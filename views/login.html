@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro — เข้าสู่ระบบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Sans Thai', sans-serif;
+      background: #F3F4F6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      max-width: 800px;
+      min-height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.15);
+    }
+    .left {
+      background: linear-gradient(160deg, #7B2FF7 0%, #4338CA 45%, #0EA5E9 100%);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; gap: 1.1rem;
+    }
+    .left-icon-ring {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.35);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.12);
+    }
+    .left-icon-ring i { font-size: 46px; color: #fff; }
+    .left-name  { font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -.2px; }
+    .left-desc  { font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.65; max-width: 210px; }
+    .left-divider { width: 40px; height: 2px; background: rgba(255,255,255,.3); border-radius: 2px; }
+
+    .right { background: #fff; display: flex; flex-direction: column; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; }
+    .tab {
+      padding: 14px 8px; text-align: center; font-size: 13px; font-weight: 500;
+      color: #9CA3AF; cursor: pointer; border-bottom: 2px solid #F3F4F6;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s; user-select: none;
+    }
+    .tab.active  { color: #7B2FF7; border-bottom-color: #7B2FF7; }
+    .forms { flex: 1; position: relative; overflow: hidden; }
+    .form-panel {
+      position: absolute; inset: 0; padding: 2rem 2.5rem 1.5rem;
+      display: flex; flex-direction: column; transition: opacity .2s, transform .2s;
+    }
+    .form-panel.hidden { opacity: 0; pointer-events: none; transform: translateX(14px); }
+    .form-head { text-align: center; margin-bottom: 1.5rem; }
+    .form-head h2 { font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 4px; }
+    .form-head p  { font-size: 13px; color: #6B7280; }
+    .staff-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #F0FDF4; color: #166534; font-size: 11px; font-weight: 500;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
+    }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+    .field-wrap  { position: relative; }
+    .field-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 17px; color: #9CA3AF; }
+    .field input {
+      width: 100%; padding: 10px 12px 10px 38px; font-family: inherit; font-size: 13px;
+      border: 1.5px solid #E5E7EB; border-radius: 9px; outline: none; transition: all .15s;
+    }
+    .field input:focus { border-color: #7B2FF7; box-shadow: 0 0 0 3px rgba(123,47,247,.1); }
+    
+    /* --- สไตล์ใหม่สำหรับ Error ใต้ช่อง --- */
+    .error-msg {
+      color: #ef4444; font-size: 11px; margin-top: 5px; display: none; align-items: center; gap: 4px;
+    }
+
+    .row-opts { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .check-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6B7280; }
+    .btn-login {
+      width: 100%; padding: 11px; border: none; border-radius: 9px;
+      font-family: inherit; font-size: 14px; font-weight: 500; color: #fff;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .btn-u { background: linear-gradient(90deg, #7B2FF7, #4338CA, #0EA5E9); }
+    .btn-s { background: linear-gradient(90deg, #059669, #0D9488); }
+    .register-row { text-align: center; font-size: 12px; color: #6B7280; margin-top: 1rem; }
+    .register-row a { color: #7B2FF7; font-weight: 500; text-decoration: none; }
+    .staff-note { margin-top: 12px; background: #F0FDF4; border-radius: 9px; padding: 10px 12px; display: flex; gap: 8px; }
+    .staff-note p { font-size: 11px; color: #166534; }
+    .copy { text-align: center; padding-bottom: 15px; font-size: 11px; color: #9CA3AF; }
+
+    @media (max-width: 600px) { .page { grid-template-columns: 1fr; } .left { min-height: 200px; } }
+
+    .no-transition {
+  transition: none !important;
+}
+[v-cloak] { display: none; } /* เทคนิคช่วยให้หน้าจอนิ่งขึ้น */
+
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="left">
+    <div class="left-icon-ring"><i class="ti ti-layout-kanban"></i></div>
+    <div class="left-name">TaskFlow Pro</div>
+    <div class="left-desc">ระบบจัดการงานและมอบหมายงาน<br>สำหรับทีมและองค์กร</div>
+    <div class="left-divider"></div>
+  </div>
+
+  <div class="right">
+    <div class="tabs">
+      <div class="tab active" id="tab-user" onclick="switchTab('user')"><i class="ti ti-user"></i> ผู้แจ้งงาน</div>
+      <div class="tab" id="tab-staff" onclick="switchTab('staff')"><i class="ti ti-shield-check"></i> เจ้าหน้าที่</div>
+    </div>
+
+    <div class="forms">
+      <div class="form-panel" id="form-user">
+        <div class="form-head">
+          <h2>ยินดีต้อนรับกลับมา!</h2>
+          <p>กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+        </div>
+        
+        <form action="/login" method="POST">
+          <div class="field">
+            <label>ชื่อผู้ใช้งาน (Username)</label>
+            <div class="field-wrap"><i class="ti ti-user"></i>
+              <input type="text" name="username" placeholder="กรอกชื่อผู้ใช้งาน..." required>
+            </div>
+            <div id="login-error" class="error-msg"><i class="ti ti-alert-circle"></i> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+          </div>
+
+          <div class="field">
+            <label>รหัสผ่าน (Password)</label>
+            <div class="field-wrap"><i class="ti ti-lock"></i>
+              <input type="password" name="password" placeholder="กรอกรหัสผ่าน..." required>
+            </div>
+          </div>
+
+          <div class="row-opts">
+            <label class="check-row"><input type="checkbox"> จดจำฉันไว้</label>
+            <a href="#" class="forgot" style="font-size: 12px; color: #7B2FF7; text-decoration: none;">ลืมรหัสผ่าน?</a>
+          </div>
+          <button type="submit" class="btn-login btn-u">เข้าสู่ระบบ <i class="ti ti-arrow-right"></i></button>
+        </form>
+        <div class="register-row">
+          บุคลากรใหม่หรือไม่? &nbsp; <a href="/register"><i class="ti ti-user-plus"></i> ลงทะเบียนใช้งาน</a>
+        </div>
+      </div>
+
+      <div class="form-panel hidden" id="form-staff">
+        <div class="form-head">
+          <div class="staff-pill"><i class="ti ti-shield-check"></i> Staff Portal</div>
+          <h2>เข้าสู่ระบบเจ้าหน้าที่</h2>
+          <p>สำหรับทีมงานที่รับผิดชอบดำเนินงาน</p>
+        </div>
+
+        <form action="/login" method="POST">
+    <div class="field">
+      <label>ชื่อผู้ใช้งานเจ้าหน้าที่</label>
+      <div class="field-wrap"><i class="ti ti-user"></i>
+        <input type="text" name="username" placeholder="กรอกชื่อผู้ใช้งาน..." required>
+      </div>
+      <div id="login-error-staff" class="error-msg"><i class="ti ti-alert-circle"></i> ชื่อผู้ใช้หรือรหัสผ่านเจ้าหน้าที่ไม่ถูกต้อง</div>
+    </div>
+
+          <div class="field">
+            <label>รหัสผ่าน</label>
+            <div class="field-wrap"><i class="ti ti-lock"></i>
+              <input type="password" name="password" placeholder="กรอกรหัสผ่าน..." required>
+            </div>
+          </div>
+          <button type="submit" class="btn-login btn-s">
+            <i class="ti ti-shield-check"></i> เข้าสู่ระบบเจ้าหน้าที่</button>
+        </form>
+
+        <div class="staff-note">
+          <i class="ti ti-info-circle" style="color: #16A34A;"></i>
+          <p>บัญชีเจ้าหน้าที่จัดการโดยผู้ดูแลระบบเท่านั้น</p>
+        </div>
+      </div>
+    </div>
+    <div class="copy">© 2026 TaskFlow Pro Systems.</div>
+  </div>
+</div>
+
+<script>
+  function switchTab(t, noAnim = false) {
+    const tabUser = document.getElementById('tab-user');
+    const tabStaff = document.getElementById('tab-staff');
+    const formUser = document.getElementById('form-user');
+    const formStaff = document.getElementById('form-staff');
+
+    if (noAnim) {
+      formUser.classList.add('no-transition');
+      formStaff.classList.add('no-transition');
+    }
+
+    tabUser.classList.toggle('active', t === 'user');
+    tabStaff.classList.toggle('active', t === 'staff');
+    formUser.classList.toggle('hidden', t !== 'user');
+    formStaff.classList.toggle('hidden', t !== 'staff');
+
+    // --- เปลี่ยนมาใช้ sessionStorage เพื่อให้ล้างค่าเมื่อปิดเว็บ ---
+    sessionStorage.setItem('activeTab', t);
+
+    if (noAnim) {
+      setTimeout(() => {
+        formUser.classList.remove('no-transition');
+        formStaff.classList.remove('no-transition');
+      }, 50);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    // ดึงค่าจาก sessionStorage (ถ้าไม่มีค่าเลย หรือเปิดใหม่ จะได้ 'user' เป็นค่าเริ่มต้น)
+    const savedTab = sessionStorage.getItem('activeTab') || 'user';
+    switchTab(savedTab, true); 
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'failed') {
+      const errorId = (savedTab === 'user') ? 'login-error' : 'login-error-staff';
+      const errorDiv = document.getElementById(errorId);
+      
+      if (errorDiv) {
+        errorDiv.style.display = 'flex';
+        const activePanelId = (savedTab === 'user') ? 'form-user' : 'form-staff';
+        document.querySelectorAll(`#${activePanelId} input`).forEach(input => {
+          input.style.borderColor = '#ef4444';
+        });
+      }
+
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState(null, '', cleanUrl);
+    }
+  });
+</script>
+</body>
+</html>

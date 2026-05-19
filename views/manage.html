@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการงาน - ระบบแจ้งงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2563EB;
+    --primary-light: #EFF6FF;
+    --primary-dark: #1D4ED8;
+    --sidebar-bg: #0F172A;
+    --sidebar-text: #94A3B8;
+    --card-bg: #FFFFFF;
+    --body-bg: #F1F5F9;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
+    --pending: #F59E0B;
+    --pending-bg: #FFFBEB;
+    --inprogress: #3B82F6;
+    --inprogress-bg: #EFF6FF;
+    --done: #10B981;
+    --done-bg: #ECFDF5;
+    --rejected: #EF4444;
+    --rejected-bg: #FEF2F2;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', 'IBM Plex Sans Thai', sans-serif;
+    background: var(--body-bg);
+    color: var(--text-main);
+    display: flex;
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px; min-height: 100vh;
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; z-index: 100;
+  }
+  .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-logo .logo-icon {
+    width: 36px; height: 36px; background: var(--primary);
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; color: #fff; margin-bottom: 10px;
+  }
+  .sidebar-logo h6 { color: #F8FAFC; font-weight: 600; font-size: 14px; margin: 0; }
+  .sidebar-logo small { color: var(--sidebar-text); font-size: 11px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-label {
+    color: #475569; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 8px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    color: var(--sidebar-text); text-decoration: none;
+    font-size: 14px; transition: all 0.15s; cursor: pointer; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #F1F5F9; }
+  .nav-item.active { background: rgba(37,99,235,0.18); color: #60A5FA; }
+  .nav-item .bi { font-size: 17px; width: 20px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 10px; padding: 1px 7px; border-radius: 99px; font-weight: 600; }
+  .nav-badge.red { background: var(--rejected); }
+  .sidebar-user { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sidebar-user small { color: var(--sidebar-text); font-size: 11px; display: block; }
+  .sidebar-user span { color: #F1F5F9; font-size: 13px; font-weight: 500; display: block; }
+  .btn-logout { margin-top:4px;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--radius-sm);color:#94A3B8;font-size:13px;cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:inherit;width:100%; }
+  .btn-logout:hover { background:rgba(239,68,68,.12);color:#F87171; }
+
+  /* ── MAIN ── */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--card-bg); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; color: var(--text-muted); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-muted); position: relative; transition: background 0.15s;
+  }
+  .icon-btn:hover { background: var(--body-bg); }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--rejected); border: 1px solid #fff; }
+
+  /* ── CONTENT ── */
+  .content { padding: 28px; flex: 1; }
+
+  /* ── STAT STRIP ── */
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .sstrip {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .sstrip-icon { width: 42px; height: 42px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .sstrip-num { font-size: 24px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+  .sstrip-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── CONTROLS ── */
+  .controls-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 7px 12px;
+    flex: 1; min-width: 200px;
+  }
+  .search-box input { border: none; outline: none; font-family: inherit; font-size: 13px; background: transparent; width: 100%; color: var(--text-main); }
+  .search-box .bi { color: var(--text-muted); font-size: 14px; }
+  .filter-select { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-family: inherit; font-size: 13px; color: var(--text-main); cursor: pointer; outline: none; }
+
+  /* ── KANBAN ── */
+  .queue-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  .qcol { background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-height: 200px; }
+  .qcol-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card-bg); }
+  .qcol-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .qcol-count { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .qcol-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── CARD ── */
+  .qcard {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 13px 14px;
+    cursor: pointer; transition: box-shadow 0.15s, transform 0.1s;
+    position: relative; overflow: hidden;
+  }
+  .qcard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+  .qcard-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .qcard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .qcard-id { font-family: 'Courier New', monospace; font-size: 10px; color: var(--primary); font-weight: 600; background: var(--primary-light); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .priority-badge { padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .priority-badge.high { background: #FEE2E2; color: #991B1B; }
+  .priority-badge.med  { background: #FEF9C3; color: #854D0E; }
+  .priority-badge.low  { background: #DCFCE7; color: #166534; }
+  .qcard-title { font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+  .qcard-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
+  .qcard-meta-item { display: flex; align-items: center; gap: 3px; }
+
+  /* ── QUICK ACTIONS ── */
+  .qcard-quick {
+    display: flex; gap: 5px; margin-top: 8px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .qbtn {
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
+    font-family: inherit; cursor: pointer; border: 1px solid var(--border);
+    background: var(--body-bg); color: var(--text-main);
+    display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .qbtn:hover { background: var(--border); }
+  .qbtn.accept { background: var(--primary-light); color: var(--primary); border-color: #BFDBFE; }
+  .qbtn.accept:hover { background: var(--primary); color: #fff; }
+  .qbtn.close-task { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
+  .qbtn.close-task:hover { background: var(--done); color: #fff; }
+  .qbtn.detail { color: var(--text-muted); }
+
+  .qcard-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .avatar-group { display: flex; }
+  .avatar-sm { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-left: -5px; flex-shrink: 0; }
+  .avatar-sm:first-child { margin-left: 0; }
+  .av-blue  { background: #BFDBFE; color: #1E40AF; }
+  .av-green { background: #BBF7D0; color: #166534; }
+  .av-amber { background: #FDE68A; color: #92400E; }
+  .av-pink  { background: #FBCFE8; color: #9D174D; }
+  .av-teal  { background: #99F6E4; color: #0F766E; }
+
+  /* ── COUNTDOWN BADGE ── */
+  .cd-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 5px;
+    display: inline-flex; align-items: center; gap: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-badge.cd-ok     { background: #DCFCE7; color: #166534; }
+  .cd-badge.cd-warn   { background: #FEF9C3; color: #854D0E; }
+  .cd-badge.cd-urgent { background: #FEE2E2; color: #991B1B; }
+  .cd-badge.cd-over   { background: #991B1B; color: #fff; }
+  .cd-badge.cd-done   { background: var(--done-bg); color: #065F46; }
+
+  /* ── COLUMN COLORS ── */
+  .col-pending    .qcol-header { border-top: 3px solid var(--pending); }
+  .col-inprogress .qcol-header { border-top: 3px solid var(--inprogress); }
+  .col-done       .qcol-header { border-top: 3px solid var(--done); }
+  .col-pending    .qcol-count  { background: var(--pending-bg); color: #92400E; }
+  .col-inprogress .qcol-count  { background: var(--inprogress-bg); color: #1E40AF; }
+  .col-done       .qcol-count  { background: var(--done-bg); color: #065F46; }
+  .col-pending    .qcard-accent { background: var(--pending); }
+  .col-inprogress .qcard-accent { background: var(--inprogress); }
+  .col-done       .qcard-accent { background: var(--done); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    position: fixed; top: 0; right: -440px; width: 440px; height: 100%;
+    background: var(--card-bg); border-left: 1px solid var(--border);
+    z-index: 200; display: flex; flex-direction: column;
+    transition: right 0.25s cubic-bezier(.4,0,.2,1); overflow-y: auto;
+  }
+  .detail-panel.open { right: 0; }
+  .panel-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.25); z-index: 199; display: none; backdrop-filter: blur(2px); }
+  .panel-backdrop.show { display: block; }
+  .panel-header {
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--card-bg); z-index: 1;
+  }
+  .panel-close { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: background 0.15s; }
+  .panel-close:hover { background: var(--body-bg); }
+  .panel-body { padding: 20px; flex: 1; }
+  .panel-section { margin-bottom: 20px; }
+  .panel-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
+  .panel-value { font-size: 14px; }
+
+  /* ── SLA ROW ── */
+  .sla-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--body-bg); border-radius: var(--radius-sm);
+    padding: 10px 14px; margin-bottom: 16px; gap: 10px;
+  }
+  .sla-label { font-size: 12px; color: var(--text-muted); }
+  .sla-countdown { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: 4px 0; }
+  .tl-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
+  .tl-item::before { content: ''; position: absolute; left: 11px; top: 22px; width: 1px; height: calc(100% - 6px); background: var(--border); }
+  .tl-item:last-child::before { display: none; }
+  .tl-dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+  .tl-dot.done   { background: var(--done-bg); color: var(--done); }
+  .tl-dot.active { background: var(--inprogress-bg); color: var(--inprogress); }
+  .tl-dot.wait   { background: var(--border); color: var(--text-muted); }
+  .tl-text h6 { font-size: 13px; font-weight: 500; margin: 0; line-height: 22px; }
+  .tl-text small { font-size: 11px; color: var(--text-muted); }
+
+  /* ── COMMENT ── */
+  .comment-box { display: flex; gap: 8px; margin-top: 12px; }
+  .comment-input { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-family: inherit; font-size: 13px; outline: none; resize: none; color: var(--text-main); transition: border-color 0.15s; }
+  .comment-input:focus { border-color: var(--primary); }
+  .comment-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .comment-item { background: var(--body-bg); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .comment-author { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .comment-text { font-size: 12px; color: var(--text-muted); }
+  .comment-time { font-size: 10px; color: #94A3B8; margin-top: 3px; }
+
+  /* ── BUTTONS ── */
+  .btn-primary-sm { background: var(--primary); color: #fff; border: none; padding: 7px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .btn-primary-sm:hover { background: var(--primary-dark); }
+  .btn-ghost-sm { background: transparent; color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+  .btn-ghost-sm:hover { background: var(--primary-light); }
+  .btn-success-sm { background: var(--done); color: #fff; border: none; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; transition: opacity 0.15s; }
+  .btn-success-sm:hover { opacity: 0.85; }
+  .btn-danger-sm { background: var(--rejected); color: #fff; border: none; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; transition: opacity 0.15s; }
+  .btn-danger-sm:hover { opacity: 0.85; }
+
+  /* ── BADGE STATUS ── */
+  .badge-status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .badge-status.pending    { background: var(--pending-bg);    color: #92400E; }
+  .badge-status.inprogress { background: var(--inprogress-bg); color: #1E40AF; }
+  .badge-status.done       { background: var(--done-bg);       color: #065F46; }
+  .badge-status.rejected   { background: var(--rejected-bg);   color: #991B1B; }
+  .badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .badge-status.pending::before    { background: var(--pending); }
+  .badge-status.inprogress::before { background: var(--inprogress); }
+  .badge-status.done::before       { background: var(--done); }
+  .badge-status.rejected::before   { background: var(--rejected); }
+
+  /* ── TOAST ── */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast-msg { background: #0F172A; color: #F8FAFC; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .toast-msg.show { opacity: 1; transform: translateY(0); }
+
+  /* ── EMPTY ── */
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px; }
+  .empty-state .bi { font-size: 32px; margin-bottom: 8px; display: block; opacity: 0.4; }
+
+  /* ── SKELETON ── */
+  .skeleton { background: linear-gradient(90deg,#E2E8F0 25%,#F1F5F9 50%,#E2E8F0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .sk-line { height: 12px; margin-bottom: 8px; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--card-bg); border-radius: var(--radius); width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h6 { font-size: 15px; font-weight: 600; margin: 0; }
+  .modal-body { padding: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
+  .form-control { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--text-main); outline: none; transition: border-color 0.15s; background: #FAFAFA; }
+  .form-control:focus { border-color: var(--primary); background: #fff; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+
+  @media (max-width: 1100px) { .queue-cols { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo h6, .sidebar-logo small, .nav-item span, .nav-badge, .nav-label, .sidebar-user > div { display: none; }
+    .main { margin-left: 60px; }
+    .stat-strip { grid-template-columns: 1fr 1fr; }
+    .queue-cols { grid-template-columns: 1fr; }
+    .detail-panel { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="bi bi-tools"></i></div>
+    <h6>ระบบแจ้งงาน</h6>
+    <small>Task Management v2.0</small>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">หลัก</div>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/index'"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/form'"><i class="bi bi-plus-circle-fill"></i><span>แจ้งงาน</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/timeline'"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/history'"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
+    <div class="nav-label">เจ้าหน้าที่</div>
+    <a class="nav-item active" onclick="setActive(this)"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red" id="nav-pending-badge">0</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/queue'"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-list-ol"></i><span>คิวงาน</span><span class="nav-badge" id="nav-count">0</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-chat-dots"></i><span>แชท</span></a>
+    <div class="nav-label">Admin</div>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">--</div>
+    <div>
+      <span id="user-fullname">กำลังโหลด...</span>
+      <small id="user-role">--</small>
+    </div>
+  </div>
+  <button class="btn-logout" onclick="if(confirm('ออกจากระบบ?')){ window.location.href='/logout'; }">
+    <i class="bi bi-box-arrow-left" style="font-size:16px"></i>
+    <span>ออกจากระบบ</span>
+  </button>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">จัดการงาน</div>
+      <div class="topbar-sub" id="topbar-sub">กำลังโหลด...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="รีเฟรช" onclick="loadTickets()">
+        <i class="bi bi-arrow-clockwise" style="font-size:16px"></i>
+      </button>
+      <button class="btn-primary-sm" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> แจ้งงานใหม่
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stat-strip" id="stat-strip">
+      <!-- skeleton -->
+      ${[1,2,3,4].map(()=>`<div class="sstrip"><div class="skeleton" style="width:42px;height:42px;border-radius:8px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton sk-line" style="width:40%"></div><div class="skeleton sk-line" style="width:60%"></div></div></div>`).join('')}
+    </div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="search-input" placeholder="ค้นหา Ticket, ชื่องาน..." oninput="filterCards()">
+      </div>
+      <select class="filter-select" id="filter-priority" onchange="filterCards()">
+        <option value="">ทุกความเร่งด่วน</option>
+        <option value="high">ด่วนมาก</option>
+        <option value="med">ปานกลาง</option>
+        <option value="low">ปกติ</option>
+      </select>
+      <button class="btn-ghost-sm" onclick="clearFilters()"><i class="bi bi-x-lg"></i> ล้างตัวกรอง</button>
+    </div>
+
+    <div class="queue-cols">
+      <div class="qcol col-pending">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-hourglass-split" style="color:var(--pending)"></i>รอดำเนินการ</div>
+          <span class="qcol-count" id="cnt-pending">0</span>
+        </div>
+        <div class="qcol-body" id="col-pending"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+      <div class="qcol col-inprogress">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-gear-wide-connected" style="color:var(--inprogress)"></i>กำลังดำเนินการ</div>
+          <span class="qcol-count" id="cnt-inprogress">0</span>
+        </div>
+        <div class="qcol-body" id="col-inprogress"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+      <div class="qcol col-done">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-check-circle-fill" style="color:var(--done)"></i>เสร็จสิ้น</div>
+          <span class="qcol-count" id="cnt-done">0</span>
+        </div>
+        <div class="qcol-body" id="col-done"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="panel-backdrop" id="backdrop" onclick="closePanel()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="panel-id"></div>
+      <div id="panel-status-badge"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h6><i class="bi bi-plus-circle-fill" style="color:var(--primary);margin-right:6px"></i>แจ้งงานใหม่</h6>
+      <button class="panel-close" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">ชื่องาน / รายละเอียดปัญหา *</label>
+        <input class="form-control" id="new-title" placeholder="เช่น เครื่องปรับอากาศไม่เย็น...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ความเร่งด่วน</label>
+          <select class="form-control" id="new-priority">
+            <option value="high">ด่วนมาก (SLA 4 ชม.)</option>
+            <option value="med">ปานกลาง (SLA 24 ชม.)</option>
+            <option value="low">ปกติ (SLA 72 ชม.)</option>
+          </select>
+        </div>
+        <!-- [CHANGED] เปลี่ยนจาก "ผู้รับผิดชอบ" เป็น "ชื่อผู้แจ้ง" -->
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้แจ้ง</label>
+          <input class="form-control" id="new-reporter" placeholder="ชื่อผู้แจ้งงาน...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียด</label>
+        <textarea class="form-control" id="new-detail" rows="3" placeholder="อธิบายปัญหา..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="new-note" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost-sm" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-primary-sm" onclick="addTask()"><i class="bi bi-check-lg"></i> บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===================================================
+//  CONSTANTS
+// ===================================================
+const prioLabel  = { high:'ด่วนมาก', med:'ปานกลาง', low:'ปกติ' };
+const statusLabel= { pending:'รอดำเนินการ', inprogress:'กำลังทำ', done:'เสร็จแล้ว', rejected:'ถูกตีกลับ' };
+const SLA_HOURS  = { high: 4, med: 24, low: 72 };
+const avColors   = ['av-blue','av-green','av-amber','av-pink','av-teal'];
+
+// ===================================================
+//  STATE
+// ===================================================
+let tasks = [];
+let panelOpenTaskId = null;
+
+// ===================================================
+//  LOAD FROM API
+// ===================================================
+async function loadTickets() {
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) throw new Error();
+    const raw = await res.json();
+
+    // แปลงจาก DB format → internal format
+    tasks = raw.map(t => ({
+      _id:        t.id,
+      id:         'TK-' + String(t.id).padStart(4,'0'),
+      title:      t.title || '(ไม่มีหัวข้อ)',
+      detail:     t.detail || '',
+      note:       t.note || '',
+      pri:        t.priority || 'low',
+      status:     t.status || 'pending',
+      // [CHANGED] ใช้ reporter แทน assignee
+      reporter:   t.reporter || t.assignee || '',   // รองรับ field เดิมด้วย
+      reporterInitials: (t.reporter || t.assignee || '').substring(0, 2) || '—',
+
+      created_at: t.created_at,
+      time:       formatTime(t.created_at),
+      // [CHANGED] เพิ่มวันที่แจ้ง (แบบเต็ม)
+      reportDate: formatDate(t.created_at),
+      deadlineDate: calcDeadline(t.created_at, t.priority),
+      comments:   [],
+      timeline:   buildTimeline(t),
+    }));
+
+    renderAll();
+    updateTopbar();
+  } catch(e) {
+    console.error(e);
+    showToast('โหลดข้อมูลไม่สำเร็จ','bi-exclamation-triangle-fill','#EF4444');
+  }
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+// [CHANGED] ฟังก์ชันแสดงวันที่แบบไทย
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const day   = d.getDate();
+  const month = months[d.getMonth()];
+  const year  = d.getFullYear() + 543;
+  const hh    = String(d.getHours()).padStart(2,'0');
+  const mm    = String(d.getMinutes()).padStart(2,'0');
+  return `${day} ${month} ${year} ${hh}:${mm}`;
+}
+
+function calcDeadline(createdAt, priority) {
+  if (!createdAt) return null;
+  const h = SLA_HOURS[priority] || 24;
+  return new Date(new Date(createdAt).getTime() + h * 3600000);
+}
+
+function buildTimeline(t) {
+  const base = [
+    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || t.assignee || '—', state:'done' },
+    { label:'รับเรื่อง', time:'—', by:'—', state: t.status !== 'pending' ? 'done' : 'active' },
+    { label:'ดำเนินการ', time:'—', by:'—', state: t.status === 'inprogress' ? 'active' : t.status === 'done' ? 'done' : 'wait' },
+    { label:'เสร็จสิ้น', time:'—', by:'—', state: t.status === 'done' ? 'done' : 'wait' },
+  ];
+  return base;
+}
+
+// ===================================================
+//  COUNTDOWN HELPERS
+// ===================================================
+function getSecsLeft(t) {
+  if (!t.deadlineDate) return null;
+  return Math.floor((t.deadlineDate.getTime() - Date.now()) / 1000);
+}
+
+function fmtCountdown(secs) {
+  if (secs === null) return '—';
+  const abs = Math.abs(secs);
+  const h = Math.floor(abs / 3600);
+  const m = Math.floor((abs % 3600) / 60);
+  const s = abs % 60;
+  const sign = secs < 0 ? '-' : '';
+  if (h > 0) return `${sign}${h}:${String(m).padStart(2,'0')} ชม.`;
+  return `${sign}${m}:${String(s).padStart(2,'0')} น.`;
+}
+
+function getCdClass(t, secs) {
+  if (t.status === 'done') return 'cd-done';
+  if (secs === null) return 'cd-ok';
+  if (secs < 0) return 'cd-over';
+  if (secs < 3600) return 'cd-urgent';
+  if (secs < 7200) return 'cd-warn';
+  return 'cd-ok';
+}
+
+function getCdLabel(t, secs) {
+  if (t.status === 'done') return '<i class="bi bi-check-circle-fill"></i> เสร็จ';
+  if (secs === null) return '—';
+  if (secs < 0) return '<i class="bi bi-exclamation-triangle-fill"></i> เกิน SLA ' + fmtCountdown(secs);
+  return '<i class="bi bi-clock-fill"></i> ' + fmtCountdown(secs);
+}
+
+// ===================================================
+//  RENDER ALL
+// ===================================================
+function renderAll() { renderStats(); renderCards(); }
+
+function updateTopbar() {
+  const now = new Date();
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('topbar-sub').textContent =
+    `อัปเดต: วัน${days[now.getDay()]}ที่ ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} น.`;
+}
+
+// ===================================================
+//  STAT STRIP
+// ===================================================
+function renderStats() {
+  const pend    = tasks.filter(t => t.status === 'pending').length;
+  const prog    = tasks.filter(t => t.status === 'inprogress').length;
+  const done    = tasks.filter(t => t.status === 'done').length;
+  const overSla = tasks.filter(t => t.status !== 'done' && getSecsLeft(t) !== null && getSecsLeft(t) < 0).length;
+  document.getElementById('nav-count').textContent         = pend + prog;
+  document.getElementById('nav-pending-badge').textContent = pend;
+  document.getElementById('stat-strip').innerHTML = `
+    <div class="sstrip">
+      <div class="sstrip-icon" style="background:var(--pending-bg);color:var(--pending)"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="sstrip-num" style="color:var(--pending)">${pend}</div><div class="sstrip-label">รอดำเนินการ</div></div>
+    </div>
+    <div class="sstrip">
+      <div class="sstrip-icon" style="background:var(--inprogress-bg);color:var(--inprogress)"><i class="bi bi-gear-wide-connected"></i></div>
+      <div><div class="sstrip-num" style="color:var(--inprogress)">${prog}</div><div class="sstrip-label">กำลังดำเนินการ</div></div>
+    </div>
+    <div class="sstrip">
+      <div class="sstrip-icon" style="background:var(--done-bg);color:var(--done)"><i class="bi bi-check-circle-fill"></i></div>
+      <div><div class="sstrip-num" style="color:var(--done)">${done}</div><div class="sstrip-label">เสร็จสิ้น</div></div>
+    </div>
+    <div class="sstrip" style="${overSla>0?'border-color:#FECACA':''}">
+      <div class="sstrip-icon" style="background:${overSla>0?'#FEE2E2':'#F3E8FF'};color:${overSla>0?'#991B1B':'#7C3AED'}">
+        <i class="bi ${overSla>0?'bi-exclamation-triangle-fill':'bi-shield-check'}"></i>
+      </div>
+      <div><div class="sstrip-num" style="color:${overSla>0?'#991B1B':'#7C3AED'}">${overSla}</div><div class="sstrip-label">เกิน SLA</div></div>
+    </div>`;
+}
+
+// ===================================================
+//  FILTER & RENDER CARDS
+// ===================================================
+function getFilteredTasks() {
+  const q  = (document.getElementById('search-input').value||'').toLowerCase();
+  const fp = document.getElementById('filter-priority').value;
+  return tasks.filter(t => {
+    const matchQ  = !q  || t.id.toLowerCase().includes(q) || t.title.includes(q) || t.detail.includes(q) || t.reporter.includes(q);
+    const matchP  = !fp || t.pri === fp;
+    return matchQ && matchP;
+  });
+}
+
+function filterCards() { renderCards(); }
+
+function renderCards() {
+  const filtered = getFilteredTasks();
+  ['pending','inprogress','done'].forEach(s => {
+    const col = document.getElementById('col-'+s);
+    const cnt = document.getElementById('cnt-'+s);
+    const items = filtered.filter(t => t.status === s);
+    items.sort((a,b) => {
+      const sa = getSecsLeft(a) ?? 99999;
+      const sb = getSecsLeft(b) ?? 99999;
+      if (sa < 0 && sb >= 0) return -1;
+      if (sb < 0 && sa >= 0) return  1;
+      return sa - sb;
+    });
+    cnt.textContent = items.length;
+    col.innerHTML = '';
+    if (items.length === 0) {
+      col.innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i>ไม่มีงาน</div>`;
+      return;
+    }
+    items.forEach(t => {
+      // [CHANGED] avatar แสดงอักษรย่อผู้แจ้ง
+      const avHtml = t.reporter
+        ? `<div class="avatar-sm av-blue">${t.reporterInitials}</div>`
+        : `<div class="avatar-sm av-blue" style="color:#94A3B8;background:#F1F5F9">—</div>`;
+
+      const secs    = getSecsLeft(t);
+      const cdClass = getCdClass(t, secs);
+      const cdHtml  = `<span class="cd-badge ${cdClass}" data-task-id="${t.id}">${getCdLabel(t, secs)}</span>`;
+
+      let quickHtml = '';
+      if (s === 'pending') {
+        quickHtml = `
+          <div class="qcard-quick" onclick="event.stopPropagation()">
+            <button class="qbtn accept" onclick="changeStatus('${t.id}','inprogress')"><i class="bi bi-play-fill"></i>รับงาน</button>
+            <button class="qbtn detail" onclick="openPanel('${t.id}')"><i class="bi bi-info-circle"></i>รายละเอียด</button>
+          </div>`;
+      } else if (s === 'inprogress') {
+        quickHtml = `
+          <div class="qcard-quick" onclick="event.stopPropagation()">
+            <button class="qbtn close-task" onclick="changeStatus('${t.id}','done')"><i class="bi bi-check-lg"></i>ปิดงาน</button>
+            <button class="qbtn detail" onclick="openPanel('${t.id}')"><i class="bi bi-pencil"></i>รายละเอียด</button>
+          </div>`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'qcard';
+      card.setAttribute('data-task-id', t.id);
+      card.onclick = () => openPanel(t.id);
+      card.innerHTML = `
+        <div class="qcard-accent"></div>
+        <div class="qcard-top">
+          <span class="qcard-id">${t.id}</span>
+          <span class="priority-badge ${t.pri}">${prioLabel[t.pri]}</span>
+        </div>
+        <div class="qcard-title">${escHtml(t.title)}</div>
+        <div class="qcard-meta">
+          <!-- [CHANGED] แสดงวันที่แจ้งแทนเวลาอย่างเดียว -->
+          <span class="qcard-meta-item"><i class="bi bi-calendar3" style="font-size:10px"></i>${t.reportDate}</span>
+          ${t.reporter ? `<span class="qcard-meta-item"><i class="bi bi-person-fill" style="font-size:10px"></i>${escHtml(t.reporter)}</span>` : ''}
+        </div>
+        <div class="qcard-footer">
+          <div class="avatar-group">${avHtml}</div>
+          ${cdHtml}
+        </div>
+        ${quickHtml}`;
+      col.appendChild(card);
+    });
+  });
+}
+
+// ===================================================
+//  DETAIL PANEL
+// ===================================================
+function openPanel(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('panel-id').textContent = t.id + '  ' + t.title;
+  document.getElementById('panel-status-badge').innerHTML =
+    `<span class="badge-status ${t.status}">${statusLabel[t.status]}</span>`;
+
+  const secs       = getSecsLeft(t);
+  const cdClass    = getCdClass(t, secs);
+  const cdLabel    = getCdLabel(t, secs);
+  const deadlineStr = t.deadlineDate
+    ? t.deadlineDate.toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'2-digit'})
+    : '—';
+
+  const slaRow = t.status !== 'done' ? `
+    <div class="sla-row">
+      <div>
+        <div class="sla-label">กำหนดเสร็จ</div>
+        <div style="font-size:12px;font-weight:500">${deadlineStr}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sla-label">เวลาที่เหลือ</div>
+        <div id="panel-cd" style="font-size:16px;font-weight:700;color:${secs!==null&&secs<0?'#991B1B':secs!==null&&secs<3600?'#991B1B':'#065F46'}">${fmtCountdown(secs)}</div>
+      </div>
+      <span class="cd-badge ${cdClass}">${cdLabel}</span>
+    </div>` : `
+    <div class="sla-row" style="background:var(--done-bg)">
+      <div><div class="sla-label" style="color:#065F46">เสร็จสิ้น</div></div>
+      <span class="cd-badge cd-done"><i class="bi bi-check-circle-fill"></i> เสร็จแล้ว</span>
+    </div>`;
+
+  const tlHtml = t.timeline.map(tl => `
+    <div class="tl-item">
+      <div class="tl-dot ${tl.state}">
+        ${tl.state==='done'?'<i class="bi bi-check-lg"></i>':tl.state==='active'?'<i class="bi bi-arrow-repeat"></i>':'<i class="bi bi-circle"></i>'}
+      </div>
+      <div class="tl-text">
+        <h6>${tl.label}</h6>
+        <small>${tl.time !== '—' ? tl.time + ' น.' : ''} ${tl.by !== '—' ? '· ' + tl.by : ''}</small>
+      </div>
+    </div>`).join('');
+
+  const commentsHtml = t.comments.length
+    ? t.comments.map(c => `<div class="comment-item"><div class="comment-author">${escHtml(c.author)}</div><div class="comment-text">${escHtml(c.text)}</div><div class="comment-time">${c.time}</div></div>`).join('')
+    : '<div style="font-size:12px;color:var(--text-muted)">ยังไม่มีความคิดเห็น</div>';
+
+  const actionBtns = t.status === 'pending' ? `
+    <button class="btn-primary-sm" onclick="changeStatus('${t.id}','inprogress')"><i class="bi bi-play-fill"></i> รับงาน</button>
+    <button class="btn-danger-sm"  onclick="changeStatus('${t.id}','rejected')"><i class="bi bi-x-lg"></i> ตีกลับ</button>
+  ` : t.status === 'inprogress' ? `
+    <button class="btn-success-sm" onclick="changeStatus('${t.id}','done')"><i class="bi bi-check-lg"></i> ปิดงาน</button>
+    <button class="btn-ghost-sm" style="color:var(--rejected);border-color:var(--rejected)" onclick="changeStatus('${t.id}','rejected')"><i class="bi bi-x-lg"></i> ตีกลับ</button>
+  ` : `<span style="font-size:12px;color:var(--done);font-weight:600"><i class="bi bi-check-circle-fill"></i> งานเสร็จสิ้นแล้ว</span>`;
+
+  document.getElementById('panel-body').innerHTML = `
+    ${slaRow}
+    <div class="panel-section">
+      <div class="panel-label">รายละเอียด</div>
+      <div class="panel-value" style="line-height:1.6">${escHtml(t.detail) || '—'}</div>
+    </div>
+    <!-- [CHANGED] แสดงผู้แจ้งและวันที่แจ้งแทนผู้รับงาน -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+      <div>
+        <div class="panel-label">ความเร่งด่วน</div>
+        <span class="priority-badge ${t.pri}">${prioLabel[t.pri]}</span>
+      </div>
+      <div>
+        <div class="panel-label">ผู้แจ้ง</div>
+        <div class="panel-value" style="display:flex;align-items:center;gap:6px">
+          ${t.reporter ? `<div class="avatar-sm av-blue" style="width:20px;height:20px;font-size:9px;flex-shrink:0">${t.reporterInitials}</div>` : ''}
+          ${escHtml(t.reporter) || '—'}
+        </div>
+      </div>
+      <div>
+        <div class="panel-label">วันที่แจ้ง</div>
+        <div class="panel-value" style="font-size:13px;display:flex;align-items:center;gap:5px">
+          <i class="bi bi-calendar3" style="color:var(--text-muted);font-size:12px"></i>
+          ${t.reportDate}
+        </div>
+      </div>
+      <div>
+        <div class="panel-label">หมายเหตุ</div>
+        <div class="panel-value" style="font-size:13px">${escHtml(t.note) || '—'}</div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">ไทม์ไลน์</div>
+      <div class="timeline">${tlHtml}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">ความคิดเห็น</div>
+      <div class="comment-list">${commentsHtml}</div>
+      <div class="comment-box">
+        <textarea class="comment-input" id="comment-input-${t.id}" rows="2" placeholder="พิมพ์ความคิดเห็น..."></textarea>
+        <button class="btn-primary-sm" onclick="addComment('${t.id}')" style="align-self:flex-end;flex-shrink:0"><i class="bi bi-send-fill"></i></button>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">การดำเนินการ</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${actionBtns}</div>
+    </div>`;
+
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('backdrop').classList.add('show');
+  panelOpenTaskId = t.id;
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('show');
+  panelOpenTaskId = null;
+}
+
+// ===================================================
+//  CHANGE STATUS
+// ===================================================
+async function changeStatus(id, newStatus) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+
+  t.status   = newStatus;
+  t.timeline = buildTimeline({ ...t, status: newStatus, created_at: t.created_at, reporter: t.reporter });
+  closePanel();
+  renderAll();
+
+  try {
+    await fetch(`/api/tickets/${t._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title:    t.title,
+        detail:   t.detail,
+        note:     t.note,
+        priority: t.pri,
+        reporter: t.reporter,   // [CHANGED] ส่ง reporter แทน assignee
+        status:   newStatus,
+      }),
+    });
+  } catch {
+    showToast('บันทึกลง DB ไม่สำเร็จ','bi-exclamation-triangle-fill','#EF4444');
+  }
+
+  const labels = { inprogress:'รับงานแล้ว', done:'ปิดงานสำเร็จ', rejected:'ตีกลับแล้ว' };
+  const icons  = { inprogress:'bi-play-fill', done:'bi-check-circle-fill', rejected:'bi-x-circle-fill' };
+  const colors = { inprogress:'#2563EB', done:'#10B981', rejected:'#EF4444' };
+  showToast(`${id} — ${labels[newStatus]}`, icons[newStatus], colors[newStatus]);
+}
+
+
+function addComment(id) {
+  const t   = tasks.find(x => x.id === id);
+  const inp = document.getElementById('comment-input-'+id);
+  if (!t || !inp || !inp.value.trim()) return;
+  t.comments.push({ author:'Admin', text: inp.value.trim(), time:'เดี๋ยวนี้' });
+  showToast('ส่งความคิดเห็นแล้ว','bi-chat-dots-fill','#2563EB');
+  closePanel();
+  setTimeout(() => openPanel(id), 50);
+}
+
+// ===================================================
+//  ADD TASK
+// ===================================================
+function openModal()  { document.getElementById('add-modal').classList.add('show'); }
+function closeModal() { document.getElementById('add-modal').classList.remove('show'); }
+
+async function addTask() {
+  const title = document.getElementById('new-title').value.trim();
+  if (!title) { showToast('กรุณากรอกชื่องาน','bi-exclamation-triangle-fill','#F59E0B'); return; }
+  const priority = document.getElementById('new-priority').value;
+  // [CHANGED] ใช้ new-reporter แทน new-assignee
+  const reporter = document.getElementById('new-reporter').value.trim();
+  const detail   = document.getElementById('new-detail').value.trim();
+  const note     = document.getElementById('new-note').value.trim();
+
+  try {
+    const form = new FormData();
+    form.append('title',    title);
+    form.append('detail',   detail);
+    form.append('priority', priority);
+    form.append('note',     note);
+    form.append('reporter', reporter);   // [CHANGED] ส่ง reporter
+
+    const res  = await fetch('/api/submit-ticket', { method:'POST', body:form });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    closeModal();
+    document.getElementById('new-title').value    = '';
+    document.getElementById('new-reporter').value = '';
+    document.getElementById('new-detail').value   = '';
+    document.getElementById('new-note').value     = '';
+
+    await loadTickets();
+    showToast('เพิ่มงานใหม่เรียบร้อย','bi-check-circle-fill','#10B981');
+  } catch(e) {
+    showToast('บันทึกไม่สำเร็จ: ' + e.message,'bi-exclamation-triangle-fill','#EF4444');
+  }
+}
+
+// ===================================================
+//  FILTERS
+// ===================================================
+function clearFilters() {
+  document.getElementById('search-input').value  = '';
+  document.getElementById('filter-priority').value = '';
+  filterCards();
+}
+
+// ===================================================
+//  HELPERS
+// ===================================================
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, icon='bi-check-circle-fill', color='#10B981') {
+  const wrap = document.getElementById('toast-wrap');
+  const el   = document.createElement('div');
+  el.className = 'toast-msg';
+  el.innerHTML = `<i class="bi ${icon}" style="color:${color};font-size:15px"></i>${msg}`;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function setActive(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===================================================
+//  LIVE COUNTDOWN
+// ===================================================
+function tickCountdowns() {
+  document.querySelectorAll('[data-task-id]').forEach(el => {
+    const badge = el.querySelector('.cd-badge');
+    if (!badge) return;
+    const tid = el.getAttribute('data-task-id');
+    const t   = tasks.find(x => x.id === tid);
+    if (!t || t.status === 'done') return;
+    const secs = getSecsLeft(t);
+    badge.className = `cd-badge ${getCdClass(t, secs)}`;
+    badge.innerHTML = getCdLabel(t, secs);
+  });
+  if (panelOpenTaskId) {
+    const t  = tasks.find(x => x.id === panelOpenTaskId);
+    const el = document.getElementById('panel-cd');
+    if (t && el) {
+      const secs = getSecsLeft(t);
+      el.textContent = fmtCountdown(secs);
+      el.style.color = secs !== null && secs < 0 ? '#991B1B' : secs !== null && secs < 3600 ? '#991B1B' : '#065F46';
+    }
+  }
+  renderStats();
+}
+
+// ===================================================
+//  INIT
+// ===================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closePanel(); closeModal(); }
+});
+
+async function loadUser() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    document.getElementById('user-fullname').textContent = data.fullName;
+    document.getElementById('user-role').textContent     = data.role;
+    document.getElementById('user-avatar').textContent   = data.fullName.substring(0,2);
+  } catch(e) { console.error(e); }
+}
+
+loadUser();
+loadTickets();
+setInterval(tickCountdowns, 1000);
+</script>
+</body>
+</html>

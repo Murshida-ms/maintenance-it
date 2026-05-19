@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro — ลงทะเบียน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  
+  <style>
+    /* CSS ทั้งหมดคงเดิมตามที่คุณส่งมา */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Sans Thai', sans-serif;
+      background: #F3F4F6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      max-width: 800px;
+      min-height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.15);
+      background: #fff;
+    }
+    .left {
+      background: linear-gradient(160deg, #7B2FF7 0%, #4338CA 45%, #0EA5E9 100%);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; gap: 1.1rem;
+    }
+    .left-icon-ring {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.35);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.12);
+    }
+    .left-icon-ring i { font-size: 46px; color: #fff; }
+    .left-name { font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -.2px; }
+    .left-desc { font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.65; max-width: 210px; }
+    .left-divider { width: 40px; height: 2px; background: rgba(255,255,255,.3); border-radius: 2px; }
+
+    .right { padding: 2rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+    .form-head { text-align: center; margin-bottom: 1.5rem; }
+    .form-head h2 { font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 4px; }
+    .form-head p { font-size: 13px; color: #6B7280; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+    .field-wrap { position: relative; }
+    .field-wrap i {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 17px; color: #9CA3AF; pointer-events: none;
+    }
+    .field input {
+      width: 100%; padding: 10px 12px 10px 38px; font-family: inherit; font-size: 13px;
+      border: 1.5px solid #E5E7EB; border-radius: 9px; color: #1F2937; outline: none; transition: all .15s;
+    }
+    .field input:focus { border-color: #7B2FF7; box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.1); }
+
+    .btn-u {
+      width: 100%; padding: 11px; border: none; border-radius: 9px;
+      background: linear-gradient(90deg, #7B2FF7, #4338CA, #0EA5E9);
+      color: #fff; font-size: 14px; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: all 0.2s; margin-top: 5px;
+    }
+    .btn-u:hover { opacity: 0.9; }
+    .btn-u:disabled { background: #9CA3AF; cursor: not-allowed; opacity: 0.6; }
+
+    .register-row { text-align: center; margin-top: 1rem; font-size: 12px; color: #6B7280; }
+    .register-row a { color: #7B2FF7; text-decoration: none; font-weight: 500; }
+    
+    @media (max-width: 600px) { .page { grid-template-columns: 1fr; } .left { padding: 2rem 1.5rem; min-height: 220px; } }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="left">
+    <div class="left-icon-ring"><i class="ti ti-user-plus"></i></div>
+    <div class="left-name">TaskFlow Pro</div>
+    <div class="left-desc">สมัครสมาชิกเพื่อเข้าถึงระบบจัดการงานและแจ้งซ่อมออนไลน์</div>
+    <div class="left-divider"></div>
+  </div>
+
+  <div class="right">
+    <div class="form-head">
+      <h2>ลงทะเบียนใช้งาน</h2>
+      <p>กรุณากรอกข้อมูลเพื่อสร้างบัญชีใหม่</p>
+    </div>
+
+    <form action="/register" method="POST">
+      <div class="field">
+        <label>ชื่อผู้ใช้งาน (Username)</label>
+        <div class="field-wrap">
+          <i class="ti ti-user"></i>
+          <input type="text" name="username" id="username-input" placeholder="กรอกชื่อผู้ใช้งาน..." required>
+        </div>
+        <div id="username-error" style="color: #ef4444; font-size: 11px; margin-top: 5px; display: none; align-items: center; gap: 4px;">
+           <i class="ti ti-alert-circle"></i> ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ชื่อ-นามสกุลจริง</label>
+        <div class="field-wrap">
+          <i class="ti ti-id"></i>
+          <input type="text" name="full_name" placeholder="ชื่อ และ นามสกุล" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>อีเมล (Email)</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail"></i>
+          <input type="email" name="email" placeholder="example@email.com" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>รหัสผ่าน (Password)</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock"></i>
+          <input type="password" name="password" placeholder="กรอกรหัสผ่าน..." required>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn-u">
+        ยืนยันการลงทะเบียน <i class="ti ti-arrow-right"></i>
+      </button>
+    </form>
+
+    <div class="register-row">
+      มีบัญชีอยู่แล้ว? <a href="/login">เข้าสู่ระบบที่นี่</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const usernameInput = document.getElementById('username-input');
+  const errorMsg = document.getElementById('username-error');
+  const submitBtn = document.getElementById('submit-btn');
+
+  // ฟังก์ชันช่วยเช็คชื่อซ้ำ
+  async function checkDuplicate() {
+    const username = usernameInput.value.trim();
+    if (username.length === 0) {
+      errorMsg.style.display = 'none';
+      usernameInput.style.borderColor = '#E5E7EB';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/check-username?username=${username}`);
+      const data = await response.json();
+
+      if (data.exists) {
+        errorMsg.style.display = 'flex'; // แสดงข้อความสีแดงใต้ช่อง
+        usernameInput.style.borderColor = '#ef4444'; // ขอบแดง
+        submitBtn.disabled = true; // ปิดปุ่มยืนยัน
+      } else {
+        errorMsg.style.display = 'none';
+        usernameInput.style.borderColor = '#E5E7EB';
+        submitBtn.disabled = false; // เปิดปุ่มยืนยัน
+      }
+    } catch (err) { console.error('Error:', err); }
+  }
+
+  // เช็คทุกครั้งที่พิมพ์
+  usernameInput.addEventListener('input', checkDuplicate);
+
+  // เช็คจาก URL (กรณี Server redirect กลับมาพร้อม ?error=duplicate)
+  window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'duplicate') {
+      errorMsg.style.display = 'flex';
+      usernameInput.style.borderColor = '#ef4444';
+    }
+  }
+</script>
+
+</body>
+</html>

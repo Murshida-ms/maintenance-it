@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แจ้งงาน - ระบบแจ้งงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-light: #EFF6FF;
+  --primary-dark: #1D4ED8;
+  --sidebar-bg: #0F172A;
+  --sidebar-text: #94A3B8;
+  --body-bg: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --pending: #F59E0B;
+  --done: #10B981;
+  --rejected: #EF4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--body-bg);
+  color: var(--text-main);
+  display: flex;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; min-height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex; flex-direction: column;
+  position: fixed; top:0; left:0; z-index:100;
+}
+.sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.logo-icon { width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;margin-bottom:10px; }
+.sidebar-logo h6 { color:#F8FAFC;font-weight:600;font-size:14px;margin:0; }
+.sidebar-logo small { color:var(--sidebar-text);font-size:11px; }
+.sidebar-nav { flex:1;padding:16px 12px;overflow-y:auto; }
+.nav-label { color:#475569;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:12px 8px 6px; }
+.nav-item { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--sidebar-text);text-decoration:none;font-size:14px;cursor:pointer;margin-bottom:2px;transition:all .15s; }
+.nav-item:hover { background:rgba(255,255,255,.06);color:#F1F5F9; }
+.nav-item.active { background:rgba(37,99,235,.18);color:#60A5FA; }
+.nav-item .bi { font-size:17px;width:20px;flex-shrink:0; }
+.nav-badge { margin-left:auto;background:var(--primary);color:#fff;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:600; }
+.nav-badge.red { background:var(--rejected); }
+.sidebar-user { padding:16px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px; }
+.user-avatar { width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.sidebar-user small { color:var(--sidebar-text);font-size:11px;display:block; }
+.sidebar-user span { color:#F1F5F9;font-size:13px;font-weight:500;display:block; }
+.btn-logout {
+  margin-top:4px;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--radius-sm);
+  color:#94A3B8;font-size:13px;cursor:pointer;transition:all .15s;border:none;background:transparent;
+  font-family:inherit;width:100%;
+}
+.btn-logout:hover { background:rgba(239,68,68,.12);color:#F87171; }
+
+/* MAIN */
+.main { margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh; }
+
+/* TOPBAR */
+.topbar { background:var(--card-bg);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
+.topbar-title { font-size:16px;font-weight:600; }
+.breadcrumb-nav { display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted); }
+.breadcrumb-nav a { color:var(--primary);text-decoration:none; }
+.breadcrumb-nav a:hover { text-decoration:underline; }
+
+/* CONTENT */
+.content { padding:28px;flex:1; }
+
+/* TICKET ID BAR */
+.ticket-bar {
+  background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  color: #fff;
+}
+.ticket-bar .tk-num { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; font-family: 'Courier New', monospace; }
+.ticket-bar .tk-label { font-size: 12px; opacity: 0.75; margin-bottom: 2px; }
+.ticket-bar .tk-date { font-size: 12px; opacity: 0.8; }
+.ticket-bar .tk-status { background: rgba(255,255,255,0.18); border-radius: 99px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.ticket-bar .tk-status::before { content:''; width:7px;height:7px;border-radius:50%;background:#FCD34D;display:inline-block; }
+
+/* FORM LAYOUT */
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* CARD */
+.card-box { background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:20px; }
+.card-box:last-child { margin-bottom:0; }
+.card-header { padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+.card-header h6 { font-size:14px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px; }
+.card-header h6 .ch-icon { width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px; }
+.card-body-pad { padding:20px; }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom:18px; }
+.form-group:last-child { margin-bottom:0; }
+.form-label { display:block;font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:7px; }
+.form-label .req { color:var(--rejected);margin-left:2px; }
+.form-label .hint { font-size:11px;font-weight:400;color:var(--text-muted);margin-left:6px; }
+
+.form-control, .form-select {
+  width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;font-family:'Sarabun',sans-serif;color:var(--text-main);background:var(--card-bg);
+  outline:none;transition:border-color .15s, box-shadow .15s;appearance:none;
+}
+.form-control:focus, .form-select:focus {
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.12);
+}
+.form-control::placeholder { color:#CBD5E1;font-size:13px; }
+textarea.form-control { resize:vertical;min-height:100px; }
+
+.input-icon-wrap { position:relative; }
+.input-icon-wrap .bi { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:15px;pointer-events:none; }
+.input-icon-wrap .form-control { padding-left:36px; }
+
+/* PRIORITY RADIO */
+.priority-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+.priority-card {
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;
+  transition:all .15s;text-align:center;
+}
+.priority-card:hover { border-color:#94A3B8; }
+.priority-card input[type=radio] { display:none; }
+.priority-card .pc-icon { font-size:20px;margin-bottom:4px;display:block; }
+.priority-card .pc-label { font-size:12px;font-weight:600; }
+.priority-card .pc-sub { font-size:10px;color:var(--text-muted);margin-top:1px; }
+.priority-card.low.selected  { border-color:#10B981;background:#ECFDF5; }
+.priority-card.med.selected  { border-color:#F59E0B;background:#FFFBEB; }
+.priority-card.high.selected { border-color:#EF4444;background:#FEF2F2; }
+
+/* ===================== SLA BLOCK ===================== */
+.sla-block {
+  margin-top: 14px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1.5px solid var(--sla-color, var(--border));
+  background: var(--sla-bg, #F8FAFC);
+  animation: slaFadeIn .25s ease;
+}
+@keyframes slaFadeIn {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.sla-header {
+  background: var(--sla-color, #64748B);
+  color: #fff;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sla-header .sla-badge {
+  background: rgba(255,255,255,.22);
+  border-radius: 99px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.sla-body { padding: 12px 14px; display: flex; gap: 12px; align-items: stretch; }
+.sla-deadline-col { flex:1; }
+.sla-dl-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.sla-dl-time { font-size: 15px; font-weight: 700; color: var(--text-main); font-family: 'Courier New', monospace; letter-spacing: .02em; }
+.sla-dl-date { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.sla-divider { width: 1px; background: var(--border); flex-shrink: 0; margin: 0 4px; }
+.sla-countdown-col { flex:1; text-align: center; }
+.sla-cd-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.sla-cd-digits {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+.sla-digit-group { text-align: center; }
+.sla-digit {
+  background: var(--sla-color, #64748B);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  border-radius: 5px;
+  padding: 3px 7px;
+  min-width: 34px;
+  display: inline-block;
+  line-height: 1.3;
+  transition: background .3s;
+}
+.sla-digit-unit { font-size: 9px; color: var(--text-muted); margin-top: 2px; font-weight: 600; letter-spacing: .04em; }
+.sla-colon { font-size: 18px; font-weight: 700; color: var(--text-muted); padding: 0 1px; line-height: 1.6; animation: blink 1s step-start infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.sla-progress-wrap { padding: 0 14px 12px; }
+.sla-prog-row { display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:4px; }
+.sla-progress { height: 5px; border-radius: 99px; background: var(--border); overflow:hidden; }
+.sla-progress-fill { height: 100%; border-radius: 99px; background: var(--sla-color, #64748B); transition: width .5s ease; }
+.sla-block.urgent .sla-digit {
+  animation: urgentPulse 1.5s ease-in-out infinite;
+}
+@keyframes urgentPulse {
+  0%,100% { opacity:1; }
+  50% { opacity:.7; }
+}
+/* ===================== END SLA ===================== */
+
+/* FILE UPLOAD */
+.file-drop {
+  border:2px dashed var(--border);border-radius:var(--radius-sm);padding:24px;text-align:center;
+  cursor:pointer;transition:all .15s;background:#FAFBFC;
+}
+.file-drop:hover, .file-drop.drag { border-color:var(--primary);background:var(--primary-light); }
+.file-drop .fd-icon { font-size:32px;color:var(--text-muted);margin-bottom:8px; }
+.file-drop .fd-title { font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:3px; }
+.file-drop .fd-sub { font-size:11px;color:var(--text-muted); }
+.file-drop input[type=file] { display:none; }
+.file-preview { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+.file-thumb {
+  width:70px;height:70px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  position:relative;overflow:hidden;background:#F8FAFC;display:flex;align-items:center;justify-content:center;
+}
+.file-thumb img { width:100%;height:100%;object-fit:cover; }
+.file-thumb .ft-remove {
+  position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+  background:rgba(0,0,0,0.5);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+
+/* ===================== RECENT TASKS ===================== */
+.recent-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .12s;
+}
+.recent-item:last-child { border-bottom: none; padding-bottom: 0; }
+.recent-item:first-child { padding-top: 0; }
+.recent-item:hover { background: #F8FAFC; margin: 0 -20px; padding-left: 20px; padding-right: 20px; border-radius: var(--radius-sm); }
+
+.ri-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.ri-dot.pending  { background: var(--pending); box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+.ri-dot.done     { background: var(--done);    box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+.ri-dot.progress { background: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+
+.ri-body { flex: 1; min-width: 0; }
+.ri-title { font-size: 13px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.ri-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ri-ticket { font-size: 10px; font-family: monospace; color: var(--primary); font-weight: 700; background: var(--primary-light); padding: 1px 6px; border-radius: 4px; }
+.ri-time { font-size: 11px; color: var(--text-muted); }
+
+.ri-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap;
+}
+.ri-badge.pending  { background: #FFFBEB; color: #D97706; }
+.ri-badge.done     { background: #ECFDF5; color: #059669; }
+.ri-badge.progress { background: var(--primary-light); color: var(--primary); }
+
+.recent-empty {
+  text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px;
+}
+.recent-empty .bi { font-size: 32px; display: block; margin-bottom: 8px; opacity: .35; }
+
+.recent-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.recent-footer a {
+  font-size: 12px; color: var(--primary); text-decoration: none; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.recent-footer a:hover { text-decoration: underline; }
+/* ===================== END RECENT ===================== */
+
+/* SUBMIT AREA */
+.submit-area {
+  background:var(--card-bg);border-top:1px solid var(--border);
+  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;bottom:0;z-index:40;
+}
+.btn-primary-lg {
+  background:var(--primary);color:#fff;border:none;padding:12px 28px;border-radius:var(--radius-sm);
+  font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:background .15s;
+}
+.btn-primary-lg:hover { background:var(--primary-dark); }
+.btn-cancel { background:transparent;color:var(--text-muted);border:none;padding:11px 16px;font-size:14px;cursor:pointer;font-family:inherit;transition:color .15s; }
+.btn-cancel:hover { color:var(--rejected); }
+
+/* SUCCESS MODAL */
+.modal-overlay {
+  position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:200;display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.show { display:flex; }
+.modal-box { background:#fff;border-radius:20px;padding:40px;text-align:center;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+.modal-icon { width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:36px;color:#10B981;margin:0 auto 20px; }
+.modal-box h5 { font-size:20px;font-weight:700;margin-bottom:8px; }
+.modal-ticket { background:var(--primary-light);color:var(--primary);font-size:22px;font-weight:700;font-family:'Courier New',monospace;padding:12px 24px;border-radius:var(--radius-sm);margin-bottom:20px;display:inline-block; }
+.modal-actions { display:flex;gap:10px;justify-content:center; }
+.btn-mod-track { background:var(--primary);color:#fff;border:none;padding:10px 22px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit; }
+.btn-mod-new { background:transparent;color:var(--primary);border:1px solid var(--primary);padding:10px 22px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit; }
+
+/* CHAR COUNTER */
+.char-counter { font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px; }
+
+/* SCROLL */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:#CBD5E1;border-radius:99px; }
+
+#validate-msg { display:flex;align-items:center;gap:6px; }
+
+.sla-summary-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 99px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+}
+
+@media (max-width:1100px) {
+  .form-layout { grid-template-columns:1fr; }
+  .sidebar { width:60px; }
+  .sidebar-logo h6, .sidebar-logo small, .nav-item span, .nav-badge, .nav-label, .sidebar-user > div, .btn-logout span { display:none; }
+  .main { margin-left:60px; }
+}
+@media (max-width:600px) {
+  .priority-grid { grid-template-columns:1fr 1fr; }
+  .content { padding:16px; }
+  .submit-area { padding:12px 16px;flex-wrap:wrap;gap:8px; }
+  .sla-body { flex-direction: column; gap: 8px; }
+  .sla-divider { width:100%; height:1px; margin:4px 0; }
+  .sla-countdown-col { text-align:left; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="bi bi-tools"></i></div>
+    <h6>ระบบแจ้งงาน</h6>
+    <small>Task Management v1.0</small>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">หลัก</div>
+    <a class="nav-item" onclick="setActive(this); window.location.href='/index'"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a class="nav-item active"><i class="bi bi-plus-circle-fill"></i><span>แจ้งงาน</span></a>
+    <a class="nav-item" onclick="setActive(this); window.location.href='/timeline'"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
+    <a class="nav-item" onclick="setActive(this); window.location.href='/history'"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
+    <div class="nav-label">เจ้าหน้าที่</div>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red">5</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/queue'"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-list-ol"></i><span>คิวงาน</span><span class="nav-badge">12</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-chat-dots"></i><span>แชท</span></a>
+    <div class="nav-label">Admin</div>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">--</div>
+    <div>
+      <span id="user-fullname">กำลังโหลด...</span>
+      <small id="user-role">--</small>
+    </div>
+  </div>
+  <button class="btn-logout" onclick="if(confirm('ออกจากระบบ?')){ window.location.href='/logout'; }">
+    <i class="bi bi-box-arrow-left" style="font-size:16px"></i>
+    <span>ออกจากระบบ</span>
+  </button>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">แจ้งงานใหม่</div>
+      <div class="breadcrumb-nav">
+        <a href="#">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:10px"></i>
+        <span>แจ้งงาน</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TICKET ID BAR -->
+    <div class="ticket-bar">
+      <div>
+        <div class="tk-label">หมายเลข Ticket</div>
+        <div class="tk-num" id="ticket-id">-</div>
+        <div class="tk-date"><i class="bi bi-calendar3" style="font-size:11px"></i> <span id="tk-date"></span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="tk-status" style="margin-bottom:8px"><span>รอดำเนินการ</span></div>
+      </div>
+    </div>
+
+    <!-- MAIN FORM LAYOUT -->
+    <div class="form-layout">
+
+      <!-- LEFT: FORM -->
+      <div>
+
+        <!-- SECTION 1: ข้อมูลพื้นฐาน -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6>
+              <span class="ch-icon" style="background:#EFF6FF;color:#2563EB"><i class="bi bi-info-circle-fill"></i></span>
+              ข้อมูลพื้นฐาน
+            </h6>
+            <span style="font-size:11px;color:var(--text-muted)">กรอกข้อมูลให้ครบก่อนส่ง</span>
+          </div>
+          <div class="card-body-pad">
+            <div class="form-group">
+              <label class="form-label">หัวข้อ <span class="req">*</span></label>
+              <input type="text" class="form-control" id="task-title" placeholder="เช่น เครื่องปรับอากาศไม่ทำงาน ห้องประชุม A1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">รายละเอียด</label>
+              <textarea class="form-control" id="task-detail" rows="4" placeholder="อธิบาย..." oninput="countChars(this, 'char-detail', 500)"></textarea>
+              <div class="char-counter" id="char-detail">0 / 500</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ผู้แจ้ง</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-person"></i>
+                <input type="text" class="form-control" id="contact-name" value="" readonly style="background:#F8FAFC;color:var(--text-muted)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: ความเร่งด่วน -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6>
+              <span class="ch-icon" style="background:#FEF2F2;color:#EF4444"><i class="bi bi-exclamation-triangle-fill"></i></span>
+              ระดับความเร่งด่วน
+            </h6>
+          </div>
+          <div class="card-body-pad">
+            <div class="priority-grid">
+              <label class="priority-card low" onclick="selectPriority(this,'low')">
+                <input type="radio" name="priority" value="low">
+                <span class="pc-icon">🟢</span>
+                <div class="pc-label" style="color:#059669">ปกติ</div>
+                <div class="pc-sub">SLA 72 ชม.</div>
+              </label>
+              <label class="priority-card med" onclick="selectPriority(this,'med')">
+                <input type="radio" name="priority" value="med">
+                <span class="pc-icon">🟡</span>
+                <div class="pc-label" style="color:#D97706">ปานกลาง</div>
+                <div class="pc-sub">SLA 24 ชม.</div>
+              </label>
+              <label class="priority-card high" onclick="selectPriority(this,'high')">
+                <input type="radio" name="priority" value="high">
+                <span class="pc-icon">🔴</span>
+                <div class="pc-label" style="color:#DC2626">ด่วน</div>
+                <div class="pc-sub">SLA 4 ชม.</div>
+              </label>
+            </div>
+
+            <!-- SLA BLOCK -->
+            <div id="sla-block" class="sla-block" style="display:none">
+              <div class="sla-header">
+                <span><i class="bi bi-clock-history" style="margin-right:5px"></i>กำหนด SLA</span>
+                <span class="sla-badge" id="sla-badge-label">—</span>
+              </div>
+              <div class="sla-body">
+                <div class="sla-deadline-col">
+                  <div class="sla-dl-label">📅 Deadline</div>
+                  <div class="sla-dl-time" id="sla-dl-time">—</div>
+                  <div class="sla-dl-date" id="sla-dl-date">—</div>
+                </div>
+                <div class="sla-divider"></div>
+                <div class="sla-countdown-col">
+                  <div class="sla-cd-label">⏱ เวลาที่เหลือ</div>
+                  <div class="sla-cd-digits">
+                    <div class="sla-digit-group">
+                      <div class="sla-digit" id="cd-d">00</div>
+                      <div class="sla-digit-unit">วัน</div>
+                    </div>
+                    <div class="sla-colon">:</div>
+                    <div class="sla-digit-group">
+                      <div class="sla-digit" id="cd-h">00</div>
+                      <div class="sla-digit-unit">ชม.</div>
+                    </div>
+                    <div class="sla-colon">:</div>
+                    <div class="sla-digit-group">
+                      <div class="sla-digit" id="cd-m">00</div>
+                      <div class="sla-digit-unit">นาที</div>
+                    </div>
+                    <div class="sla-colon">:</div>
+                    <div class="sla-digit-group">
+                      <div class="sla-digit" id="cd-s">00</div>
+                      <div class="sla-digit-unit">วินาที</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div style="margin-top:16px">
+              <label class="form-label">หมายเหตุเพิ่มเติม <span class="hint">(ถ้ามี)</span></label>
+              <textarea class="form-control" id="priority-note" rows="2" placeholder="ข้อมูลเพิ่มเติม..." oninput="countChars(this,'char-pnote',200)"></textarea>
+              <div class="char-counter" id="char-pnote">0 / 200</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: แนบรูป -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6>
+              <span class="ch-icon" style="background:#F0FDF4;color:#16A34A"><i class="bi bi-images"></i></span>
+              แนบรูปภาพ / เอกสาร <span class="hint" style="font-size:11px;font-weight:400;color:var(--text-muted)">(ไม่เกิน 5 ไฟล์, สูงสุดไฟล์ละ 10MB)</span>
+            </h6>
+          </div>
+          <div class="card-body-pad">
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+              <input type="file" id="file-input" accept="image/*,.pdf" multiple onchange="handleFiles(this.files)">
+              <div class="fd-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+              <div class="fd-title">คลิกหรือลากไฟล์มาวางที่นี่</div>
+              <div class="fd-sub">รองรับ JPG, PNG, PDF · สูงสุด 10MB ต่อไฟล์</div>
+            </div>
+            <div class="file-preview" id="file-preview"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: SIDEBAR -->
+      <div>
+
+        <!-- RECENT TASKS CARD -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6>
+              <span class="ch-icon" style="background:#F1F5F9;color:#64748B"><i class="bi bi-clock-history"></i></span>
+              รายการล่าสุด
+            </h6>
+            <span style="font-size:11px;color:var(--text-muted)" id="recent-count">—</span>
+          </div>
+          <div class="card-body-pad" id="recent-list">
+            <!-- populated by JS -->
+            <div class="recent-empty">
+              <i class="bi bi-inbox"></i>
+              ยังไม่มีรายการ
+            </div>
+          </div>
+          <div class="recent-footer">
+            <a href="/history"><i class="bi bi-arrow-right-circle"></i> ดูประวัติทั้งหมด</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT AREA -->
+  <div class="submit-area">
+    <button class="btn-cancel" onclick="if(confirm('ยกเลิกและล้างข้อมูลทั้งหมด?')){ resetForm(); }">
+      <i class="bi bi-x-lg"></i> ยกเลิก
+    </button>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div id="validate-msg" style="font-size:12px;color:var(--rejected);display:none"><i class="bi bi-exclamation-circle"></i></div>
+      <button class="btn-primary-lg" onclick="submitForm()">
+        <i class="bi bi-send-fill"></i> ส่งงาน
+      </button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button onclick="closeModal()" style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-icon"><i class="bi bi-check-lg"></i></div>
+    <h5>ส่งงานสำเร็จ! 🎉</h5>
+    <div class="modal-ticket" id="modal-ticket-num">TK-0249</div>
+    <div id="modal-sla-info" style="display:none;background:#F8FAFC;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;text-align:left">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <i class="bi bi-clock" style="color:var(--primary)"></i>
+        <span style="font-weight:600;color:var(--text-main)">กำหนด SLA</span>
+        <span id="modal-sla-badge" class="sla-summary-badge"></span>
+      </div>
+      <div style="color:var(--text-muted)">ต้องเสร็จภายใน: <strong id="modal-sla-deadline" style="color:var(--text-main)">—</strong></div>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px">กด "ติดตามงาน" เพื่อดูความคืบหน้า</div>
+    <div class="modal-actions">
+      <button class="btn-mod-track" onclick="goToTrackPage()"><i class="bi bi-eye"></i> ติดตามงาน</button>
+      <button class="btn-mod-new" onclick="resetForm()"><i class="bi bi-plus-lg"></i> แจ้งงานใหม่</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// SLA CONFIG
+// =====================================================================
+const SLA_CONFIG = {
+  low:  { hours: 72, label: 'ปกติ (72 ชม.)',     color: '#10B981', bg: '#ECFDF5', emoji: '🟢' },
+  med:  { hours: 24, label: 'ปานกลาง (24 ชม.)', color: '#F59E0B', bg: '#FFFBEB', emoji: '🟡' },
+  high: { hours:  4, label: 'ด่วน (4 ชม.)',      color: '#EF4444', bg: '#FEF2F2', emoji: '🔴' },
+};
+
+let slaDeadline = null;
+let slaLevel    = null;
+let cdInterval  = null;
+
+// =====================================================================
+// PRIORITY + SLA
+// =====================================================================
+function selectPriority(el, level) {
+  document.querySelectorAll('.priority-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  slaLevel = level;
+  const cfg = SLA_CONFIG[level];
+  const now = new Date();
+  slaDeadline = new Date(now.getTime() + cfg.hours * 60 * 60 * 1000);
+
+  const block = document.getElementById('sla-block');
+  block.style.setProperty('--sla-color', cfg.color);
+  block.style.setProperty('--sla-bg', cfg.bg);
+  block.classList.toggle('urgent', level === 'high');
+
+  document.getElementById('sla-badge-label').textContent = cfg.label;
+  document.getElementById('sla-dl-time').textContent = formatTime(slaDeadline);
+  document.getElementById('sla-dl-date').textContent  = formatDateThai(slaDeadline);
+
+  block.style.display = 'block';
+
+  if (cdInterval) clearInterval(cdInterval);
+  tickCountdown();
+  cdInterval = setInterval(tickCountdown, 1000);
+}
+
+function tickCountdown() {
+  if (!slaDeadline) return;
+  const cfg = SLA_CONFIG[slaLevel];
+  const now  = new Date();
+  const diff = slaDeadline - now;
+
+  if (diff <= 0) {
+    ['cd-d','cd-h','cd-m','cd-s'].forEach(id => document.getElementById(id).textContent = '00');
+    document.getElementById('sla-pct').textContent  = '100%';
+    document.getElementById('sla-fill').style.width = '100%';
+    clearInterval(cdInterval);
+    return;
+  }
+
+  const totalMs = cfg.hours * 3600 * 1000;
+  const elapsed = totalMs - diff;
+  const pct = Math.min(100, Math.round((elapsed / totalMs) * 100));
+
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000)  / 60000);
+  const secs  = Math.floor((diff % 60000)    / 1000);
+
+  document.getElementById('cd-d').textContent = String(days).padStart(2,'0');
+  document.getElementById('cd-h').textContent = String(hours).padStart(2,'0');
+  document.getElementById('cd-m').textContent = String(mins).padStart(2,'0');
+  document.getElementById('cd-s').textContent = String(secs).padStart(2,'0');
+  document.getElementById('sla-pct').textContent  = pct + '%';
+  document.getElementById('sla-fill').style.width = pct + '%';
+}
+
+// =====================================================================
+// DATE HELPERS
+// =====================================================================
+const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
+                     'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function formatTime(d) {
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  return `${h}:${m} น.`;
+}
+
+function formatDateThai(d) {
+  const day   = d.getDate();
+  const month = THAI_MONTHS[d.getMonth()];
+  const year  = d.getFullYear() + 543;
+  return `${day} ${month} ${year}`;
+}
+
+function timeAgo(dateStr) {
+  const now  = new Date();
+  const past = new Date(dateStr);
+  const diff = Math.floor((now - past) / 60000); // minutes
+  if (diff < 1)  return 'เพิ่งสักครู่';
+  if (diff < 60) return `${diff} นาทีที่แล้ว`;
+  const h = Math.floor(diff / 60);
+  if (h < 24)    return `${h} ชม.ที่แล้ว`;
+  const d = Math.floor(h / 24);
+  return `${d} วันที่แล้ว`;
+}
+
+// =====================================================================
+// RECENT TASKS
+// =====================================================================
+const STATUS_MAP = {
+  pending:    { label: 'รอดำเนินการ', cls: 'pending' },
+  inprogress: { label: 'กำลังดำเนินการ', cls: 'progress' },
+  done:       { label: 'เสร็จแล้ว', cls: 'done' },
+};
+
+// cache of tasks shown (max 6)
+let recentCache = [];
+
+function taskToHtml(t) {
+  const st = STATUS_MAP[t.status] || { label: t.status, cls: 'pending' };
+  const ticketNo = 'TK-' + String(t.id).padStart(4, '0');
+  return `
+    <div class="recent-item" id="ri-${t.id}" onclick="window.location.href='/timeline?id=${ticketNo}'">
+      <div class="ri-dot ${st.cls}"></div>
+      <div class="ri-body">
+        <div class="ri-title">${escHtml(t.title)}</div>
+        <div class="ri-meta">
+          <span class="ri-ticket">${ticketNo}</span>
+          <span class="ri-time">${timeAgo(t.created_at)}</span>
+        </div>
+      </div>
+      <span class="ri-badge ${st.cls}">${st.label}</span>
+    </div>`;
+}
+
+function renderRecentTasks(tasks) {
+  const list    = document.getElementById('recent-list');
+  const countEl = document.getElementById('recent-count');
+  recentCache   = tasks.slice(0, 6);
+
+  if (recentCache.length === 0) {
+    list.innerHTML = `<div class="recent-empty"><i class="bi bi-inbox"></i>ยังไม่มีรายการ</div>`;
+    countEl.textContent = '0 รายการ';
+    return;
+  }
+
+  countEl.textContent = `${recentCache.length} รายการล่าสุด`;
+  list.innerHTML = recentCache.map(taskToHtml).join('');
+}
+
+function prependRecentTask(t) {
+  // remove empty state if present
+  const list    = document.getElementById('recent-list');
+  const countEl = document.getElementById('recent-count');
+  const empty   = list.querySelector('.recent-empty');
+  if (empty) empty.remove();
+
+  // prepend to DOM
+  list.insertAdjacentHTML('afterbegin', taskToHtml(t));
+
+  // update cache & trim to 6
+  recentCache.unshift(t);
+  if (recentCache.length > 6) {
+    recentCache.pop();
+    const items = list.querySelectorAll('.recent-item');
+    if (items.length > 6) items[items.length - 1].remove();
+  }
+
+  countEl.textContent = `${Math.min(recentCache.length, 6)} รายการล่าสุด`;
+
+  // flash highlight
+  const newEl = list.querySelector('.recent-item');
+  if (newEl) {
+    newEl.style.transition = 'background .4s';
+    newEl.style.background = 'var(--primary-light)';
+    setTimeout(() => { newEl.style.background = ''; }, 1200);
+  }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadRecentTasks() {
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    renderRecentTasks(Array.isArray(data) ? data.slice(0, 6) : []);
+  } catch {
+    renderRecentTasks([]);
+  }
+}
+
+// =====================================================================
+// FILE UPLOAD
+// =====================================================================
+let uploadedFiles = [];
+function handleFiles(files) {
+  const preview = document.getElementById('file-preview');
+  [...files].slice(0, 5 - uploadedFiles.length).forEach(file => {
+    uploadedFiles.push(file);
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const idx = uploadedFiles.length - 1;
+        preview.innerHTML += `<div class="file-thumb" id="ft-${idx}"><img src="${e.target.result}" alt="preview"><div class="ft-remove" onclick="removeFile(${idx})"><i class="bi bi-x"></i></div></div>`;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const idx = uploadedFiles.length - 1;
+      preview.innerHTML += `<div class="file-thumb" id="ft-${idx}" style="flex-direction:column;gap:4px"><i class="bi bi-file-earmark-pdf" style="font-size:24px;color:#EF4444"></i><span style="font-size:9px;color:var(--text-muted);text-align:center;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%">${file.name}</span><div class="ft-remove" onclick="removeFile(${idx})"><i class="bi bi-x"></i></div></div>`;
+    }
+  });
+}
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  const el = document.getElementById('ft-' + idx);
+  if (el) el.remove();
+}
+function dragOver(e) { e.preventDefault(); document.getElementById('file-drop').classList.add('drag'); }
+function dragLeave()  { document.getElementById('file-drop').classList.remove('drag'); }
+function dropFile(e)  { e.preventDefault(); dragLeave(); handleFiles(e.dataTransfer.files); }
+
+// =====================================================================
+// CHAR COUNT
+// =====================================================================
+function countChars(el, counterId, max) {
+  const c = el.value.length;
+  const el2 = document.getElementById(counterId);
+  el2.textContent = `${c} / ${max}`;
+  el2.style.color = c > max * 0.9 ? 'var(--pending)' : 'var(--text-muted)';
+}
+
+// =====================================================================
+// SUBMIT
+// =====================================================================
+async function submitForm() {
+  const title      = document.getElementById('task-title').value.trim();
+  const detail     = document.getElementById('task-detail').value.trim();
+  const priorityEl = document.querySelector('input[name="priority"]:checked');
+  const msg        = document.getElementById('validate-msg');
+
+  if (!title || !priorityEl) {
+    const errorText = !title ? 'กรุณากรอกหัวข้องาน' : 'กรุณาเลือกระดับความเร่งด่วน';
+    msg.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${errorText}`;
+    msg.style.display = 'flex';
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('title',    title);
+    formData.append('detail',   detail);
+    formData.append('priority', priorityEl.value);
+    formData.append('note',     document.getElementById('priority-note').value.trim());
+    if (slaDeadline) formData.append('sla_deadline', slaDeadline.toISOString());
+    if (uploadedFiles.length > 0) formData.append('file', uploadedFiles[0]);
+
+    const res  = await fetch('/api/submit-ticket', { method:'POST', body:formData });
+    const data = await res.json();
+
+    if (data.success) {
+      if (slaLevel && slaDeadline) {
+        const cfg = SLA_CONFIG[slaLevel];
+        const modalSla = document.getElementById('modal-sla-info');
+        modalSla.style.display = 'block';
+        const badge = document.getElementById('modal-sla-badge');
+        badge.textContent = cfg.emoji + ' ' + cfg.label;
+        badge.style.cssText = `background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.color}40`;
+        document.getElementById('modal-sla-deadline').textContent =
+          `${formatDateThai(slaDeadline)} · ${formatTime(slaDeadline)}`;
+      }
+      document.getElementById('success-modal').classList.add('show');
+
+      // prepend new ticket into recent list immediately
+      prependRecentTask({
+        id:        data.ticketId,
+        title:     title,
+        status:    'pending',
+        priority:  priorityEl.value,
+        created_at: new Date().toISOString(),
+      });
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + data.error);
+    }
+  } catch (err) {
+    alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+  }
+}
+
+function closeModal() { document.getElementById('success-modal').classList.remove('show'); }
+
+function resetForm() {
+  closeModal();
+  if (cdInterval) { clearInterval(cdInterval); cdInterval = null; }
+  slaDeadline = null; slaLevel = null;
+  document.getElementById('task-title').value    = '';
+  document.getElementById('task-detail').value   = '';
+  document.getElementById('priority-note').value = '';
+  document.getElementById('file-preview').innerHTML = '';
+  document.querySelectorAll('.priority-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('sla-block').style.display = 'none';
+  uploadedFiles = [];
+  document.getElementById('modal-sla-info').style.display = 'none';
+  const cur  = parseInt(document.getElementById('ticket-id').textContent.replace('TK-',''));
+  const next = 'TK-' + String(cur + 1).padStart(4,'0');
+  document.getElementById('ticket-id').textContent        = next;
+  document.getElementById('modal-ticket-num').textContent = next;
+}
+
+function setActive(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function goToTrackPage() { window.location.href = '/timeline'; }
+
+// =====================================================================
+// DATE TIME
+// =====================================================================
+function setThaiDateTime() {
+  const now = new Date();
+  const thaiYear = now.getFullYear() + 543;
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const day  = now.getDate();
+  const month = months[now.getMonth()];
+  const hour  = String(now.getHours()).padStart(2,'0');
+  const min   = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('tk-date').textContent =
+    `วันที่ ${day} ${month} ${thaiYear} · ${hour}:${min} น.`;
+}
+setThaiDateTime();
+
+// =====================================================================
+// LOAD USER + RECENT
+// =====================================================================
+async function loadUser() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    document.getElementById('user-fullname').textContent = data.fullName;
+    document.getElementById('user-role').textContent     = data.role;
+    document.getElementById('user-avatar').textContent   = data.fullName.substring(0, 2);
+    const contact = document.getElementById('contact-name');
+    if (contact) contact.value = data.fullName;
+
+    const tkRes  = await fetch('/api/next-ticket');
+    const tkData = await tkRes.json();
+    document.getElementById('ticket-id').textContent        = tkData.ticketNo;
+    document.getElementById('modal-ticket-num').textContent = tkData.ticketNo;
+  } catch(e) { console.error(e); }
+}
+
+loadUser();
+loadRecentTasks();
+</script>
+</body>
+</html>
