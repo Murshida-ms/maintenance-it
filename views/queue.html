@@ -46,8 +46,7 @@ body {
 .nav-item .bi { font-size: 17px; width: 20px; flex-shrink: 0; }
 .nav-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 10px; padding: 1px 7px; border-radius: 99px; font-weight: 600; }
 .nav-badge.red { background: var(--rejected); }
-/* ======= SIDEBAR USER (รวมปุ่ม logout) ======= */
-  .sidebar-user {
+.sidebar-user {
     padding: 14px 12px;
     border-top: 1px solid rgba(255,255,255,0.06);
     display: flex;
@@ -64,42 +63,19 @@ body {
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .user-info {
-    flex: 1;
-    min-width: 0;
-  }
+  .user-info { flex: 1; min-width: 0; }
   .sidebar-user .user-name {
-    color: #F1F5F9;
-    font-size: 13px;
-    font-weight: 500;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: #F1F5F9; font-size: 13px; font-weight: 500;
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .sidebar-user .user-role {
-    color: var(--sidebar-text);
-    font-size: 11px;
-    display: block;
-  }
-  /* ปุ่ม logout แบบ icon เล็กๆ ข้างชื่อ */
+  .sidebar-user .user-role { color: var(--sidebar-text); font-size: 11px; display: block; }
   .btn-logout-icon {
-    width: 30px; height: 30px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent;
-    color: var(--sidebar-text);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    flex-shrink: 0;
-    font-size: 15px;
+    width: 30px; height: 30px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.08); background: transparent;
+    color: var(--sidebar-text); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0; font-size: 15px;
   }
-  .btn-logout-icon:hover {
-    background: rgba(239,68,68,0.15);
-    color: #F87171;
-    border-color: rgba(239,68,68,0.3);
-  }
+  .btn-logout-icon:hover { background: rgba(239,68,68,0.15); color: #F87171; border-color: rgba(239,68,68,0.3); }
 
 /* MAIN */
 .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
@@ -133,31 +109,14 @@ body {
 .d-pri-med  { background: #FEF9C3; color: #854D0E; }
 .d-pri-low  { background: #DCFCE7; color: #166534; }
 .d-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
-
-/* DETAIL SECTION */
-
-/* NOTE SECTION */
-.d-note-block { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 7px 10px; margin-bottom: 6px; display: flex; gap: 7px; align-items: flex-start; }
-.d-note-block .bi { color: #D97706; font-size: 12px; margin-top: 1px; flex-shrink: 0; }
-.d-note-text { font-size: 12px; color: #78350F; line-height: 1.5; word-break: break-word; }
-
 .d-meta { display: flex; gap: 10px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; margin-top: 4px; }
 .d-meta span { display: flex; align-items: center; gap: 3px; }
-
-/* EXPAND/COLLAPSE toggle */
-.d-toggle-detail { font-size: 11px; color: var(--primary); cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
-.d-toggle-detail:hover { text-decoration: underline; }
-.d-expandable { display: none; margin-top: 8px; }
-.d-expandable.open { display: block; }
 
 /* ASSIGNED CARD */
 .d-assigned-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--done); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px; }
 .d-assigned-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--done-bg); color: var(--done); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 .d-assigned-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .d-assigned-to { font-size: 11px; color: var(--done); font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
-.d-assigned-loc { font-size: 11px; color: var(--text-muted); }
-/* detail in assigned */
-.d-assigned-note { font-size: 11px; color: #92400E; background: #FFFBEB; border-radius: 4px; padding: 3px 7px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; }
 
 /* DIVIDER & SECTION LABEL */
 .d-divider { border: none; border-top: 1px solid var(--border); }
@@ -165,7 +124,7 @@ body {
 
 /* STAFF CARDS */
 .d-staff-card { background: var(--body-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
-.d-staff-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.d-staff-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-color: #94A3B8; }
 .d-staff-card.d-staff-selected { border: 1.5px solid var(--primary); background: #EFF6FF; }
 .d-staff-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .d-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
@@ -189,6 +148,11 @@ body {
 .d-score-fill { height: 100%; border-radius: 99px; background: var(--done); }
 .d-score-num { font-size: 11px; font-weight: 700; color: #065F46; min-width: 32px; text-align: right; }
 
+/* SKILL TAGS */
+.d-skill-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.d-skill-tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: #F1F5F9; border: 1px solid var(--border); color: var(--text-muted); }
+.d-skill-tag.matched { background: #D1FAE5; border-color: #6EE7B7; color: #065F46; font-weight: 600; }
+
 /* BADGES */
 .d-badge-count { background: var(--rejected); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; }
 .d-badge-done  { background: var(--done-bg); color: #065F46; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; display: inline-flex; align-items: center; gap: 3px; }
@@ -199,14 +163,7 @@ body {
 .d-assign-btn:hover:not(:disabled) { background: var(--primary-dark); }
 .d-assign-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
 
-/* DUE DATE BADGES */
-.due-ok      { color: #065F46; background: #D1FAE5; }
-.due-soon    { color: #92400E; background: #FEF3C7; }
-.due-today   { color: #7C2D12; background: #FED7AA; }
-.due-overdue { color: #fff;    background: var(--rejected); }
-.d-due-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; }
-
-/* REPORTER ROW */
+/* SKELETON */
 .skeleton { background: linear-gradient(90deg,#E2E8F0 25%,#F1F5F9 50%,#E2E8F0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .sk-line { height: 12px; margin-bottom: 8px; }
@@ -257,8 +214,6 @@ body {
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
   </nav>
-
-  <!-- USER + LOGOUT ในแถวเดียวกัน -->
   <div class="sidebar-user">
     <div class="user-avatar" id="user-avatar">--</div>
     <div class="user-info">
@@ -298,11 +253,6 @@ body {
           <div class="skeleton sk-line" style="width:75%"></div>
           <div class="skeleton sk-line" style="width:55%"></div>
         </div>
-        <div style="background:var(--body-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
-          <div class="skeleton sk-line" style="width:45%"></div>
-          <div class="skeleton sk-line" style="width:70%"></div>
-          <div class="skeleton sk-line" style="width:50%"></div>
-        </div>
       </div>
     </div>
   </div>
@@ -312,11 +262,42 @@ body {
 
 <script>
 // ============================================================
-//  STAFF DATA
+//  STAFF DATA (สมมติ)
 // ============================================================
-const staffList = [];
+const staffList = [
+  {
+    id: 's1', name: 'ช่างประยงค์ มั่นใจ', role: 'ช่างไฟฟ้า',
+    short: 'ปย', avCls: 'd-av-a',
+    skills: ['ไฟฟ้า', 'แสงสว่าง', 'UPS', 'ระบบไฟ'],
+    active: 2, max: 5
+  },
+  {
+    id: 's2', name: 'ช่างวิชัย สุขใจ', role: 'ช่างระบบเครือข่าย',
+    short: 'วช', avCls: 'd-av-b',
+    skills: ['เน็ตเวิร์ค', 'WiFi', 'Server', 'IT', 'คอมพิวเตอร์'],
+    active: 3, max: 5
+  },
+  {
+    id: 's3', name: 'ช่างสมชาย ดีใจ', role: 'ช่างประปา',
+    short: 'สช', avCls: 'd-av-c',
+    skills: ['ประปา', 'น้ำรั่ว', 'ท่อ', 'ปั๊มน้ำ', 'ระบบน้ำ'],
+    active: 1, max: 5
+  },
+  {
+    id: 's4', name: 'ช่างมานพ รักงาน', role: 'ช่างแอร์/ระบายอากาศ',
+    short: 'มน', avCls: 'd-av-d',
+    skills: ['แอร์', 'ความเย็น', 'ระบายอากาศ', 'HVAC'],
+    active: 4, max: 5
+  },
+  {
+    id: 's5', name: 'ช่างธนา เก่งกาจ', role: 'ช่างทั่วไป',
+    short: 'ธน', avCls: 'd-av-e',
+    skills: ['ซ่อมบำรุง', 'ทาสี', 'งานไม้', 'ก่อสร้าง', 'งานทั่วไป'],
+    active: 0, max: 5
+  },
+];
 
-const prioLabel = { high:'ด่วนมาก', med:'ปานกลาง', low:'ปกติ' };
+const prioLabel = { high: 'ด่วนมาก', med: 'ปานกลาง', low: 'ปกติ' };
 
 // ============================================================
 //  STATE
@@ -325,8 +306,6 @@ let tasks       = [];
 let dSelTicket  = null;
 let dSelStaff   = null;
 let assignedMap = {};
-// track which cards are expanded: { ticketId: true/false }
-let expandedMap = {};
 
 // ============================================================
 //  LOAD TICKETS FROM API
@@ -347,11 +326,10 @@ async function loadTickets() {
         pri:         t.priority || 'low',
         status:      t.status,
         note:        t.note || '',
-        time:        formatCreatedAt(t.created_at),
+        time:        formatTime(t.created_at),
         createdDate: formatDate(t.created_at),
         reporter:    t.reporter || t.reported_by || t.created_by || '—',
-        dueDate:     t.due_date ? formatDate(t.due_date) : null,
-        dueDateRaw:  t.due_date || null,
+        assignee:    t.assignee || '—',
         needs:       [],
       }));
 
@@ -365,7 +343,7 @@ async function loadTickets() {
   }
 }
 
-function formatCreatedAt(dateStr) {
+function formatTime(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
@@ -374,21 +352,7 @@ function formatCreatedAt(dateStr) {
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth() + 1).padStart(2,'0');
-  const yy = d.getFullYear() + 543; // พ.ศ.
-  return `${dd}/${mm}/${yy}`;
-}
-
-function dueDateStatus(dueDateRaw) {
-  if (!dueDateRaw) return null;
-  const now  = new Date();
-  const due  = new Date(dueDateRaw);
-  const diff = Math.ceil((due - now) / (1000 * 60 * 60 * 24)); // วัน
-  if (diff < 0)  return { cls: 'due-overdue', label: `เกินกำหนด ${Math.abs(diff)} วัน`, icon: 'bi-exclamation-triangle-fill' };
-  if (diff === 0) return { cls: 'due-today',   label: 'ครบกำหนดวันนี้',                 icon: 'bi-alarm-fill' };
-  if (diff <= 2)  return { cls: 'due-soon',    label: `อีก ${diff} วัน`,                icon: 'bi-hourglass-split' };
-  return { cls: 'due-ok', label: `อีก ${diff} วัน`, icon: 'bi-calendar-check' };
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543}`;
 }
 
 // ============================================================
@@ -416,16 +380,12 @@ function nowStr() {
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-function truncate(str, n) {
-  if (!str) return '';
-  return str.length > n ? str.substring(0, n) + '…' : str;
-}
 
 // ============================================================
-//  SCORING
+//  SCORING — คำนวณความเหมาะสมของช่างกับงาน
 // ============================================================
 function scoreStaff(ticket, s) {
-  const needs   = ticket.needs || [];
+  const needs = ticket.needs || [];
   const matched = needs.length
     ? s.skills.filter(sk => needs.some(n => n === sk || sk.includes(n) || n.includes(sk)))
     : [];
@@ -448,7 +408,10 @@ function renderDispatch() {
 
   const scoredStaff = dSelTicket
     ? staffList.map(s => ({ ...s, ...scoreStaff(dSelTicket, s) })).sort((a, b) => b.total - a.total)
-    : staffList;
+    : staffList.map(s => {
+        const wlPct = Math.round((s.active / s.max) * 100);
+        return { ...s, total: Math.round((1 - s.active / s.max) * 100), matched: [] };
+      }).sort((a, b) => b.total - a.total);
 
   wrap.innerHTML = `
     <!-- LEFT: รายการงาน -->
@@ -476,18 +439,10 @@ function renderDispatch() {
             <div class="d-title">${escHtml(t.title)}</div>
             ${t.detail ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:5px;line-height:1.5">${escHtml(t.detail)}</div>` : ''}
             <div class="d-meta">
-              <span><i class="bi bi-person" style="font-size:10px"></i>${escHtml(t.reporter)}</span>
-              <span><i class="bi bi-clock" style="font-size:10px"></i>แจ้ง ${t.createdDate} ${t.time} น.</span>
-              ${(() => {
-                if (!t.dueDate) return '';
-                const ds = dueDateStatus(t.dueDateRaw);
-                const color = ds && ds.cls === 'due-overdue' ? 'var(--rejected)'
-                            : ds && ds.cls === 'due-today'   ? '#EA580C'
-                            : ds && ds.cls === 'due-soon'    ? '#D97706'
-                            : 'var(--text-muted)';
-                const label = ds ? ds.label : '';
-                return `<span style="color:${color}"><i class="bi bi-calendar-event" style="font-size:10px"></i>กำหนด ${t.dueDate}${label ? ' · ' + label : ''}</span>`;
-              })()}
+              <span><i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate} ${t.time} น.</span>
+              ${t.reporter && t.reporter !== '—'
+                ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง: ${escHtml(t.reporter)}</span>`
+                : ''}
             </div>
           </div>`;
         }).join('')}
@@ -515,15 +470,16 @@ function renderDispatch() {
                 </div>
                 <div class="d-assigned-name">${escHtml(t.title)}</div>
                 <div class="d-meta" style="margin-top:4px">
-                  <span><i class="bi bi-person" style="font-size:10px"></i>${escHtml(t.reporter)}</span>
-                  <span><i class="bi bi-clock" style="font-size:10px"></i>แจ้ง ${t.createdDate}</span>
-                  ${t.dueDate ? `<span><i class="bi bi-calendar-event" style="font-size:10px"></i>กำหนด ${t.dueDate}</span>` : ''}
+                  <span><i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate}</span>
+                  ${t.reporter && t.reporter !== '—'
+                    ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง: ${escHtml(t.reporter)}</span>`
+                    : ''}
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
                   <span class="d-assigned-to">
                     <i class="bi bi-person-check-fill"></i>${escHtml(a.staffName)}
                   </span>
-                  <span class="d-assigned-loc">${a.at}</span>
+                  <span style="font-size:11px;color:var(--text-muted)">${a.at}</span>
                 </div>
               </div>
             </div>`;
@@ -538,80 +494,86 @@ function renderDispatch() {
       <div class="dispatch-panel-head">
         <i class="bi bi-people" style="font-size:16px;color:var(--text-muted)"></i>
         <h2>${dSelTicket ? 'เลือกผู้รับผิดชอบ' : 'เจ้าหน้าที่ทั้งหมด'}</h2>
+        <span style="font-size:11px;color:var(--text-muted)">${staffList.length} คน</span>
       </div>
       <div class="dispatch-panel-body">
-        ${!dSelTicket
-          ? `<div class="d-empty" style="padding-top:48px">
-               <i class="bi bi-arrow-left-circle" style="font-size:32px"></i>
-               <span>เลือกงาน</span>
-             </div>`
-          : `
-          <div style="background:var(--body-bg);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;border:1px solid var(--border);margin-bottom:4px">
-            <div style="font-weight:600;margin-bottom:5px">${escHtml(dSelTicket.title)}</div>
-            <div class="d-meta">
-              <span><i class="bi bi-person" style="font-size:10px"></i>${escHtml(dSelTicket.reporter)}</span>
-              <span><i class="bi bi-clock" style="font-size:10px"></i>แจ้ง ${dSelTicket.createdDate}</span>
-              ${(() => {
-                if (!dSelTicket.dueDate) return '';
-                const ds = dueDateStatus(dSelTicket.dueDateRaw);
-                const color = ds && ds.cls === 'due-overdue' ? 'var(--rejected)'
-                            : ds && ds.cls === 'due-today'   ? '#EA580C'
-                            : ds && ds.cls === 'due-soon'    ? '#D97706'
-                            : 'var(--text-muted)';
-                const label = ds ? ds.label : '';
-                return `<span style="color:${color}"><i class="bi bi-calendar-event" style="font-size:10px"></i>กำหนด ${dSelTicket.dueDate}${label ? ' · ' + label : ''}</span>`;
-              })()}
+
+        ${dSelTicket ? `
+          <!-- งานที่เลือก -->
+          <div style="background:var(--primary-light);border:1px solid #BFDBFE;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px">
+            <div style="font-weight:600;color:var(--primary);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+              <i class="bi bi-cursor-fill"></i> งานที่เลือก
+            </div>
+            <div style="font-weight:600;font-size:13px;color:var(--text-main)">${escHtml(dSelTicket.title)}</div>
+            <div class="d-meta" style="margin-top:4px">
+              <span>${escHtml(dSelTicket.id)}</span>
+              <span><i class="bi bi-clock" style="font-size:10px"></i>${dSelTicket.createdDate}</span>
+              ${dSelTicket.reporter && dSelTicket.reporter !== '—'
+                ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง: ${escHtml(dSelTicket.reporter)}</span>`
+                : ''}
             </div>
           </div>
-          <div class="d-section-lbl">เลือกผู้รับผิดชอบ</div>
-          ${scoredStaff.map(s => {
-            const isSel = dSelStaff && dSelStaff.id === s.id;
-            const wlPct = Math.round((s.active / s.max) * 100);
-            return `
-            <div class="d-staff-card${isSel ? ' d-staff-selected' : ''}" onclick="dSelectStaff('${s.id}')">
-              <div class="d-staff-top">
-                <div class="d-avatar ${s.avCls}">${s.short}</div>
-                <div>
-                  <div class="d-staff-name">${escHtml(s.name)}</div>
-                  <div class="d-staff-role">${escHtml(s.role)}</div>
-                </div>
-                <div class="d-staff-right">
-                  <div class="d-wl-num" style="color:${wlColor(wlPct)}">${s.active}/${s.max}</div>
-                  <div class="d-wl-lbl">งานในมือ</div>
-                </div>
-              </div>
-              <div class="d-wl-bar">
-                <div class="d-wl-fill ${wlCls(wlPct)}" style="width:${wlPct}%"></div>
-              </div>
-              <div class="d-match-score">
-                <span style="color:var(--text-muted)">ความเหมาะสม</span>
-                <div class="d-score-bar">
-                  <div class="d-score-fill" style="width:${s.total}%"></div>
-                </div>
-                <span class="d-score-num">${s.total}%</span>
-              </div>
-            </div>`;
-          }).join('')}
+          <div class="d-section-lbl" style="margin-top:4px">
+            <i class="bi bi-sort-down"></i> เลือกผู้รับผิดชอบ
+          </div>
+        ` : `
+          <div style="background:#F8FAFC;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:8px">
+            <i class="bi bi-info-circle"></i>
+            เลือกงาน
+          </div>
         `}
+
+        ${scoredStaff.map(s => {
+          const isSel = dSelStaff && dSelStaff.id === s.id;
+          const wlPct = Math.round((s.active / s.max) * 100);
+          const isAvail = s.active < s.max;
+          return `
+          <div class="d-staff-card${isSel ? ' d-staff-selected' : ''}${!isAvail ? ' opacity-full' : ''}"
+               onclick="${isAvail ? `dSelectStaff('${s.id}')` : 'void(0)'}">
+            <div class="d-staff-top">
+              <div class="d-avatar ${s.avCls}">${s.short}</div>
+              <div>
+                <div class="d-staff-name">${escHtml(s.name)}</div>
+                <div class="d-staff-role">${escHtml(s.role)}</div>
+              </div>
+              <div class="d-staff-right">
+                <div class="d-wl-num" style="color:${wlColor(wlPct)}">${s.active}/${s.max}</div>
+                <div class="d-wl-lbl">งานในมือ</div>
+                ${!isAvail ? `<div style="font-size:10px;color:var(--rejected);font-weight:600">เต็ม</div>` : ''}
+              </div>
+            </div>
+            <div class="d-wl-bar">
+              <div class="d-wl-fill ${wlCls(wlPct)}" style="width:${wlPct}%"></div>
+            </div>
+            <!-- ทักษะ -->
+            <div class="d-skill-tags">
+              ${s.skills.map(sk => {
+                const isMatch = s.matched && s.matched.includes(sk);
+                return `<span class="d-skill-tag${isMatch ? ' matched' : ''}">${escHtml(sk)}</span>`;
+              }).join('')}
+            </div>
+            <!-- คะแนนความเหมาะสม -->
+            ${dSelTicket ? `
+            <div class="d-match-score">
+              <span style="color:var(--text-muted)">ความเหมาะสม</span>
+              <div class="d-score-bar">
+                <div class="d-score-fill" style="width:${s.total}%;background:${s.total >= 70 ? 'var(--done)' : s.total >= 40 ? 'var(--pending)' : '#CBD5E1'}"></div>
+              </div>
+              <span class="d-score-num" style="color:${s.total >= 70 ? '#065F46' : s.total >= 40 ? '#92400E' : 'var(--text-muted)'}">${s.total}%</span>
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+
       </div>
       <div class="d-bottom">
         <button class="d-assign-btn" ${!dSelTicket || !dSelStaff ? 'disabled' : ''} onclick="doDispatchAssign()">
           <i class="bi bi-send"></i>
           ${dSelTicket && dSelStaff
             ? `มอบหมาย ${escHtml(dSelTicket.id)} → ${escHtml(dSelStaff.name)}`
-            : 'มอบหมายงาน'}
+            : 'เลือกงาน และผู้รับผิดชอบ'}
         </button>
       </div>
     </div>`;
-}
-
-// ============================================================
-//  TOGGLE EXPAND (ไม่ trigger dSelectTicket)
-// ============================================================
-function toggleExpand(e, ticketId) {
-  e.stopPropagation();
-  expandedMap[ticketId] = !expandedMap[ticketId];
-  renderDispatch();
 }
 
 // ============================================================
@@ -624,7 +586,9 @@ function dSelectTicket(id) {
 }
 
 function dSelectStaff(id) {
-  dSelStaff = staffList.find(s => s.id === id) || null;
+  const s = staffList.find(x => x.id === id);
+  if (!s || s.active >= s.max) return;
+  dSelStaff = s;
   renderDispatch();
 }
 
@@ -646,7 +610,7 @@ async function doDispatchAssign() {
         assignee: sname,
       }),
     });
-  } catch { /* ถ้า API ล้มเหลว ยังคง assign ใน UI ได้ */ }
+  } catch { /* ถ้า API ล้มเหลว ยัง assign ใน UI ได้ */ }
 
   assignedMap[tid] = { staffId: dSelStaff.id, staffName: sname, at: nowStr() };
   dSelStaff.active = Math.min(dSelStaff.active + 1, dSelStaff.max);
@@ -666,7 +630,6 @@ function resetDispatch() {
   dSelTicket  = null;
   dSelStaff   = null;
   assignedMap = {};
-  expandedMap = {};
   renderDispatch();
   showToast('รีเซ็ตการมอบหมายแล้ว', 'bi-arrow-clockwise', '#64748B');
 }
@@ -687,7 +650,6 @@ async function loadUser() {
 
 loadUser();
 loadTickets();
-
 </script>
 </body>
 </html>
