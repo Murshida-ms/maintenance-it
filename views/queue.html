@@ -563,7 +563,7 @@ function renderDispatch() {
               })()}
             </div>
           </div>
-          <div class="d-section-lbl">เรียงตามความเหมาะสม</div>
+          <div class="d-section-lbl">เลือกผู้รับผิดชอบ</div>
           ${scoredStaff.map(s => {
             const isSel = dSelStaff && dSelStaff.id === s.id;
             const wlPct = Math.round((s.active / s.max) * 100);
@@ -687,6 +687,7 @@ async function loadUser() {
 
 loadUser();
 loadTickets();
+
 </script>
 </body>
 </html>
