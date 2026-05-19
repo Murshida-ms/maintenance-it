@@ -418,6 +418,72 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h5><i class="bi bi-pencil-square" style="color:var(--primary);margin-right:6px"></i> แก้ไขงาน <span id="modal-ticket-id" style="font-family:monospace;color:var(--primary);font-size:13px"></span></h5>
+      <button class="modal-close" onclick="closeEditModal(null)">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- หัวข้อ -->
+      <div class="form-group">
+        <label class="form-label">หัวข้อปัญหา <span style="color:var(--rejected)">*</span></label>
+        <input type="text" class="form-control" id="edit-title" placeholder="ระบุหัวข้อปัญหา">
+      </div>
+
+      <!-- รายละเอียด -->
+      <div class="form-group">
+        <label class="form-label">รายละเอียด</label>
+        <textarea class="form-control" id="edit-detail" rows="3" placeholder="อธิบายรายละเอียดเพิ่มเติม" style="resize:vertical"></textarea>
+      </div>
+
+      <!-- หมายเหตุ -->
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <input type="text" class="form-control" id="edit-note" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
+      </div>
+
+      <!-- ความเร่งด่วน + ผู้รับผิดชอบ -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">ความเร่งด่วน</label>
+          <select class="form-control form-select" id="edit-priority">
+            <option value="low">🟢 ปกติ</option>
+            <option value="med">🟡 ปานกลาง</option>
+            <option value="high">🔴 ด่วน</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">ผู้รับผิดชอบ</label>
+          <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อช่าง">
+        </div>
+      </div>
+
+      <!-- แนบไฟล์ -->
+      <div class="form-group" style="margin-top:16px;margin-bottom:0">
+        <label class="form-label">แนบรูปภาพ / เอกสาร</label>
+        <div class="upload-area" onclick="document.getElementById('edit-file-input').click()">
+          <i class="bi bi-cloud-upload" style="font-size:24px;display:block;margin-bottom:6px"></i>
+          คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่<br>
+          <small style="font-size:11px">รองรับ JPG, PNG, PDF (สูงสุด 10MB ต่อไฟล์)</small>
+        </div>
+        <input type="file" id="edit-file-input" multiple accept="image/*,.pdf" style="display:none" onchange="handleFileSelect(event)">
+        <div class="upload-preview" id="upload-preview"></div>
+        <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn-act btn-ghost-act" onclick="closeEditModal(null)">ยกเลิก</button>
+      <button class="btn-act btn-primary-act" onclick="submitEdit()">
+        <i class="bi bi-check-lg"></i> บันทึกการแก้ไข
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== CONSTANTS =====
 const statusLabel = { pending:'รอดำเนินการ', inprogress:'กำลังทำ', done:'เสร็จแล้ว' };
@@ -1193,71 +1259,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('beforeunload', () => clearInterval(refreshTimer));
 </script>
-<!-- EDIT MODAL -->
-<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h5><i class="bi bi-pencil-square" style="color:var(--primary);margin-right:6px"></i> แก้ไขงาน <span id="modal-ticket-id" style="font-family:monospace;color:var(--primary);font-size:13px"></span></h5>
-      <button class="modal-close" onclick="closeEditModal(null)">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- หัวข้อ -->
-      <div class="form-group">
-        <label class="form-label">หัวข้อปัญหา <span style="color:var(--rejected)">*</span></label>
-        <input type="text" class="form-control" id="edit-title" placeholder="ระบุหัวข้อปัญหา">
-      </div>
-
-      <!-- รายละเอียด -->
-      <div class="form-group">
-        <label class="form-label">รายละเอียด</label>
-        <textarea class="form-control" id="edit-detail" rows="3" placeholder="อธิบายรายละเอียดเพิ่มเติม" style="resize:vertical"></textarea>
-      </div>
-
-      <!-- หมายเหตุ -->
-      <div class="form-group">
-        <label class="form-label">หมายเหตุ</label>
-        <input type="text" class="form-control" id="edit-note" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
-      </div>
-
-      <!-- ความเร่งด่วน + ผู้รับผิดชอบ -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">ความเร่งด่วน</label>
-          <select class="form-control form-select" id="edit-priority">
-            <option value="low">🟢 ปกติ</option>
-            <option value="med">🟡 ปานกลาง</option>
-            <option value="high">🔴 ด่วน</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">ผู้รับผิดชอบ</label>
-          <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อช่าง">
-        </div>
-      </div>
-
-      <!-- แนบไฟล์ -->
-      <div class="form-group" style="margin-top:16px;margin-bottom:0">
-        <label class="form-label">แนบรูปภาพ / เอกสาร</label>
-        <div class="upload-area" onclick="document.getElementById('edit-file-input').click()">
-          <i class="bi bi-cloud-upload" style="font-size:24px;display:block;margin-bottom:6px"></i>
-          คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่<br>
-          <small style="font-size:11px">รองรับ JPG, PNG, PDF (สูงสุด 10MB ต่อไฟล์)</small>
-        </div>
-        <input type="file" id="edit-file-input" multiple accept="image/*,.pdf" style="display:none" onchange="handleFileSelect(event)">
-        <div class="upload-preview" id="upload-preview"></div>
-        <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
-      </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn-act btn-ghost-act" onclick="closeEditModal(null)">ยกเลิก</button>
-      <button class="btn-act btn-primary-act" onclick="submitEdit()">
-        <i class="bi bi-check-lg"></i> บันทึกการแก้ไข
-      </button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
