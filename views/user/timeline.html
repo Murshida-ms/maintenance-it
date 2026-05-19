@@ -414,6 +414,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
   </div>
 </div>
 
+
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
   <div class="modal-box">
@@ -580,7 +581,7 @@ function generateSteps(t) {
       detail: isPending ? 'รอเจ้าหน้าที่รับมอบหมาย' : `มอบหมายให้: ${assigneeName}`,
       actor: !isPending ? {
         name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
+        role: 'ช่างผู้รับผิดชอบ',
         initials: assigneeInitials,
         bg: '#BBF7D0',
         tc: '#166534'
@@ -595,7 +596,7 @@ function generateSteps(t) {
       detail: isPending ? '' : (isInprogress ? 'ช่างกำลังดำเนินการแก้ไข' : 'ดำเนินการเสร็จสิ้น'),
       actor: !isPending ? {
         name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
+        role: 'ช่างผู้รับผิดชอบ',
         initials: assigneeInitials,
         bg: '#FDE68A',
         tc: '#92400E'
@@ -610,7 +611,7 @@ function generateSteps(t) {
       detail: isDone ? 'งานเสร็จสมบูรณ์ สามารถประเมินความพึงพอใจได้' : '',
       actor: isDone ? {
         name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
+        role: 'ช่างผู้รับผิดชอบ',
         initials: assigneeInitials,
         bg: '#BBF7D0',
         tc: '#166534'
@@ -764,7 +765,7 @@ function renderList() {
       : '';
 
     list.innerHTML += `
-    <div class="ticket-card ${t.status} ${sel}" id="tc-${t.id}" onclick="selectTicket('${t.id}')" style="padding-bottom:36px">
+    <div class="ticket-card ${t.status} ${sel}" id="tc-${t.id}" onclick="selectTicket('${t.id}')">
       <div class="tc-top">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
@@ -781,15 +782,6 @@ function renderList() {
         <span><i class="bi bi-person-fill"></i>${t.assignee}</span>
         <span><i class="bi bi-calendar3"></i>${t.created}</span>
         <span class="${prioClass[t.priority]}" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${prioLabel[t.priority]}</span>
-      </div>
-      <!-- ปุ่มแก้ไข + ลบ -->
-      <div class="tc-actions">
-        <button class="tc-action-btn edit" onclick="event.stopPropagation();openEditModal('${t.id}')">
-          <i class="bi bi-pencil"></i> แก้ไข
-        </button>
-        <button class="tc-action-btn delete" onclick="event.stopPropagation();confirmDelete('${t.id}')">
-          <i class="bi bi-trash3"></i> ลบ
-        </button>
       </div>
     </div>`;
   });
