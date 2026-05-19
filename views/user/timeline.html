@@ -34,8 +34,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 .nav-item .bi{font-size:17px;width:20px;flex-shrink:0;}
 .nav-badge{margin-left:auto;background:var(--primary);color:#fff;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:600;}
 .nav-badge.red{background:var(--rejected);}
-/* ======= SIDEBAR USER (รวมปุ่ม logout) ======= */
-  .sidebar-user {
+.sidebar-user {
     padding: 14px 12px;
     border-top: 1px solid rgba(255,255,255,0.06);
     display: flex;
@@ -70,7 +69,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
     font-size: 11px;
     display: block;
   }
-  /* ปุ่ม logout แบบ icon เล็กๆ ข้างชื่อ */
   .btn-logout-icon {
     width: 30px; height: 30px;
     border-radius: var(--radius-sm);
@@ -146,12 +144,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 .badge-s.done::before{background:var(--done);}
 .badge-s.rejected::before{background:var(--rejected);}
 
-/* MINI PROGRESS */
-.mini-progress{margin-top:10px;}
-.mp-track{height:4px;border-radius:99px;background:var(--border);overflow:hidden;}
-.mp-fill{height:100%;border-radius:99px;transition:width .6s ease;}
-.mp-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:3px;}
-
 /* DETAIL PANEL */
 .detail-panel{background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;position:sticky;top:80px;}
 
@@ -168,6 +160,8 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 .btn-primary-act:hover{background:var(--primary-dark);}
 .btn-ghost-act{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
 .btn-ghost-act:hover{background:var(--body-bg);color:var(--text-main);}
+.btn-danger-act{background:transparent;color:var(--rejected);border:1px solid #FECACA;}
+.btn-danger-act:hover{background:var(--rejected-bg);border-color:var(--rejected);}
 
 /* TABS */
 .dp-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card-bg);}
@@ -276,16 +270,19 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 .file-chip{display:inline-flex;align-items:center;gap:6px;background:var(--body-bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;}
 .file-chip-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;line-height:1;padding:0;}
 
-/* EDIT BTN IN CARD */
-.tc-edit-btn{position:absolute;bottom:12px;right:12px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s;font-family:inherit;}
-.ticket-card:hover .tc-edit-btn{opacity:1;}
-.tc-edit-btn:hover{background:var(--primary-light);border-color:var(--primary);color:var(--primary);}
+/* ACTION BUTTONS IN CARD */
+.tc-actions{position:absolute;bottom:12px;right:12px;display:flex;gap:6px;opacity:0;transition:opacity .15s;}
+.ticket-card:hover .tc-actions{opacity:1;}
+.tc-action-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;transition:all .15s;}
+.tc-action-btn.edit:hover{background:var(--primary-light);border-color:var(--primary);color:var(--primary);}
+.tc-action-btn.delete:hover{background:var(--rejected-bg);border-color:var(--rejected);color:var(--rejected);}
+
+/* DELETE CONFIRM MODAL */
+.modal-box.danger .modal-head{border-bottom-color:#FECACA;}
+.btn-danger-solid{background:var(--rejected);color:#fff;border:none;}
+.btn-danger-solid:hover{background:#DC2626;}
 
 @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-
-/* LOGOUT BUTTON */
-.btn-logout{margin-top:4px;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--radius-sm);color:#94A3B8;font-size:13px;cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:inherit;width:100%;}
-.btn-logout:hover{background:rgba(239,68,68,.12);color:#F87171;}
 
 /* RESPONSIVE */
 @media(max-width:1100px){
@@ -323,7 +320,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
     <a class="nav-item" onclick="setNav(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
     <a class="nav-item" onclick="setNav(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
   </nav>
-  <!-- USER + LOGOUT ในแถวเดียวกัน -->
   <div class="sidebar-user">
     <div class="user-avatar" id="user-avatar">--</div>
     <div class="user-info">
@@ -426,26 +422,18 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
       <button class="modal-close" onclick="closeEditModal(null)">✕</button>
     </div>
     <div class="modal-body">
-
-      <!-- หัวข้อ -->
       <div class="form-group">
         <label class="form-label">หัวข้อปัญหา <span style="color:var(--rejected)">*</span></label>
         <input type="text" class="form-control" id="edit-title" placeholder="ระบุหัวข้อปัญหา">
       </div>
-
-      <!-- รายละเอียด -->
       <div class="form-group">
         <label class="form-label">รายละเอียด</label>
         <textarea class="form-control" id="edit-detail" rows="3" placeholder="อธิบายรายละเอียดเพิ่มเติม" style="resize:vertical"></textarea>
       </div>
-
-      <!-- หมายเหตุ -->
       <div class="form-group">
         <label class="form-label">หมายเหตุ</label>
         <input type="text" class="form-control" id="edit-note" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
       </div>
-
-      <!-- ความเร่งด่วน + ผู้รับผิดชอบ -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group" style="margin-bottom:0">
           <label class="form-label">ความเร่งด่วน</label>
@@ -460,8 +448,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
           <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อช่าง">
         </div>
       </div>
-
-      <!-- แนบไฟล์ -->
       <div class="form-group" style="margin-top:16px;margin-bottom:0">
         <label class="form-label">แนบรูปภาพ / เอกสาร</label>
         <div class="upload-area" onclick="document.getElementById('edit-file-input').click()">
@@ -473,12 +459,43 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
         <div class="upload-preview" id="upload-preview"></div>
         <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
       </div>
-
     </div>
     <div class="modal-foot">
       <button class="btn-act btn-ghost-act" onclick="closeEditModal(null)">ยกเลิก</button>
       <button class="btn-act btn-primary-act" onclick="submitEdit()">
         <i class="bi bi-check-lg"></i> บันทึกการแก้ไข
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="delete-modal" onclick="closeDeleteModal(event)">
+  <div class="modal-box danger" style="max-width:420px">
+    <div class="modal-head">
+      <h5><i class="bi bi-trash3-fill" style="color:var(--rejected);margin-right:6px"></i> ยืนยันการลบ</h5>
+      <button class="modal-close" onclick="closeDeleteModal(null)">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--rejected-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;color:var(--rejected)">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">ต้องการลบ Ticket นี้?</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          <span id="delete-ticket-id" style="font-family:monospace;font-weight:700;color:var(--primary)"></span><br>
+          <span id="delete-ticket-title" style="font-weight:500;color:var(--text-main)"></span>
+        </div>
+        <div style="margin-top:14px;padding:10px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius-sm);font-size:12px;color:#991B1B">
+          <i class="bi bi-info-circle" style="margin-right:4px"></i>
+          การลบไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะหายไปถาวร
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-act btn-ghost-act" onclick="closeDeleteModal(null)">ยกเลิก</button>
+      <button class="btn-act btn-danger-solid" onclick="submitDelete()">
+        <i class="bi bi-trash3"></i> ลบ Ticket
       </button>
     </div>
   </div>
@@ -531,18 +548,15 @@ function getInitials(name) {
 }
 
 // ===== GENERATE STEPS =====
-// แก้ไขหลัก: เพิ่ม actor และ photos ให้ครบทุก step
 function generateSteps(t) {
   const assigneeName = t.assignee || '—';
   const assigneeInitials = getInitials(assigneeName);
 
-  // กำหนด status ของแต่ละ step ตาม status งานปัจจุบัน
   const isPending    = t.status === 'pending';
   const isInprogress = t.status === 'inprogress';
   const isDone       = t.status === 'done';
 
   return [
-    // Step 1: แจ้งงานสำเร็จ — เสร็จเสมอ (มีวันที่จาก created_at)
     {
       status: 'done',
       icon: 'bi-check-lg',
@@ -556,10 +570,8 @@ function generateSteps(t) {
         bg: '#E0E7FF',
         tc: '#3730A3'
       },
-      photos: []  // ← ต้องมี photos เสมอ ถ้าไม่มีให้เป็น array ว่าง
+      photos: []
     },
-
-    // Step 2: รอมอบหมายงาน
     {
       status: isPending ? 'active' : 'done',
       icon: 'bi-person-check',
@@ -573,10 +585,8 @@ function generateSteps(t) {
         bg: '#BBF7D0',
         tc: '#166534'
       } : null,
-      photos: []  // ← ต้องมี photos เสมอ
+      photos: []
     },
-
-    // Step 3: กำลังดำเนินการ
     {
       status: isPending ? 'wait' : (isInprogress ? 'active' : 'done'),
       icon: 'bi-tools',
@@ -590,11 +600,8 @@ function generateSteps(t) {
         bg: '#FDE68A',
         tc: '#92400E'
       } : null,
-      // ใส่ placeholder รูป 2 ช่อง เพื่อรองรับรูปประกอบการซ่อม
       photos: (!isPending) ? ['placeholder', 'placeholder'] : []
     },
-
-    // Step 4: ปิดงาน
     {
       status: isDone ? 'done' : 'wait',
       icon: 'bi-clipboard-check',
@@ -608,7 +615,7 @@ function generateSteps(t) {
         bg: '#BBF7D0',
         tc: '#166534'
       } : null,
-      photos: []  // ← ต้องมี photos เสมอ
+      photos: []
     }
   ];
 }
@@ -621,7 +628,6 @@ async function fetchTickets(silent = false) {
 
     tickets = data.map(t => {
       const assigneeName = t.assignee || '—';
-      const progress = t.status === 'done' ? 100 : (t.status === 'inprogress' ? 50 : 10);
 
       const ticket = {
         id: `TK-${t.id.toString().padStart(4, '0')}`,
@@ -641,7 +647,6 @@ async function fetchTickets(silent = false) {
         created: fmtDate(t.created_at),
         rawCreatedAt: t.created_at,
         rawUpdatedAt: t.updated_at,
-        progress,
         chatMessages: []
       };
 
@@ -654,13 +659,11 @@ async function fetchTickets(silent = false) {
     renderList();
 
     if (silent) {
-      // auto-refresh: re-render เฉพาะ ticket ที่เลือกอยู่
       if (currentTicket) {
         const updated = tickets.find(t => t.id === currentTicket.id);
         if (updated) { currentTicket = updated; renderDetail(); }
       }
     } else {
-      // โหลดครั้งแรก
       if (tickets.length > 0) {
         currentTicket = tickets[0];
         renderDetail();
@@ -688,9 +691,7 @@ function updateCounts() {
 }
 
 // ===== CALC QUEUE =====
-// นับคิวงานที่ยังไม่เสร็จของช่างแต่ละคน เรียงตาม created_at (ก่อน-หลัง)
 function calcQueue() {
-  // จัดกลุ่มงานที่ยังไม่เสร็จตามชื่อช่าง เรียงตามวันที่แจ้ง
   const assigneeMap = {};
   tickets
     .filter(t => t.status !== 'done')
@@ -700,15 +701,14 @@ function calcQueue() {
       assigneeMap[t.assignee].push(t.id);
     });
 
-  // ใส่ลำดับคิวกลับเข้าไปใน ticket object
   tickets.forEach(t => {
     if (t.status === 'done') {
-      t.queuePos  = null;  // งานเสร็จแล้ว ไม่มีคิว
+      t.queuePos  = null;
       t.queueTotal = null;
     } else {
       const q = assigneeMap[t.assignee] || [];
-      t.queuePos   = q.indexOf(t.id) + 1;       // ลำดับที่ของงานนี้
-      t.queueTotal = q.length;                   // งานค้างทั้งหมดของช่าง
+      t.queuePos   = q.indexOf(t.id) + 1;
+      t.queueTotal = q.length;
     }
   });
 }
@@ -729,7 +729,6 @@ function renderList() {
   document.getElementById('list-count').textContent = filtered.length;
 
   if (filtered.length === 0) {
-    // แยก 2 กรณี: ไม่มี ticket ในระบบเลย vs ค้นหาแล้วไม่เจอ
     const isEmpty = tickets.length === 0;
     list.innerHTML = `
       <div style="text-align:center;padding:48px 24px;color:var(--text-muted)">
@@ -749,10 +748,9 @@ function renderList() {
 
   list.innerHTML = '';
   filtered.forEach(t => {
-    const progColor = t.status === 'done' ? 'var(--done)' : t.status === 'inprogress' ? 'var(--inprogress)' : 'var(--pending)';
     const sel = currentTicket && currentTicket.id === t.id ? 'selected' : '';
 
-    // Queue badge: แสดงเฉพาะงานที่ยังไม่เสร็จ
+    // Queue badge
     const queueBadge = t.queuePos
       ? `<span style="
             display:inline-flex;align-items:center;gap:4px;
@@ -766,7 +764,7 @@ function renderList() {
       : '';
 
     list.innerHTML += `
-    <div class="ticket-card ${t.status} ${sel}" id="tc-${t.id}" onclick="selectTicket('${t.id}')" style="padding-bottom:${t.status !== 'done' ? '36px' : '16px'}">
+    <div class="ticket-card ${t.status} ${sel}" id="tc-${t.id}" onclick="selectTicket('${t.id}')" style="padding-bottom:36px">
       <div class="tc-top">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
@@ -784,14 +782,15 @@ function renderList() {
         <span><i class="bi bi-calendar3"></i>${t.created}</span>
         <span class="${prioClass[t.priority]}" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${prioLabel[t.priority]}</span>
       </div>
-      <div class="mini-progress">
-        <div class="mp-track"><div class="mp-fill" style="width:${t.progress}%;background:${progColor}"></div></div>
-        <div class="mp-label"><span>ความคืบหน้า</span><span>${t.progress}%</span></div>
+      <!-- ปุ่มแก้ไข + ลบ -->
+      <div class="tc-actions">
+        <button class="tc-action-btn edit" onclick="event.stopPropagation();openEditModal('${t.id}')">
+          <i class="bi bi-pencil"></i> แก้ไข
+        </button>
+        <button class="tc-action-btn delete" onclick="event.stopPropagation();confirmDelete('${t.id}')">
+          <i class="bi bi-trash3"></i> ลบ
+        </button>
       </div>
-      ${t.status !== 'done' ? `
-      <button class="tc-edit-btn" onclick="event.stopPropagation();openEditModal('${t.id}')">
-        <i class="bi bi-pencil"></i> แก้ไข
-      </button>` : ''}
     </div>`;
   });
 }
@@ -801,7 +800,6 @@ function selectTicket(id) {
   currentTicket = tickets.find(t => t.id === id);
   renderList();
   renderDetail();
-  // reset tabs
   document.querySelectorAll('.dp-tab').forEach((tab, i) => {
     tab.classList.toggle('active', i === 0);
   });
@@ -817,9 +815,7 @@ function renderDetail() {
   if (!t) return;
 
   // --- HEADER ---
-  const progColor = t.status === 'done' ? 'var(--done)' : t.status === 'inprogress' ? 'var(--inprogress)' : 'var(--pending)';
-
-  // Queue info สำหรับ detail panel
+  // Queue info
   const queueInfo = t.queuePos
     ? `<div style="
           margin-top:14px;padding:10px 16px;
@@ -845,22 +841,14 @@ function renderDetail() {
       <span class="dp-ticket-id">${t.id}</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge-s ${t.status}">${statusLabel[t.status]}</span>
-        ${t.status !== 'done' ? `<button class="btn-act btn-ghost-act" style="padding:4px 12px;font-size:12px" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil"></i> แก้ไข</button>` : ''}
+        <button class="btn-act btn-ghost-act" style="padding:4px 12px;font-size:12px" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil"></i> แก้ไข</button>
+        <button class="btn-act btn-danger-act" style="padding:4px 12px;font-size:12px" onclick="confirmDelete('${t.id}')"><i class="bi bi-trash3"></i> ลบ</button>
       </div>
     </div>
     <div class="dp-title">${t.title}</div>
     <div class="dp-sub">
       <span><i class="bi bi-person-fill"></i> ช่าง: ${t.assignee}</span>
       <span><i class="bi bi-calendar3"></i> ${t.created}</span>
-    </div>
-    <div style="margin-top:12px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px">
-        <span>ความคืบหน้า</span>
-        <span style="font-weight:700;color:${progColor}">${t.progress}%</span>
-      </div>
-      <div style="height:8px;border-radius:99px;background:var(--border);overflow:hidden">
-        <div style="height:100%;border-radius:99px;width:${t.progress}%;background:${progColor};transition:width .6s ease"></div>
-      </div>
     </div>
     ${queueInfo}`;
 
@@ -872,7 +860,6 @@ function renderDetail() {
     const iconClass  = step.status === 'done' ? 'done' : step.status === 'active' ? 'active' : step.status === 'rejected' ? 'rejected' : 'wait';
     const titleColor = step.status === 'wait' ? 'var(--text-muted)' : 'var(--text-main)';
 
-    // actor html
     let actorHtml = '';
     if (step.actor) {
       actorHtml = `
@@ -885,7 +872,6 @@ function renderDetail() {
         </div>`;
     }
 
-    // photos html — step.photos มีอยู่เสมอแล้ว (ไม่ undefined อีกต่อไป)
     let photoHtml = '';
     if (step.photos.length > 0) {
       photoHtml = '<div class="tl-photo">';
@@ -897,7 +883,6 @@ function renderDetail() {
               : '<span>รอรูป</span>'}
           </div>`;
       });
-      // ปุ่มเพิ่มรูปสำหรับ step ที่กำลัง active
       if (step.status === 'active') {
         photoHtml += `
           <div class="tl-img-placeholder" style="cursor:pointer;border-color:var(--primary);color:var(--primary)" onclick="alert('แนบรูปภาพ')">
@@ -908,12 +893,10 @@ function renderDetail() {
       photoHtml += '</div>';
     }
 
-    // note html
     const detailHtml = step.detail
       ? `<div class="tl-detail"><i class="bi bi-sticky" style="margin-right:5px;color:var(--pending)"></i><strong>หมายเหตุ:</strong> ${step.detail.replace(/^หมายเหตุ:\s*/, '')}</div>`
       : '';
 
-    // status badge
     let statusBadge = '';
     if (step.status === 'active') {
       statusBadge = `<span style="font-size:10px;background:var(--inprogress-bg);color:var(--inprogress);padding:2px 8px;border-radius:99px;margin-left:6px;font-weight:600">กำลังดำเนินการ</span>`;
@@ -963,7 +946,6 @@ function renderDetail() {
     <tr><td class="it-label">วันที่แจ้ง</td><td class="it-val">${t.created}</td></tr>
     <tr><td class="it-label">อัปเดตล่าสุด</td><td class="it-val">${fmtDate(t.rawUpdatedAt)}</td></tr>
     <tr><td class="it-label">สถานะ</td><td class="it-val"><span class="badge-s ${t.status}">${statusLabel[t.status]}</span></td></tr>
-    <tr><td class="it-label">ความคืบหน้า</td><td class="it-val">${t.progress}%</td></tr>
   </table>`;
 
   // --- CHAT TAB ---
@@ -1105,14 +1087,69 @@ function submitRating() {
     </div>`;
 }
 
+// ===== DELETE =====
+function confirmDelete(id) {
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('delete-ticket-id').textContent  = t.id;
+  document.getElementById('delete-ticket-title').textContent = t.title;
+  document.getElementById('delete-modal').dataset.ticketId = id;
+  document.getElementById('delete-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteModal(e) {
+  if (e && e.target !== document.getElementById('delete-modal')) return;
+  document.getElementById('delete-modal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+async function submitDelete() {
+  const id    = document.getElementById('delete-modal').dataset.ticketId;
+  const rawId = id.replace('TK-', '').replace(/^0+/, '');
+
+  try {
+    const res = await fetch(`/api/tickets/${rawId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('ลบไม่สำเร็จ');
+
+    // ลบออกจาก local state
+    tickets = tickets.filter(t => t.id !== id);
+
+    // ถ้า ticket ที่ลบคือ selected → reset
+    if (currentTicket?.id === id) {
+      currentTicket = tickets.length > 0 ? tickets[0] : null;
+      if (currentTicket) renderDetail();
+      else {
+        document.getElementById('dp-header').innerHTML = `
+          <div style="text-align:center;padding:20px;color:var(--text-muted)">
+            <i class="bi bi-card-list" style="font-size:32px;display:block;margin-bottom:8px"></i>
+            เลือก Ticket เพื่อดูรายละเอียด
+          </div>`;
+        ['timeline','info','chat','rating'].forEach(n => {
+          document.getElementById('tab-' + n).innerHTML = '';
+        });
+      }
+    }
+
+    updateCounts();
+    calcQueue();
+    renderList();
+
+    document.getElementById('delete-modal').classList.remove('show');
+    document.body.style.overflow = '';
+    showToast('ลบ Ticket เรียบร้อยแล้ว');
+  } catch(err) {
+    alert('เกิดข้อผิดพลาด: ' + err.message);
+  }
+}
+
 // ===== EDIT MODAL =====
-let editFiles = []; // เก็บไฟล์ที่แนบ
+let editFiles = [];
 
 function openEditModal(id) {
   const t = tickets.find(x => x.id === id);
   if (!t) return;
 
-  // ใส่ข้อมูลปัจจุบันลงฟอร์ม
   document.getElementById('modal-ticket-id').textContent = t.id;
   document.getElementById('edit-title').value    = t.title;
   document.getElementById('edit-detail').value   = t.detail;
@@ -1120,20 +1157,17 @@ function openEditModal(id) {
   document.getElementById('edit-priority').value = t.priority;
   document.getElementById('edit-assignee').value = t.assignee === '—' ? '' : t.assignee;
 
-  // reset ไฟล์
   editFiles = [];
   document.getElementById('upload-preview').innerHTML = '';
   document.getElementById('file-chips').innerHTML = '';
   document.getElementById('edit-file-input').value = '';
 
-  // เปิด modal
   document.getElementById('edit-modal').dataset.ticketId = id;
   document.getElementById('edit-modal').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 
 function closeEditModal(e) {
-  // ถ้า click overlay (ไม่ใช่ modal-box) หรือกดปุ่มปิด
   if (e && e.target !== document.getElementById('edit-modal')) return;
   document.getElementById('edit-modal').classList.remove('show');
   document.body.style.overflow = '';
@@ -1198,8 +1232,7 @@ async function submitEdit() {
   };
 
   try {
-    // ส่งข้อมูลไปยัง API (ปรับ endpoint ให้ตรงกับ backend จริง)
-    const rawId = id.replace('TK-', '').replace(/^0+/, ''); // TK-0001 → 1
+    const rawId = id.replace('TK-', '').replace(/^0+/, '');
     const res = await fetch(`/api/tickets/${rawId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -1208,18 +1241,15 @@ async function submitEdit() {
 
     if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
-    // อัปเดต local state ทันที ไม่ต้อง reload
     const t = tickets.find(x => x.id === id);
     Object.assign(t, payload);
-    t.steps = generateSteps(t); // re-generate steps
+    t.steps = generateSteps(t);
 
     calcQueue();
     renderList();
     if (currentTicket?.id === id) renderDetail();
 
     closeEditModal(null);
-
-    // แสดง toast สำเร็จ
     showToast('บันทึกการแก้ไขเรียบร้อยแล้ว');
   } catch(err) {
     alert('เกิดข้อผิดพลาด: ' + err.message);
@@ -1252,8 +1282,6 @@ let refreshTimer = null;
 document.addEventListener('DOMContentLoaded', () => {
   loadUser();
   fetchTickets();
-
-  // Auto-refresh ทุก 45 วินาที (silent = ไม่ reset selection)
   refreshTimer = setInterval(() => fetchTickets(true), 45000);
 });
 
