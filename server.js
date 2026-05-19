@@ -230,6 +230,27 @@ app.put('/api/tickets/:id', async (req, res) => {
     }
 });
 
+// ลบ Ticket
+app.delete('/api/tickets/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.query(
+            "DELETE FROM it_maintenance WHERE id = ?",
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'ไม่พบ Ticket' });
+        }
+
+        res.json({ success: true, message: 'ลบ Ticket เรียบร้อยแล้ว' });
+    } catch (err) {
+        console.error('Delete Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // หน้า manage
 app.get('/manage', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'manage.html'));
