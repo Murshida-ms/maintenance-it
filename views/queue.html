@@ -176,6 +176,57 @@ body {
 .toast-bar { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px); background: #0F172A; color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 13px; font-weight: 500; z-index: 999; white-space: nowrap; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; display: flex; align-items: center; gap: 8px; }
 .toast-bar.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* NOTIFICATION */
+.notif-wrap { position: relative; }
+.notif-dropdown {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  width: 300px; background: var(--card-bg);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  z-index: 300; display: none; flex-direction: column; overflow: hidden;
+}
+.notif-dropdown.show { display: flex; }
+.notif-head {
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-head-title { font-size: 13px; font-weight: 600; }
+.notif-mark-all { font-size: 11px; color: var(--primary); cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+.notif-mark-all:hover { text-decoration: underline; }
+.notif-list { max-height: 300px; overflow-y: auto; }
+.notif-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.12s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--body-bg); }
+.notif-item.unread { background: #F0F7FF; }
+.notif-item.unread:hover { background: #E0EFFF; }
+.notif-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; margin-top: 1px;
+}
+.notif-icon.new-task { background: var(--primary-light); color: var(--primary); }
+.notif-icon.over-sla { background: #FEE2E2; color: #991B1B; }
+.notif-text { flex: 1; min-width: 0; }
+.notif-text-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.notif-text-sub   { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.notif-time { font-size: 10px; color: #94A3B8; margin-top: 2px; }
+.notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 5px; }
+.notif-badge {
+  position: absolute; top: 4px; right: 4px;
+  min-width: 16px; height: 16px;
+  background: var(--rejected); color: #fff;
+  font-size: 9px; font-weight: 700;
+  border-radius: 99px; border: 2px solid var(--card-bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none;
+}
+.notif-empty { padding: 24px 14px; text-align: center; color: var(--text-muted); font-size: 12px; }
+.notif-empty i { font-size: 26px; display: block; margin-bottom: 6px; opacity: 0.35; }
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
@@ -235,7 +286,21 @@ body {
       <div class="topbar-sub">Smart Task Dispatch</div>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" title="แจ้งเตือน"><i class="bi bi-bell" style="font-size:16px"></i><span class="notif-dot"></span></button>
+      <div class="notif-wrap" id="notif-wrap">
+        <button class="icon-btn" title="แจ้งเตือน" onclick="toggleNotif(event)" style="position:relative">
+          <i class="bi bi-bell" style="font-size:16px"></i>
+          <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-head">
+            <span class="notif-head-title">การแจ้งเตือน</span>
+            <button class="notif-mark-all" onclick="markAllRead()">อ่านทั้งหมด</button>
+          </div>
+          <div class="notif-list" id="notif-list">
+            <div class="notif-empty"><i class="bi bi-bell-slash"></i>ไม่มีการแจ้งเตือน</div>
+          </div>
+        </div>
+      </div>
       <button class="btn-primary-sm" onclick="resetDispatch()"><i class="bi bi-arrow-clockwise"></i> รีเซ็ต</button>
     </div>
   </div>
@@ -282,7 +347,7 @@ const staffList = [
     short: 'สช', avCls: 'd-av-c',
     skills: ['ประปา', 'น้ำรั่ว', 'ท่อ', 'ปั๊มน้ำ', 'ระบบน้ำ'],
     active: 1, max: 5
-  }
+  },
 ];
 
 const prioLabel = { high: 'ด่วนมาก', med: 'ปานกลาง', low: 'ปกติ' };
@@ -574,15 +639,7 @@ function renderDispatch() {
                 return `<span class="d-skill-tag${isMatch ? ' matched' : ''}">${escHtml(sk)}</span>`;
               }).join('')}
             </div>
-            <!-- คะแนนความเหมาะสม -->
-            ${dSelTicket ? `
-            <div class="d-match-score">
-              <span style="color:var(--text-muted)">ความเหมาะสม</span>
-              <div class="d-score-bar">
-                <div class="d-score-fill" style="width:${s.total}%;background:${s.total >= 70 ? 'var(--done)' : s.total >= 40 ? 'var(--pending)' : '#CBD5E1'}"></div>
-              </div>
-              <span class="d-score-num" style="color:${s.total >= 70 ? '#065F46' : s.total >= 40 ? '#92400E' : 'var(--text-muted)'}">${s.total}%</span>
-            </div>` : ''}
+
           </div>`;
         }).join('')}
 
@@ -657,8 +714,109 @@ function resetDispatch() {
 }
 
 // ============================================================
+//  NOTIFICATION SYSTEM
+// ============================================================
+let notifications = [];
+let knownTaskIds  = new Set();
+let isFirstLoad   = true;
+
+function buildNotifications() {
+  const newNotifs = [];
+  tasks.forEach(t => {
+    const nid = t.id + '_new';
+    if (t.status === 'pending' && !knownTaskIds.has(nid)) {
+      if (!isFirstLoad) {
+        newNotifs.push({
+          id: nid, type: 'new-task', icon: 'bi-plus-circle-fill',
+          title: `งานใหม่: ${t.id}`, sub: t.title,
+          time: t.createdDate + ' ' + t.time + ' น.',
+          read: false, taskId: t.id,
+        });
+      }
+      knownTaskIds.add(nid);
+    }
+  });
+  isFirstLoad = false;
+  newNotifs.forEach(n => { if (!notifications.find(x => x.id === n.id)) notifications.unshift(n); });
+  renderNotifDropdown();
+}
+
+async function pollNewTickets() {
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) return;
+    const data = await res.json();
+    const fresh = data.filter(t => t.status === 'pending' || t.status === 'inprogress')
+      .map(t => ({
+        id: 'TK-' + String(t.id).padStart(4,'0'), _id: t.id,
+        title: t.title, detail: t.detail || '',
+        pri: t.priority || 'low', status: t.status, note: t.note || '',
+        time: formatTime(t.created_at), createdDate: formatDate(t.created_at),
+        reporter: t.reporter || t.reported_by || t.created_by || '—',
+        assignee: t.assignee || '—', needs: [],
+        deadlineDate: calcDeadline(t.created_at, t.priority),
+        get deadlineStr() { return formatDeadline(this.deadlineDate); },
+        get secsLeft() { if (!this.deadlineDate) return null; return Math.floor((this.deadlineDate.getTime() - Date.now()) / 1000); },
+      }));
+    const freshIds   = fresh.map(x => x.id).sort().join(',');
+    const currentIds = tasks.map(x => x.id).sort().join(',');
+    if (freshIds !== currentIds) { tasks = fresh; renderDispatch(); }
+    buildNotifications();
+  } catch { /* silent */ }
+}
+
+function renderNotifDropdown() {
+  const list   = document.getElementById('notif-list');
+  const badge  = document.getElementById('notif-badge');
+  const unread = notifications.filter(n => !n.read).length;
+  badge.style.display = unread > 0 ? 'flex' : 'none';
+  badge.textContent   = unread > 99 ? '99+' : unread;
+  if (notifications.length === 0) {
+    list.innerHTML = `<div class="notif-empty"><i class="bi bi-bell-slash"></i>ไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item${n.read ? '' : ' unread'}" onclick="notifClick('${n.id}','${n.taskId}')">
+      <div class="notif-icon ${n.type}"><i class="bi ${n.icon}"></i></div>
+      <div class="notif-text">
+        <div class="notif-text-title">${escHtml(n.title)}</div>
+        <div class="notif-text-sub">${escHtml(n.sub)}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${!n.read ? '<div class="notif-unread-dot"></div>' : ''}
+    </div>`).join('');
+}
+
+function notifClick(notifId, taskId) {
+  const n = notifications.find(x => x.id === notifId);
+  if (n) n.read = true;
+  renderNotifDropdown();
+  closeNotif();
+  if (taskId) dSelectTicket(taskId);
+}
+
+function markAllRead() {
+  notifications.forEach(n => { n.read = true; });
+  renderNotifDropdown();
+}
+
+function toggleNotif(e) {
+  e.stopPropagation();
+  document.getElementById('notif-dropdown').classList.toggle('show');
+}
+
+function closeNotif() {
+  document.getElementById('notif-dropdown').classList.remove('show');
+}
+
+// ============================================================
 //  INIT
 // ============================================================
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNotif(); });
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('notif-wrap');
+  if (wrap && !wrap.contains(e.target)) closeNotif();
+});
 async function loadUser() {
   try {
     const res = await fetch('/api/me');
@@ -671,7 +829,8 @@ async function loadUser() {
 }
 
 loadUser();
-loadTickets();
+loadTickets().then(() => buildNotifications());
+setInterval(pollNewTickets, 30000);
 </script>
 </body>
 </html>

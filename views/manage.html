@@ -234,24 +234,30 @@
   .col-inprogress .qcard-accent { background: var(--inprogress); }
   .col-done       .qcard-accent { background: var(--done); }
 
-  /* ── DETAIL PANEL ── */
+  /* ── DETAIL PANEL (modal popup) ── */
   .detail-panel {
-    position: fixed; top: 0; right: -440px; width: 440px; height: 100%;
-    background: var(--card-bg); border-left: 1px solid var(--border);
-    z-index: 200; display: flex; flex-direction: column;
-    transition: right 0.25s cubic-bezier(.4,0,.2,1); overflow-y: auto;
+    background: var(--card-bg); border-radius: var(--radius);
+    width: 580px; max-width: 95vw; max-height: 90vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    transform: scale(0.95); opacity: 0;
+    transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s;
   }
-  .detail-panel.open { right: 0; }
-  .panel-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.25); z-index: 199; display: none; backdrop-filter: blur(2px); }
-  .panel-backdrop.show { display: block; }
+  .detail-panel.open { transform: scale(1); opacity: 1; }
+  .panel-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+    z-index: 199; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .panel-backdrop.show { display: flex; }
   .panel-header {
     padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; background: var(--card-bg); z-index: 1;
+    background: var(--card-bg); flex-shrink: 0;
   }
   .panel-close { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: background 0.15s; }
   .panel-close:hover { background: var(--body-bg); }
-  .panel-body { padding: 20px; flex: 1; }
+  .panel-body { padding: 20px; flex: 1; overflow-y: auto; }
   .panel-section { margin-bottom: 20px; }
   .panel-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
   .panel-value { font-size: 14px; }
@@ -302,12 +308,12 @@
   .badge-status.pending    { background: var(--pending-bg);    color: #92400E; }
   .badge-status.inprogress { background: var(--inprogress-bg); color: #1E40AF; }
   .badge-status.done       { background: var(--done-bg);       color: #065F46; }
-  .badge-status.rejected   { background: var(--rejected-bg);   color: #991B1B; }
+  .badge-status.cancelled  { background: var(--rejected-bg);   color: #991B1B; }
   .badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
   .badge-status.pending::before    { background: var(--pending); }
   .badge-status.inprogress::before { background: var(--inprogress); }
   .badge-status.done::before       { background: var(--done); }
-  .badge-status.rejected::before   { background: var(--rejected); }
+  .badge-status.cancelled::before  { background: var(--rejected); }
 
   /* ── TOAST ── */
   .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
@@ -513,17 +519,18 @@
   </div>
 </div>
 
-<!-- DETAIL PANEL -->
-<div class="panel-backdrop" id="backdrop" onclick="closePanel()"></div>
-<div class="detail-panel" id="detail-panel">
-  <div class="panel-header">
-    <div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="panel-id"></div>
-      <div id="panel-status-badge"></div>
+<!-- DETAIL POPUP -->
+<div class="panel-backdrop" id="backdrop" onclick="closePanel()">
+  <div class="detail-panel" id="detail-panel" onclick="event.stopPropagation()">
+    <div class="panel-header">
+      <div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="panel-id"></div>
+        <div id="panel-status-badge"></div>
+      </div>
+      <button class="panel-close" onclick="closePanel()"><i class="bi bi-x-lg"></i></button>
     </div>
-    <button class="panel-close" onclick="closePanel()"><i class="bi bi-x-lg"></i></button>
+    <div class="panel-body" id="panel-body"></div>
   </div>
-  <div class="panel-body" id="panel-body"></div>
 </div>
 
 <!-- ADD TASK MODAL -->
@@ -568,6 +575,27 @@
   </div>
 </div>
 
+<!-- CANCEL CONFIRM MODAL -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal-box" style="width:400px">
+    <div class="modal-header">
+      <h6><i class="bi bi-exclamation-triangle-fill" style="color:var(--rejected);margin-right:6px"></i>ยืนยันการยกเลิกงาน</h6>
+      <button class="panel-close" onclick="closeCancelModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">คุณต้องการยกเลิกงานนี้ใช่หรือไม่?</p>
+      <div style="background:var(--body-bg);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px">
+        <div style="font-weight:600" id="cancel-task-title">—</div>
+        <div style="color:var(--text-muted);font-size:11px;margin-top:3px" id="cancel-task-id">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost-sm" onclick="closeCancelModal()">ไม่ยกเลิก</button>
+      <button class="btn-danger-sm" onclick="confirmCancel()"><i class="bi bi-x-lg"></i> ยืนยันยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast-wrap" id="toast-wrap"></div>
 
@@ -577,7 +605,7 @@
 //  CONSTANTS
 // ===================================================
 const prioLabel  = { high:'ด่วนมาก', med:'ปานกลาง', low:'ปกติ' };
-const statusLabel= { pending:'รอดำเนินการ', inprogress:'กำลังทำ', done:'เสร็จแล้ว', rejected:'ถูกตีกลับ' };
+const statusLabel= { pending:'รอดำเนินการ', inprogress:'กำลังทำ', done:'เสร็จแล้ว', cancelled:'ยกเลิก' };
 const SLA_HOURS  = { high: 4, med: 24, low: 72 };
 
 // ===================================================
@@ -603,8 +631,8 @@ async function loadTickets() {
       note:             t.note || '',
       pri:              t.priority || 'low',
       status:           t.status || 'pending',
-      reporter:         t.reporter ||  '',
-      reporterInitials: (t.reporter ||  '').substring(0, 2) || '—',
+      reporter:         t.reporter || t.assignee || '',
+      reporterInitials: (t.reporter || t.assignee || '').substring(0, 2) || '—',
       created_at:       t.created_at,
       time:             formatTime(t.created_at),
       reportDate:       formatDate(t.created_at),
@@ -648,7 +676,7 @@ function calcDeadline(createdAt, priority) {
 
 function buildTimeline(t) {
   return [
-    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || '—', state:'done' },
+    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || t.assignee || '—', state:'done' },
     { label:'รับเรื่อง',     time:'—', by:'—', state: t.status !== 'pending' ? 'done' : 'active' },
     { label:'ดำเนินการ',     time:'—', by:'—', state: t.status === 'inprogress' ? 'active' : t.status === 'done' ? 'done' : 'wait' },
     { label:'เสร็จสิ้น',     time:'—', by:'—', state: t.status === 'done' ? 'done' : 'wait' },
@@ -871,10 +899,10 @@ function openPanel(id) {
 
   const actionBtns = t.status === 'pending' ? `
     <button class="btn-primary-sm" onclick="changeStatus('${t.id}','inprogress')"><i class="bi bi-play-fill"></i> รับงาน</button>
-    <button class="btn-danger-sm"  onclick="changeStatus('${t.id}','rejected')"><i class="bi bi-x-lg"></i> ตีกลับ</button>
+    <button class="btn-danger-sm" onclick="closePanel()"><i class="bi bi-x-lg"></i> ยกเลิก</button>
   ` : t.status === 'inprogress' ? `
     <button class="btn-success-sm" onclick="changeStatus('${t.id}','done')"><i class="bi bi-check-lg"></i> ปิดงาน</button>
-    <button class="btn-ghost-sm" style="color:var(--rejected);border-color:var(--rejected)" onclick="changeStatus('${t.id}','rejected')"><i class="bi bi-x-lg"></i> ตีกลับ</button>
+    <button class="btn-danger-sm" onclick="closePanel()"><i class="bi bi-x-lg"></i> ยกเลิก</button>
   ` : `<span style="font-size:12px;color:var(--done);font-weight:600"><i class="bi bi-check-circle-fill"></i> งานเสร็จสิ้นแล้ว</span>`;
 
   document.getElementById('panel-body').innerHTML = `
@@ -910,14 +938,6 @@ function openPanel(id) {
     <div class="panel-section">
       <div class="panel-label">ไทม์ไลน์</div>
       <div class="timeline">${tlHtml}</div>
-    </div>
-    <div class="panel-section">
-      <div class="panel-label">ความคิดเห็น</div>
-      <div class="comment-list">${commentsHtml}</div>
-      <div class="comment-box">
-        <textarea class="comment-input" id="comment-input-${t.id}" rows="2" placeholder="พิมพ์ความคิดเห็น..."></textarea>
-        <button class="btn-primary-sm" onclick="addComment('${t.id}')" style="align-self:flex-end;flex-shrink:0"><i class="bi bi-send-fill"></i></button>
-      </div>
     </div>
     <div class="panel-section">
       <div class="panel-label">การดำเนินการ</div>
@@ -964,9 +984,9 @@ async function changeStatus(id, newStatus) {
     showToast('บันทึกลง DB ไม่สำเร็จ','bi-exclamation-triangle-fill','#EF4444');
   }
 
-  const labels = { inprogress:'รับงานแล้ว', done:'ปิดงานสำเร็จ', rejected:'ตีกลับแล้ว' };
-  const icons  = { inprogress:'bi-play-fill', done:'bi-check-circle-fill', rejected:'bi-x-circle-fill' };
-  const colors = { inprogress:'#2563EB', done:'#10B981', rejected:'#EF4444' };
+  const labels = { inprogress:'รับงานแล้ว', done:'ปิดงานสำเร็จ', cancelled:'ยกเลิกงานแล้ว' };
+  const icons  = { inprogress:'bi-play-fill', done:'bi-check-circle-fill', cancelled:'bi-x-circle-fill' };
+  const colors = { inprogress:'#2563EB', done:'#10B981', cancelled:'#EF4444' };
   showToast(`${id} — ${labels[newStatus]}`, icons[newStatus], colors[newStatus]);
 }
 
@@ -985,6 +1005,25 @@ function addComment(id) {
 // ===================================================
 function openModal()  { document.getElementById('add-modal').classList.add('show'); }
 function closeModal() { document.getElementById('add-modal').classList.remove('show'); }
+
+let cancelTargetId = null;
+function openCancelModal(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  cancelTargetId = id;
+  document.getElementById('cancel-task-title').textContent = t.title;
+  document.getElementById('cancel-task-id').textContent    = t.id;
+  document.getElementById('cancel-modal').classList.add('show');
+}
+function closeCancelModal() {
+  cancelTargetId = null;
+  document.getElementById('cancel-modal').classList.remove('show');
+}
+async function confirmCancel() {
+  if (!cancelTargetId) return;
+  closeCancelModal();
+  await changeStatus(cancelTargetId, 'cancelled');
+}
 
 async function addTask() {
   const title = document.getElementById('new-title').value.trim();
@@ -1079,43 +1118,55 @@ function tickCountdowns() {
 // ===================================================
 //  NOTIFICATION SYSTEM
 // ===================================================
-let notifications = [];
-let seenTaskIds   = new Set();
+let notifications  = [];
+let knownTaskIds   = new Set();   // ID ที่รู้จักแล้ว (ไม่ trigger ซ้ำ)
+let isFirstLoad    = true;        // รอบแรกไม่ notify — แค่ seed knownTaskIds
 
 function buildNotifications() {
   const newNotifs = [];
 
   tasks.forEach(t => {
-    // งานใหม่ (pending ที่ยังไม่เคย notify)
-    if (t.status === 'pending' && !seenTaskIds.has(t.id + '_new')) {
-      newNotifs.push({
-        id:    t.id + '_new',
-        type:  'new-task',
-        icon:  'bi-plus-circle-fill',
-        title: `งานใหม่: ${t.id}`,
-        sub:   t.title,
-        time:  t.reportDate,
-        read:  false,
-        taskId: t.id,
-      });
+    const nidNew = t.id + '_new';
+    const nidSla = t.id + '_sla';
+
+    // งานใหม่ — เฉพาะ pending และไม่เคยเห็น
+    if (t.status === 'pending' && !knownTaskIds.has(nidNew)) {
+      if (!isFirstLoad) {
+        newNotifs.push({
+          id:     nidNew,
+          type:   'new-task',
+          icon:   'bi-plus-circle-fill',
+          title:  `งานใหม่: ${t.id}`,
+          sub:    t.title,
+          time:   t.reportDate,
+          read:   false,
+          taskId: t.id,
+        });
+      }
+      knownTaskIds.add(nidNew);
     }
+
     // เกิน SLA
     const secs = getSecsLeft(t);
-    if (t.status !== 'done' && secs !== null && secs < 0 && !seenTaskIds.has(t.id + '_sla')) {
-      newNotifs.push({
-        id:    t.id + '_sla',
-        type:  'over-sla',
-        icon:  'bi-exclamation-triangle-fill',
-        title: `เกิน SLA: ${t.id}`,
-        sub:   t.title,
-        time:  t.reportDate,
-        read:  false,
-        taskId: t.id,
-      });
+    if (t.status !== 'done' && secs !== null && secs < 0 && !knownTaskIds.has(nidSla)) {
+      if (!isFirstLoad) {
+        newNotifs.push({
+          id:     nidSla,
+          type:   'over-sla',
+          icon:   'bi-exclamation-triangle-fill',
+          title:  `เกิน SLA: ${t.id}`,
+          sub:    t.title,
+          time:   t.reportDate,
+          read:   false,
+          taskId: t.id,
+        });
+      }
+      knownTaskIds.add(nidSla);
     }
   });
 
-  // เพิ่มเฉพาะรายการที่ยังไม่มีใน notifications
+  isFirstLoad = false;
+
   newNotifs.forEach(n => {
     if (!notifications.find(x => x.id === n.id)) {
       notifications.unshift(n);
@@ -1125,9 +1176,52 @@ function buildNotifications() {
   renderNotifDropdown();
 }
 
+// Poll API ทุก 30 วินาที เพื่อจับงานใหม่
+async function pollNewTickets() {
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) return;
+    const raw = await res.json();
+
+    const SLA_H = { high: 4, med: 24, low: 72 };
+    const fresh = raw
+      .filter(t => t.status === 'pending' || t.status === 'inprogress')
+      .map(t => ({
+        _id:         t.id,
+        id:          'TK-' + String(t.id).padStart(4,'0'),
+        title:       t.title || '',
+        detail:      t.detail || '',
+        pri:         t.priority || 'low',
+        status:      t.status,
+        note:        t.note || '',
+        time:        formatTime(t.created_at),
+        reportDate:  formatDate(t.created_at),
+        reporter:    t.reporter || t.assignee || '—',
+        assignee:    t.assignee || '—',
+        needs:       [],
+        deadlineDate: (() => {
+          if (!t.created_at) return null;
+          const h = SLA_H[t.priority] || 24;
+          return new Date(new Date(t.created_at).getTime() + h * 3600000);
+        })(),
+        createdDate: formatDate(t.created_at),
+      }));
+
+    // อัปเดต tasks เฉพาะถ้าจำนวนหรือ ID เปลี่ยน
+    const freshIds  = fresh.map(x => x.id).sort().join(',');
+    const currentIds = tasks.map(x => x.id).sort().join(',');
+    if (freshIds !== currentIds) {
+      tasks = fresh;
+      renderAll();
+    }
+
+    buildNotifications();
+  } catch { /* silent */ }
+}
+
 function renderNotifDropdown() {
-  const list  = document.getElementById('notif-list');
-  const badge = document.getElementById('notif-badge');
+  const list   = document.getElementById('notif-list');
+  const badge  = document.getElementById('notif-badge');
   const unread = notifications.filter(n => !n.read).length;
 
   if (unread > 0) {
@@ -1157,14 +1251,13 @@ function renderNotifDropdown() {
 function notifClick(notifId, taskId) {
   const n = notifications.find(x => x.id === notifId);
   if (n) n.read = true;
-  seenTaskIds.add(notifId);
   renderNotifDropdown();
   closeNotif();
   if (taskId) openPanel(taskId);
 }
 
 function markAllRead() {
-  notifications.forEach(n => { n.read = true; seenTaskIds.add(n.id); });
+  notifications.forEach(n => { n.read = true; });
   renderNotifDropdown();
 }
 
@@ -1181,7 +1274,7 @@ function closeNotif() {
 //  INIT
 // ===================================================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePanel(); closeModal(); closeNotif(); }
+  if (e.key === 'Escape') { closePanel(); closeModal(); closeNotif(); closeCancelModal(); }
 });
 
 document.addEventListener('click', e => {
@@ -1203,6 +1296,7 @@ async function loadUser() {
 loadUser();
 loadTickets();
 setInterval(tickCountdowns, 1000);
+setInterval(pollNewTickets, 30000);  // poll ทุก 30 วินาที
 </script>
 </body>
 </html>

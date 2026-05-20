@@ -444,7 +444,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
         </div>
         <div class="form-group" style="margin-bottom:0">
           <label class="form-label">ผู้รับผิดชอบ</label>
-          <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อช่าง">
+          <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อผู้รับผิดชอบ">
         </div>
       </div>
       <div class="form-group" style="margin-top:16px;margin-bottom:0">
@@ -837,7 +837,7 @@ function renderDetail() {
     </div>
     <div class="dp-title">${t.title}</div>
     <div class="dp-sub">
-      <span><i class="bi bi-person-fill"></i> ช่าง: ${t.assignee}</span>
+      <span><i class="bi bi-person-fill"></i> ${t.assignee}</span>
       <span><i class="bi bi-calendar3"></i> ${t.created}</span>
     </div>
     ${queueInfo}`;
@@ -926,7 +926,7 @@ function renderDetail() {
         ${t.reporter}
       </div>
     </td></tr>
-    <tr><td class="it-label">ช่างผู้รับผิดชอบ</td><td class="it-val">
+    <tr><td class="it-label">ผู้รับผิดชอบ</td><td class="it-val">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:24px;height:24px;border-radius:50%;background:${t.assigneeAv.bg};color:${t.assigneeAv.tc};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${t.assigneeAv.initials}</div>
         ${t.assignee}
@@ -935,6 +935,7 @@ function renderDetail() {
     <tr><td class="it-label">ความเร่งด่วน</td><td class="it-val"><span class="${prioClass[t.priority]} prio-badge">${prioLabel[t.priority]}</span></td></tr>
     <tr><td class="it-label">วันที่แจ้ง</td><td class="it-val">${t.created}</td></tr>
     <tr><td class="it-label">อัปเดตล่าสุด</td><td class="it-val">${fmtDate(t.rawUpdatedAt)}</td></tr>
+    <tr><td class="it-label">กำหนดส่ง</td><td class="it-val">${t.created}</td></tr>
     <tr><td class="it-label">สถานะ</td><td class="it-val"><span class="badge-s ${t.status}">${statusLabel[t.status]}</span></td></tr>
   </table>`;
 
