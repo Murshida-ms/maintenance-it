@@ -518,6 +518,7 @@ let tickets = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let currentTicket = null;
+let currentUser   = { fullName: '—', initials: '??' }; // populated after /api/me
 
 // Lightbox state
 let lbImages = []; // array of {dataURL, name}
@@ -574,9 +575,9 @@ function generateSteps(t) {
       title: 'แจ้งงานสำเร็จ',
       time: fmtDate(t.rawCreatedAt),
       actor: {
-        name: 'name',
+        name: t.reporter || 'ผู้ใช้งาน',
         role: 'ผู้แจ้ง',
-        initials: 'SY',
+        initials: getInitials(t.reporter),
         bg: '#E0E7FF',
         tc: '#3730A3'
       },
@@ -1112,7 +1113,9 @@ function sortTickets(by) {
     const ord = { inprogress:0, pending:1, done:2 };
     tickets.sort((a,b) => ord[a.status] - ord[b.status]);
   } else {
-    tickets.sort((a,b) => b.id.localeCompare(a.id));
+    tickets.sort((a,b) =>
+  new Date(b.rawCreatedAt) - new Date(a.rawCreatedAt)
+);
   }
   renderList();
 }
@@ -1442,13 +1445,21 @@ function setNav(el) {
 // ===== INIT =====
 let refreshTimer = null;
 
+async function autoRefresh() {
+  await fetchTickets(true);
+  refreshTimer = setTimeout(autoRefresh, 45000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadUser();
   fetchTickets();
-  refreshTimer = setInterval(() => fetchTickets(true), 45000);
+  autoRefresh();
 });
 
-window.addEventListener('beforeunload', () => clearInterval(refreshTimer));
+window.addEventListener('beforeunload', () => {
+  clearTimeout(refreshTimer);
+});
+
 </script>
 </body>
 </html>

@@ -5,6 +5,7 @@ const mysql = require("mysql2/promise");
 const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
+const fs = require('fs');
 
 // 1. Middleware ตั้งค่าการรับข้อมูล
 app.use(express.urlencoded({ extended: true }));
@@ -121,7 +122,7 @@ app.get('/api/me', (req, res) => {
     if (req.session && req.session.userId) {
         res.json({
             fullName: req.session.fullName,
-            role: "IT Administrator"
+            role: "-"
         });
     } else {
         res.status(401).json({ error: "Unauthorized" });
@@ -144,7 +145,7 @@ const upload = multer({ storage: storage });
 app.use('/uploads', express.static('uploads'));
 
 // รับข้อมูลแจ้งงานใหม่ (submit-ticket) ยังไม่ทำพร้อมไฟล์แนบ
-app.post('/api/submit-ticket', upload.none(), async (req, res) =>{
+app.post('/api/submit-ticket', upload.array('files'), async (req, res) =>{
     // รับค่าจาก Body (Form)
     const { title, detail, priority, note, assignee } = req.body;
 
