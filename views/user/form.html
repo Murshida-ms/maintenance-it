@@ -592,7 +592,12 @@ textarea.form-control { resize:vertical;min-height:100px; }
           </div>
           <div class="card-body-pad">
             <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-              <input type="file" id="file-input" accept="image/*,.pdf" multiple onchange="handleFiles(this.files)">
+              <input type="file"
+                     id="file-input"
+                     name="files"
+                     accept="image/*,.pdf"
+                     multiple
+                     onchange="handleFiles(this.files)">
               <div class="fd-icon"><i class="bi bi-cloud-arrow-up"></i></div>
               <div class="fd-title">คลิกหรือลากไฟล์มาวางที่นี่</div>
               <div class="fd-sub">รองรับ JPG, PNG, PDF · สูงสุด 10MB ต่อไฟล์</div>
@@ -929,7 +934,10 @@ async function submitForm() {
     formData.append('priority', priorityEl.value);
     formData.append('note',     document.getElementById('priority-note').value.trim());
     if (slaDeadline) formData.append('sla_deadline', slaDeadline.toISOString());
-    if (uploadedFiles.length > 0) formData.append('file', uploadedFiles[0]);
+    // แนบหลายไฟล์
+    uploadedFiles.forEach(file => {
+  formData.append('files', file);
+});
 
     const res  = await fetch('/api/submit-ticket', { method:'POST', body:formData });
     const data = await res.json();

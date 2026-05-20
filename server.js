@@ -144,26 +144,55 @@ const upload = multer({ storage: storage });
 // เปิดให้เข้าถึงโฟลเดอร์ uploads ผ่าน URL ได้ (เช่น http://localhost:4000/uploads/filename.jpg)
 app.use('/uploads', express.static('uploads'));
 
-// รับข้อมูลแจ้งงานใหม่ (submit-ticket) ยังไม่ทำพร้อมไฟล์แนบ
-app.post('/api/submit-ticket', upload.array('files'), async (req, res) =>{
-    // รับค่าจาก Body (Form)
+// รับข้อมูลแจ้งงานใหม่ (submit-ticket) พร้อมไฟล์แนบ
+app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
+
     const { title, detail, priority, note, assignee } = req.body;
 
+    // รับไฟล์
+    const files = req.files;
+
+    console.log(files);
+
+    // เก็บชื่อไฟล์เป็น array
+    let attachment = null;
+
+    if (files && files.length > 0) {
+        attachment = JSON.stringify(
+            files.map(file => file.filename)
+        );
+    }
+
     try {
-        // SQL matching กับตาราง it_maintenance ล่าสุดของคุณ
-        const sql = `INSERT INTO it_maintenance (title, detail, priority, note, assignee, status, created_at) 
-                     VALUES (?, ?, ?, ?, ?, 'pending', NOW())`;
-        
-        const [result] = await db.query(sql, [title, detail, priority, note, assignee]);
-        
-        res.json({ 
-            success: true, 
+
+        const sql = `
+        INSERT INTO it_maintenance
+        (title, detail, priority, note, assignee, attachment, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+        `;
+
+        const [result] = await db.query(sql, [
+            title,
+            detail,
+            priority,
+            note,
+            assignee,
+            attachment
+        ]);
+
+        res.json({
+            success: true,
             message: "บันทึกข้อมูลเรียบร้อยแล้ว",
-            ticketId: result.insertId 
+            ticketId: result.insertId
         });
+
     } catch (err) {
+
         console.error("Database Error:", err);
-        res.status(500).json({ error: "ไม่สามารถบันทึกข้อมูลได้" });
+
+        res.status(500).json({
+            error: "ไม่สามารถบันทึกข้อมูลได้"
+        });
     }
 });
 

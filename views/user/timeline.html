@@ -576,7 +576,7 @@ function generateSteps(t) {
       time: fmtDate(t.rawCreatedAt),
       actor: {
         name: t.reporter || 'ผู้ใช้งาน',
-        role: 'ผู้แจ้ง',
+        role: 'ผู้แจ้งงาน',
         initials: getInitials(t.reporter),
         bg: '#E0E7FF',
         tc: '#3730A3'
@@ -647,8 +647,11 @@ async function fetchTickets(silent = false) {
         title: t.title,
         detail: t.detail || '',
         note: t.note || '',
-        reporter: 'ผู้ใช้งานระบบ',
-        reporterAv: { initials: 'US', bg: '#BFDBFE', tc: '#1E40AF' },
+        reporter: currentUser.fullName,reporterAv: { 
+        initials: currentUser.initials, 
+          bg: '#BFDBFE', 
+          tc: '#1E40AF' 
+        },
         assignee: assigneeName,
         assigneeAv: {
           initials: getInitials(assigneeName),
@@ -1126,12 +1129,19 @@ async function loadUser() {
     const res = await fetch('/api/me');
     if (res.status === 401) { window.location.href = '/login'; return; }
     const data = await res.json();
+    
+    // เก็บข้อมูล user ไว้ใช้งาน
+    currentUser.fullName = data.fullName;
+    currentUser.initials = data.fullName.substring(0, 2);
+
     document.getElementById('user-fullname').textContent = data.fullName;
     document.getElementById('user-role').textContent = data.role;
     document.getElementById('user-avatar').textContent = data.fullName.substring(0, 2);
+
+    // โหลด tickets หลังจากได้ชื่อ user แล้ว
+    await fetchTickets();
   } catch(e) { console.error(e); }
 }
-
 // ===== CHAT =====
 function sendChat(id) {
   const inp  = document.getElementById('chat-inp-' + id);
@@ -1452,7 +1462,6 @@ async function autoRefresh() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadUser();
-  fetchTickets();
   autoRefresh();
 });
 
