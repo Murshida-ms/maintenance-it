@@ -207,6 +207,8 @@ body {
     <div class="nav-label">เจ้าหน้าที่</div>
     <a class="nav-item" onclick="setActive(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red">5</span></a>
     <a class="nav-item active" onclick="setActive(this)"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span><span class="nav-badge" id="nav-pending-count">0</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-list-ol"></i><span>คิวงาน</span><span class="nav-badge">12</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-chat-dots"></i><span>แชท</span></a>
     <div class="nav-label">Admin</div>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
@@ -280,22 +282,23 @@ const staffList = [
     short: 'สช', avCls: 'd-av-c',
     skills: ['ประปา', 'น้ำรั่ว', 'ท่อ', 'ปั๊มน้ำ', 'ระบบน้ำ'],
     active: 1, max: 5
-  },
-  {
-    id: 's4', name: 'ช่างมานพ รักงาน', role: 'ช่างแอร์/ระบายอากาศ',
-    short: 'มน', avCls: 'd-av-d',
-    skills: ['แอร์', 'ความเย็น', 'ระบายอากาศ', 'HVAC'],
-    active: 4, max: 5
-  },
-  {
-    id: 's5', name: 'ช่างธนา เก่งกาจ', role: 'ช่างทั่วไป',
-    short: 'ธน', avCls: 'd-av-e',
-    skills: ['ซ่อมบำรุง', 'ทาสี', 'งานไม้', 'ก่อสร้าง', 'งานทั่วไป'],
-    active: 0, max: 5
-  },
+  }
 ];
 
 const prioLabel = { high: 'ด่วนมาก', med: 'ปานกลาง', low: 'ปกติ' };
+const SLA_HOURS = { high: 4, med: 24, low: 72 };
+
+function calcDeadline(createdAt, priority) {
+  if (!createdAt) return null;
+  const h = SLA_HOURS[priority] || 24;
+  return new Date(new Date(createdAt).getTime() + h * 3600000);
+}
+
+function formatDeadline(date) {
+  if (!date) return '—';
+  const d = date;
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`;
+}
 
 // ============================================================
 //  STATE
@@ -329,6 +332,12 @@ async function loadTickets() {
         reporter:    t.reporter || t.reported_by || t.created_by || '—',
         assignee:    t.assignee || '—',
         needs:       [],
+        deadlineDate: calcDeadline(t.created_at, t.priority),
+        get deadlineStr() { return formatDeadline(this.deadlineDate); },
+        get secsLeft() {
+          if (!this.deadlineDate) return null;
+          return Math.floor((this.deadlineDate.getTime() - Date.now()) / 1000);
+        },
       }));
 
     renderDispatch();
@@ -428,6 +437,12 @@ function renderDispatch() {
 
         ${pendingTasks.map(t => {
           const isSel = dSelTicket && dSelTicket.id === t.id;
+          const secs = t.secsLeft;
+          const isOver   = secs !== null && secs < 0;
+          const isUrgent = secs !== null && secs >= 0 && secs < 3600;
+          const dlColor  = isOver ? '#991B1B' : isUrgent ? '#92400E' : '#065F46';
+          const dlBg     = isOver ? '#FEE2E2' : isUrgent ? '#FEF9C3' : '#DCFCE7';
+          const dlIcon   = isOver ? 'bi-exclamation-triangle-fill' : 'bi-alarm';
           return `
           <div class="d-ticket-card${isSel ? ' d-selected' : ''}" onclick="dSelectTicket('${t.id}')">
             <div class="d-ticket-top">
@@ -435,12 +450,21 @@ function renderDispatch() {
               <span class="d-pri-badge d-pri-${t.pri}">${prioLabel[t.pri] || t.pri}</span>
             </div>
             <div class="d-title">${escHtml(t.title)}</div>
-            ${t.detail ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:5px;line-height:1.5">${escHtml(t.detail)}</div>` : ''}
-            <div class="d-meta">
-              <span><i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate} ${t.time} น.</span>
-              ${t.reporter && t.reporter !== '—'
-                ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง: ${escHtml(t.reporter)}</span>`
-                : ''}
+            ${t.detail ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:7px;line-height:1.5">${escHtml(t.detail)}</div>` : ''}
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+                <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px">
+                  <i class="bi bi-person-fill" style="font-size:10px;color:var(--primary)"></i>
+                  <span style="font-weight:600;color:var(--text-main)">${t.reporter && t.reporter !== '—' ? escHtml(t.reporter) : '—'}</span>
+                </span>
+                <span style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:3px">
+                  <i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate} ${t.time} น.
+                </span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;background:${dlBg};color:${dlColor};padding:4px 8px;border-radius:6px;width:fit-content;font-weight:600">
+                <i class="bi ${dlIcon}" style="font-size:11px"></i>
+                กำหนดส่ง: ${t.deadlineStr}
+              </div>
             </div>
           </div>`;
         }).join('')}

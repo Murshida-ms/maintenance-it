@@ -603,8 +603,8 @@ async function loadTickets() {
       note:             t.note || '',
       pri:              t.priority || 'low',
       status:           t.status || 'pending',
-      reporter:         t.reporter || t.assignee || '',
-      reporterInitials: (t.reporter || t.assignee || '').substring(0, 2) || '—',
+      reporter:         t.reporter ||  '',
+      reporterInitials: (t.reporter ||  '').substring(0, 2) || '—',
       created_at:       t.created_at,
       time:             formatTime(t.created_at),
       reportDate:       formatDate(t.created_at),
@@ -615,6 +615,7 @@ async function loadTickets() {
 
     renderAll();
     updateTopbar();
+    buildNotifications();
   } catch(e) {
     console.error(e);
     showToast('โหลดข้อมูลไม่สำเร็จ','bi-exclamation-triangle-fill','#EF4444');
@@ -647,7 +648,7 @@ function calcDeadline(createdAt, priority) {
 
 function buildTimeline(t) {
   return [
-    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || t.assignee || '—', state:'done' },
+    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || '—', state:'done' },
     { label:'รับเรื่อง',     time:'—', by:'—', state: t.status !== 'pending' ? 'done' : 'active' },
     { label:'ดำเนินการ',     time:'—', by:'—', state: t.status === 'inprogress' ? 'active' : t.status === 'done' ? 'done' : 'wait' },
     { label:'เสร็จสิ้น',     time:'—', by:'—', state: t.status === 'done' ? 'done' : 'wait' },
