@@ -237,17 +237,30 @@ app.get('/api/tickets', async (req, res) => {
 // แก้ไขข้อมูล Ticket
 app.put('/api/tickets/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, detail, note, priority, assignee } = req.body;
+    const { title, detail, note, priority, assignee, status } = req.body;
 
     if (!title) {
         return res.status(400).json({ error: 'กรุณาระบุหัวข้อ' });
     }
 
     try {
-        const sql = `UPDATE it_maintenance 
-                     SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, updated_at = NOW()
-                     WHERE id = ? AND status IN ('pending', 'inprogress')`;
-        const [result] = await db.query(sql, [title, detail, note, priority, assignee, id]);
+        let sql, params;
+
+        if (status) {
+            // กรณีส่ง status มาด้วย (จากหน้า queue)
+            sql = `UPDATE it_maintenance 
+                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, status = ?, updated_at = NOW()
+                   WHERE id = ?`;
+            params = [title, detail, note, priority, assignee, status, id];
+        } else {
+            // กรณีแก้ไขปกติ (จากหน้า timeline)
+            sql = `UPDATE it_maintenance 
+                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, updated_at = NOW()
+                   WHERE id = ? AND status IN ('pending', 'inprogress')`;
+            params = [title, detail, note, priority, assignee, id];
+        }
+
+        const [result] = await db.query(sql, params);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'ไม่พบ Ticket หรือไม่สามารถแก้ไขได้' });

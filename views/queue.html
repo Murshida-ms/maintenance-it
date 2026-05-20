@@ -403,6 +403,22 @@ async function loadTickets() {
         },
       }));
 
+    // ✅ rebuild assignedMap จากข้อมูล DB
+    assignedMap = {};
+    tasks.forEach(t => {
+      if (t.status === 'inprogress' && t.assignee && t.assignee !== '—') {
+        assignedMap[t.id] = {
+          staffId:   null,
+          staffName: t.assignee,
+          at:        t.time + ' น.',
+        };
+
+        // ✅ sync workload ของ staffList ด้วย
+        const staff = staffList.find(s => s.name === t.assignee);
+        if (staff) staff.active = Math.min(staff.active + 1, staff.max);
+      }
+    });
+
     renderDispatch();
   } catch {
     document.getElementById('dispatch-wrap').innerHTML = `
@@ -676,7 +692,7 @@ async function doDispatchAssign() {
   const sname = dSelStaff.name;
 
   try {
-    await fetch(`/api/tickets/${dSelTicket._id}`, {
+    const res = await fetch(`/api/tickets/${dSelTicket._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -685,12 +701,22 @@ async function doDispatchAssign() {
         note:     dSelTicket.note,
         priority: dSelTicket.pri,
         assignee: sname,
+        status:   'inprogress',   
       }),
     });
-  } catch { /* ถ้า API ล้มเหลว ยัง assign ใน UI ได้ */ }
+
+    if (!res.ok) throw new Error('PUT failed');
+
+  } catch(err) {
+    showToast('มอบหมายไม่สำเร็จ: ' + err.message, 'bi-x-circle-fill', '#EF4444');
+    return;
+  }
 
   assignedMap[tid] = { staffId: dSelStaff.id, staffName: sname, at: nowStr() };
   dSelStaff.active = Math.min(dSelStaff.active + 1, dSelStaff.max);
+
+  const task = tasks.find(t => t.id === tid);
+  if (task) { task.assignee = sname; task.status = 'inprogress'; }
 
   dSelTicket = null;
   dSelStaff  = null;
@@ -699,15 +725,33 @@ async function doDispatchAssign() {
   showToast(`มอบหมาย ${tid} ให้ ${sname} แล้ว`, 'bi-check-circle-fill', '#10B981');
 }
 
-function resetDispatch() {
-  Object.values(assignedMap).forEach(a => {
-    const s = staffList.find(x => x.id === a.staffId);
-    if (s) s.active = Math.max(s.active - 1, 0);
-  });
+async function resetDispatch() {
+  // ✅ reset assignee และ status กลับเป็น pending ใน DB ด้วย
+  const assignedTasks = tasks.filter(t => assignedMap[t.id]);
+  
+  await Promise.all(assignedTasks.map(t =>
+    fetch(`/api/tickets/${t._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title:    t.title,
+        detail:   t.detail,
+        note:     t.note,
+        priority: t.pri,
+        assignee: '—',
+        status:   'pending',
+      }),
+    })
+  ));
+
+  // reset workload
+  staffList.forEach(s => { s.active = 0; });
+
   dSelTicket  = null;
   dSelStaff   = null;
   assignedMap = {};
-  renderDispatch();
+
+  await loadTickets(); // โหลดใหม่จาก DB
   showToast('รีเซ็ตการมอบหมายแล้ว', 'bi-arrow-clockwise', '#64748B');
 }
 
