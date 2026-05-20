@@ -34,58 +34,13 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 .nav-item .bi{font-size:17px;width:20px;flex-shrink:0;}
 .nav-badge{margin-left:auto;background:var(--primary);color:#fff;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:600;}
 .nav-badge.red{background:var(--rejected);}
-.sidebar-user {
-    padding: 14px 12px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .user-avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .user-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .sidebar-user .user-name {
-    color: #F1F5F9;
-    font-size: 13px;
-    font-weight: 500;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sidebar-user .user-role {
-    color: var(--sidebar-text);
-    font-size: 11px;
-    display: block;
-  }
-  .btn-logout-icon {
-    width: 30px; height: 30px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent;
-    color: var(--sidebar-text);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    flex-shrink: 0;
-    font-size: 15px;
-  }
-  .btn-logout-icon:hover {
-    background: rgba(239,68,68,0.15);
-    color: #F87171;
-    border-color: rgba(239,68,68,0.3);
-  }
+.sidebar-user{padding:14px 12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.sidebar-user .user-name{color:#F1F5F9;font-size:13px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-user .user-role{color:var(--sidebar-text);font-size:11px;display:block;}
+.btn-logout-icon{width:30px;height:30px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--sidebar-text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0;font-size:15px;}
+.btn-logout-icon:hover{background:rgba(239,68,68,0.15);color:#F87171;border-color:rgba(239,68,68,0.3);}
 
 /* MAIN */
 .main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
@@ -244,6 +199,45 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
 /* SCROLL */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px;}
+
+/* ==================== ATTACHMENT GALLERY ==================== */
+.attach-section{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+.attach-section-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.attach-section-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:6px;flex:1;}
+.attach-count-badge{background:var(--body-bg);border:1px solid var(--border);padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;color:var(--text-muted);}
+.attach-add-btn{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1.5px dashed var(--border);background:transparent;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;transition:all .15s;}
+.attach-add-btn:hover{border-color:var(--primary);background:var(--primary-light);}
+.attach-grid{display:flex;flex-wrap:wrap;gap:10px;}
+.attach-item{position:relative;cursor:pointer;border-radius:var(--radius-sm);overflow:hidden;border:1.5px solid var(--border);background:var(--card-bg);transition:all .18s;flex-shrink:0;}
+.attach-item:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(37,99,235,.18);transform:translateY(-2px);}
+.attach-img{width:86px;height:86px;object-fit:cover;display:block;}
+.attach-pdf{width:86px;height:86px;background:linear-gradient(135deg,#FEF2F2,#FFE4E1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.attach-pdf i{font-size:28px;color:var(--rejected);}
+.attach-pdf-ext{font-size:9px;font-weight:800;color:var(--rejected);letter-spacing:.08em;background:#FECACA;padding:1px 5px;border-radius:3px;}
+.attach-doc{width:86px;height:86px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.attach-doc i{font-size:28px;color:var(--primary);}
+.attach-doc-ext{font-size:9px;font-weight:800;color:var(--primary);letter-spacing:.08em;background:#BFDBFE;padding:1px 5px;border-radius:3px;}
+.attach-overlay{position:absolute;inset:0;background:rgba(15,23,42,.55);opacity:0;transition:opacity .18s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;}
+.attach-overlay i{font-size:20px;}
+.attach-overlay span{font-size:10px;font-weight:600;}
+.attach-item:hover .attach-overlay{opacity:1;}
+.attach-name{font-size:10px;color:var(--text-muted);text-align:center;padding:5px 6px 6px;background:var(--card-bg);border-top:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px;line-height:1.3;}
+.attach-empty{padding:24px 20px;border:2px dashed var(--border);border-radius:var(--radius-sm);text-align:center;color:var(--text-muted);font-size:12px;width:100%;line-height:1.6;}
+.attach-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.3;}
+.attach-empty-hint{font-size:11px;color:#94A3B8;margin-top:4px;}
+
+/* ==================== LIGHTBOX ==================== */
+.lightbox{position:fixed;inset:0;background:rgba(10,10,20,.93);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:20px;}
+.lightbox.show{opacity:1;pointer-events:all;}
+.lightbox-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:92vw;max-height:92vh;}
+.lightbox img{max-width:88vw;max-height:78vh;border-radius:var(--radius);object-fit:contain;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+.lightbox-close{position:absolute;top:-52px;right:-4px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.lightbox-close:hover{background:rgba(255,255,255,.25);}
+.lightbox-caption{color:rgba(255,255,255,.65);font-size:12px;text-align:center;}
+.lightbox-nav{display:flex;align-items:center;gap:12px;}
+.lightbox-nav-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.lightbox-nav-btn:hover{background:rgba(255,255,255,.22);}
+.lightbox-counter{color:rgba(255,255,255,.5);font-size:12px;min-width:60px;text-align:center;}
 
 /* EDIT MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -500,6 +494,20 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
   </div>
 </div>
 
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('show')">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-nav">
+      <button class="lightbox-nav-btn" onclick="navigateLightbox(-1)"><i class="bi bi-chevron-left"></i></button>
+      <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+      <button class="lightbox-nav-btn" onclick="navigateLightbox(1)"><i class="bi bi-chevron-right"></i></button>
+    </div>
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+  </div>
+</div>
+
 <script>
 // ===== CONSTANTS =====
 const statusLabel = { pending:'รอดำเนินการ', inprogress:'กำลังทำ', done:'เสร็จแล้ว' };
@@ -510,6 +518,10 @@ let tickets = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let currentTicket = null;
+
+// Lightbox state
+let lbImages = []; // array of {dataURL, name}
+let lbIndex  = 0;
 
 // ===== FORMAT DATE =====
 function fmtDate(dateStr) {
@@ -561,7 +573,6 @@ function generateSteps(t) {
       icon: 'bi-check-lg',
       title: 'แจ้งงานสำเร็จ',
       time: fmtDate(t.rawCreatedAt),
-      // detail: t.note ? `หมายเหตุ: ${t.note}` : 'รับเรื่องเข้าสู่ระบบแล้ว',
       actor: {
         name: 'name',
         role: 'ผู้แจ้ง',
@@ -646,7 +657,8 @@ async function fetchTickets(silent = false) {
         created: fmtDate(t.created_at),
         rawCreatedAt: t.created_at,
         rawUpdatedAt: t.updated_at,
-        chatMessages: []
+        chatMessages: [],
+        attachments: []   // { name, type, dataURL, isPdf }
       };
 
       ticket.steps = generateSteps(ticket);
@@ -660,7 +672,13 @@ async function fetchTickets(silent = false) {
     if (silent) {
       if (currentTicket) {
         const updated = tickets.find(t => t.id === currentTicket.id);
-        if (updated) { currentTicket = updated; renderDetail(); }
+        if (updated) {
+          // preserve local attachments & chat on silent refresh
+          updated.attachments  = currentTicket.attachments;
+          updated.chatMessages = currentTicket.chatMessages;
+          currentTicket = updated;
+          renderDetail();
+        }
       }
     } else {
       if (tickets.length > 0) {
@@ -749,7 +767,6 @@ function renderList() {
   filtered.forEach(t => {
     const sel = currentTicket && currentTicket.id === t.id ? 'selected' : '';
 
-    // Queue badge
     const queueBadge = t.queuePos
       ? `<span style="
             display:inline-flex;align-items:center;gap:4px;
@@ -762,13 +779,20 @@ function renderList() {
           </span>`
       : '';
 
+    // Attachment indicator
+    const attachBadge = t.attachments && t.attachments.length > 0
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;margin-left:4px">
+           <i class="bi bi-paperclip" style="font-size:9px"></i>${t.attachments.length}
+         </span>`
+      : '';
+
     list.innerHTML += `
     <div class="ticket-card ${t.status} ${sel}" id="tc-${t.id}" onclick="selectTicket('${t.id}')">
       <div class="tc-top">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
             <span class="tc-id">${t.id}</span>
-            ${queueBadge}
+            ${queueBadge}${attachBadge}
           </div>
           <div class="tc-title" style="margin-top:6px">${t.title}</div>
         </div>
@@ -799,13 +823,77 @@ function selectTicket(id) {
   document.getElementById('tab-rating').style.display   = 'none';
 }
 
+// ===== BUILD ATTACHMENT HTML for info tab =====
+function buildAttachmentSection(t) {
+  const attachments = t.attachments || [];
+  const imgAttachments = attachments.filter(a => !a.isPdf);
+
+  let gridHtml = '';
+  if (attachments.length === 0) {
+    gridHtml = `
+      <div class="attach-empty">
+        <i class="bi bi-images"></i>
+        ยังไม่มีไฟล์แนบ
+        <div class="attach-empty-hint">กดปุ่ม "แก้ไข" เพื่อเพิ่มรูปภาพหรือเอกสารประกอบ</div>
+      </div>`;
+  } else {
+    attachments.forEach((a, i) => {
+      const ext = a.name.split('.').pop().toUpperCase();
+      if (a.isPdf) {
+        gridHtml += `
+          <div class="attach-item" onclick="openAttach('${t.id}', ${i})">
+            <div class="attach-pdf">
+              <i class="bi bi-file-earmark-pdf-fill"></i>
+              <span class="attach-pdf-ext">${ext}</span>
+            </div>
+            <div class="attach-overlay"><i class="bi bi-eye"></i><span>เปิดดู</span></div>
+            <div class="attach-name" title="${a.name}">${a.name}</div>
+          </div>`;
+      } else {
+        const docExts = ['doc','docx','xls','xlsx','ppt','pptx','txt','csv'];
+        if (docExts.includes(ext.toLowerCase())) {
+          gridHtml += `
+            <div class="attach-item" onclick="openAttach('${t.id}', ${i})">
+              <div class="attach-doc">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                <span class="attach-doc-ext">${ext}</span>
+              </div>
+              <div class="attach-overlay"><i class="bi bi-download"></i><span>ดาวน์โหลด</span></div>
+              <div class="attach-name" title="${a.name}">${a.name}</div>
+            </div>`;
+        } else {
+          gridHtml += `
+            <div class="attach-item" onclick="openAttach('${t.id}', ${i})">
+              <img class="attach-img" src="${a.dataURL}" alt="${a.name}">
+              <div class="attach-overlay"><i class="bi bi-zoom-in"></i><span>ขยาย</span></div>
+              <div class="attach-name" title="${a.name}">${a.name}</div>
+            </div>`;
+        }
+      }
+    });
+  }
+
+  return `
+    <div class="attach-section">
+      <div class="attach-section-header">
+        <div class="attach-section-title">
+          <i class="bi bi-paperclip"></i> รูปภาพ / เอกสารแนบ
+        </div>
+        <span class="attach-count-badge">${attachments.length} ไฟล์</span>
+        <button class="attach-add-btn" onclick="openEditModal('${t.id}')">
+          <i class="bi bi-plus-lg"></i> เพิ่มไฟล์
+        </button>
+      </div>
+      <div class="attach-grid">${gridHtml}</div>
+    </div>`;
+}
+
 // ===== RENDER DETAIL =====
 function renderDetail() {
   const t = currentTicket;
   if (!t) return;
 
   // --- HEADER ---
-  // Queue info
   const queueInfo = t.queuePos
     ? `<div style="
           margin-top:14px;padding:10px 16px;
@@ -839,6 +927,9 @@ function renderDetail() {
     <div class="dp-sub">
       <span><i class="bi bi-person-fill"></i> ${t.assignee}</span>
       <span><i class="bi bi-calendar3"></i> ${t.created}</span>
+      ${t.attachments && t.attachments.length > 0
+        ? `<span style="color:var(--done)"><i class="bi bi-paperclip"></i> ${t.attachments.length} ไฟล์แนบ</span>`
+        : ''}
     </div>
     ${queueInfo}`;
 
@@ -914,7 +1005,7 @@ function renderDetail() {
   tlHtml += '</div>';
   document.getElementById('tab-timeline').innerHTML = tlHtml;
 
-  // --- INFO TAB ---
+  // --- INFO TAB (with attachment section) ---
   document.getElementById('tab-info').innerHTML = `
   <table class="info-table">
     <tr><td class="it-label">หมายเลข Ticket</td><td class="it-val" style="font-family:monospace;color:var(--primary)">${t.id}</td></tr>
@@ -937,7 +1028,8 @@ function renderDetail() {
     <tr><td class="it-label">อัปเดตล่าสุด</td><td class="it-val">${fmtDate(t.rawUpdatedAt)}</td></tr>
     <tr><td class="it-label">กำหนดส่ง</td><td class="it-val">${t.created}</td></tr>
     <tr><td class="it-label">สถานะ</td><td class="it-val"><span class="badge-s ${t.status}">${statusLabel[t.status]}</span></td></tr>
-  </table>`;
+  </table>
+  ${buildAttachmentSection(t)}`;
 
   // --- CHAT TAB ---
   let chatHtml = '<div class="chat-wrap">';
@@ -1078,6 +1170,67 @@ function submitRating() {
     </div>`;
 }
 
+// ===== ATTACHMENTS / LIGHTBOX =====
+function openAttach(ticketId, idx) {
+  const t = tickets.find(x => x.id === ticketId);
+  if (!t || !t.attachments[idx]) return;
+  const a = t.attachments[idx];
+
+  if (a.isPdf) {
+    if (a.dataURL) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html><html><head><title>${a.name}</title></head>
+          <body style="margin:0;background:#1a1a2e">
+            <iframe src="${a.dataURL}" style="width:100vw;height:100vh;border:none"></iframe>
+          </body></html>`);
+      }
+    }
+    return;
+  }
+
+  // Build image gallery for lightbox (images only)
+  lbImages = t.attachments
+    .map((att, i) => ({ ...att, originalIdx: i }))
+    .filter(att => !att.isPdf && att.dataURL);
+  lbIndex = lbImages.findIndex(att => att.originalIdx === idx);
+  if (lbIndex < 0) lbIndex = 0;
+
+  showLightboxAt(lbIndex);
+}
+
+function showLightboxAt(i) {
+  if (lbImages.length === 0) return;
+  lbIndex = (i + lbImages.length) % lbImages.length;
+  const a = lbImages[lbIndex];
+  document.getElementById('lightbox-img').src = a.dataURL;
+  document.getElementById('lightbox-caption').textContent = a.name;
+  document.getElementById('lightbox-counter').textContent = `${lbIndex + 1} / ${lbImages.length}`;
+  document.getElementById('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function navigateLightbox(dir) {
+  showLightboxAt(lbIndex + dir);
+}
+
+function closeLightbox(e) {
+  if (e.target === document.getElementById('lightbox')) {
+    document.getElementById('lightbox').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
+
+// Keyboard navigation for lightbox
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('lightbox');
+  if (!lb.classList.contains('show')) return;
+  if (e.key === 'Escape') { lb.classList.remove('show'); document.body.style.overflow = ''; }
+  if (e.key === 'ArrowRight') navigateLightbox(1);
+  if (e.key === 'ArrowLeft')  navigateLightbox(-1);
+});
+
 // ===== DELETE =====
 function confirmDelete(id) {
   const t = tickets.find(x => x.id === id);
@@ -1103,10 +1256,8 @@ async function submitDelete() {
     const res = await fetch(`/api/tickets/${rawId}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('ลบไม่สำเร็จ');
 
-    // ลบออกจาก local state
     tickets = tickets.filter(t => t.id !== id);
 
-    // ถ้า ticket ที่ลบคือ selected → reset
     if (currentTicket?.id === id) {
       currentTicket = tickets.length > 0 ? tickets[0] : null;
       if (currentTicket) renderDetail();
@@ -1171,12 +1322,16 @@ function handleFileSelect(e) {
       alert(`ไฟล์ "${file.name}" ใหญ่เกิน 10MB`);
       return;
     }
-    editFiles.push(file);
     const isImg = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    const fileObj = { name: file.name, type: file.type, isPdf, dataURL: null };
+    editFiles.push(fileObj);
+    const idx = editFiles.length - 1;
+
     if (isImg) {
       const reader = new FileReader();
       reader.onload = ev => {
-        const idx = editFiles.length - 1;
+        editFiles[idx].dataURL = ev.target.result;
         const preview = document.getElementById('upload-preview');
         preview.innerHTML += `
           <div class="upload-thumb-wrap" id="thumb-${idx}">
@@ -1186,11 +1341,15 @@ function handleFileSelect(e) {
       };
       reader.readAsDataURL(file);
     } else {
-      const idx = editFiles.length - 1;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        editFiles[idx].dataURL = ev.target.result;
+      };
+      reader.readAsDataURL(file);
       const chips = document.getElementById('file-chips');
       chips.innerHTML += `
         <div class="file-chip" id="chip-${idx}">
-          <i class="bi bi-file-earmark-pdf" style="color:var(--rejected)"></i>
+          <i class="bi bi-file-earmark-${isPdf ? 'pdf' : 'text'}" style="color:${isPdf ? 'var(--rejected)' : 'var(--primary)'}"></i>
           <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</span>
           <button class="file-chip-del" onclick="removeFile(${idx})">✕</button>
         </div>`;
@@ -1233,7 +1392,19 @@ async function submitEdit() {
     if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
     const t = tickets.find(x => x.id === id);
+
+    // Merge new attachments into ticket
+    const newAttachments = editFiles
+      .filter(f => f !== null)
+      .map(f => ({
+        name: f.name,
+        type: f.type,
+        dataURL: f.dataURL,
+        isPdf: f.isPdf
+      }));
+
     Object.assign(t, payload);
+    t.attachments = [...(t.attachments || []), ...newAttachments];
     t.steps = generateSteps(t);
 
     calcQueue();
@@ -1241,12 +1412,13 @@ async function submitEdit() {
     if (currentTicket?.id === id) renderDetail();
 
     closeEditModal(null);
-    showToast('บันทึกการแก้ไขเรียบร้อยแล้ว');
+    showToast(`บันทึกเรียบร้อย${newAttachments.length > 0 ? ` · เพิ่มไฟล์ ${newAttachments.length} รายการ` : ''}`);
   } catch(err) {
     alert('เกิดข้อผิดพลาด: ' + err.message);
   }
 }
 
+// ===== TOAST =====
 function showToast(msg) {
   const toast = document.createElement('div');
   toast.style.cssText = `
