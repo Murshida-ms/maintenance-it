@@ -256,8 +256,8 @@ body {
     <a class="nav-item" onclick="setActive(this);window.location.href='/timeline'"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
     <a class="nav-item" onclick="setActive(this);window.location.href='/history'"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
     <div class="nav-label">เจ้าหน้าที่</div>
-    <a class="nav-item" onclick="setActive(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red">5</span></a>
-    <a class="nav-item active" onclick="setActive(this)"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span><span class="nav-badge" id="nav-pending-count">0</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span></a>
+    <a class="nav-item active" onclick="setActive(this)"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span><span class="nav-badge red" id="nav-pending-count">0</span></a>
     <div class="nav-label">Admin</div>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
@@ -392,7 +392,7 @@ async function loadTickets() {
         note:        t.note || '',
         time:        formatTime(t.created_at),
         createdDate: formatDate(t.created_at),
-        reporter:    t.reporter || t.reported_by || t.created_by || '—',
+        reporter: t.reporter_name || '—',
         assignee:    t.assignee || '—',
         needs:       [],
         deadlineDate: calcDeadline(t.created_at, t.priority),
@@ -537,7 +537,7 @@ function renderDispatch() {
               <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
                 <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px">
                   <i class="bi bi-person-fill" style="font-size:10px;color:var(--primary)"></i>
-                  <span style="font-weight:600;color:var(--text-main)">${t.reporter && t.reporter !== '—' ? escHtml(t.reporter) : '—'}</span>
+                  <span style="font-weight:600;color:var(--text-main)"> ผู้แจ้ง : ${t.reporter && t.reporter !== '—' ? escHtml(t.reporter) : '—'}</span>
                 </span>
                 <span style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:3px">
                   <i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate} ${t.time} น.
@@ -576,7 +576,7 @@ function renderDispatch() {
                 <div class="d-meta" style="margin-top:4px">
                   <span><i class="bi bi-clock" style="font-size:10px"></i>${t.createdDate}</span>
                   ${t.reporter && t.reporter !== '—'
-                    ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง: ${escHtml(t.reporter)}</span>`
+                    ? `<span><i class="bi bi-person" style="font-size:10px"></i>ผู้แจ้ง : ${escHtml(t.reporter)}</span>`
                     : ''}
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">

@@ -276,8 +276,8 @@
     <a class="nav-item" onclick="navigate('/timeline')"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
     <a class="nav-item active"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
     <div class="nav-label">เจ้าหน้าที่</div>
-    <a class="nav-item" onclick="navigate('/manage')"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red">5</span></a>
-    <a class="nav-item" onclick="navigate('/queue')"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span><span class="nav-badge" id="nav-pending-count">0</span></a>
+    <a class="nav-item" onclick="navigate('/manage')"><i class="bi bi-kanban"></i><span>จัดการงาน</span></a>
+    <a class="nav-item" onclick="navigate('/queue')"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span></a>
     <div class="nav-label">Admin</div>
     <a class="nav-item" onclick="navigate('/report')"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
     <a class="nav-item" onclick="navigate('/users')"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
@@ -429,7 +429,7 @@ async function fetchHistory() {
       detail: t.detail,
       status: t.status,
       pri: t.priority,
-      reporter: currentUserName || "ผู้ใช้ระบบ",
+      reporter: t.reporter_name || '—',
       assignees: [t.assignee ? t.assignee.substring(0, 2) : '??'],
       assigneeFull: t.assignee || 'ยังไม่ได้มอบหมาย',
       note: t.note || '—',
@@ -449,10 +449,10 @@ async function fetchHistory() {
 function generateTimeline(t) {
   const timeStr = t.created_at ? new Date(t.created_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) : '';
   return [
-    { state: 'done', label: 'แจ้งงานสำเร็จ', time: timeStr, by: t.reporter || '—'},
+    { state: 'done', label: 'แจ้งงานสำเร็จ', time: timeStr, by: t.reporter_name || '—' },
     { state: t.status === 'pending' ? 'active' : 'done', label: 'รอดำเนินการ', time: '—', by: t.assignee || '—' },
     { state: t.status === 'inprogress' ? 'active' : (t.status === 'done' ? 'done' : 'wait'), label: 'กำลังดำเนินการ', time: '—', by: t.assignee || '—' },
-    { state: t.status === 'done' ? 'done' : 'wait', label: 'ปิดงาน', time: '—', by: t.reporter || '—' }
+    { state: t.status === 'done' ? 'done' : 'wait', label: 'ปิดงาน', time: '—', by: t.assignee || '—' }
   ];
 }
 

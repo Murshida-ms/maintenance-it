@@ -623,23 +623,27 @@ async function loadTickets() {
     if (!res.ok) throw new Error();
     const raw = await res.json();
 
-    tasks = raw.map(t => ({
-      _id:              t.id,
-      id:               'TK-' + String(t.id).padStart(4,'0'),
-      title:            t.title || '(ไม่มีหัวข้อ)',
-      detail:           t.detail || '',
-      note:             t.note || '',
-      pri:              t.priority || 'low',
-      status:           t.status || 'pending',
-      reporter:         t.reporter || t.assignee || '',
-      reporterInitials: (t.reporter || t.assignee || '').substring(0, 2) || '—',
-      created_at:       t.created_at,
-      time:             formatTime(t.created_at),
-      reportDate:       formatDate(t.created_at),
-      deadlineDate:     calcDeadline(t.created_at, t.priority),
-      comments:         [],
-      timeline:         buildTimeline(t),
-    }));
+    tasks = raw
+      // แสดงเฉพาะงานที่มี assignee แล้วเท่านั้น
+      .filter(t => t.assignee && t.assignee !== '—' && t.assignee.trim() !== '')
+      .map(t => ({
+        _id:              t.id,
+        id:               'TK-' + String(t.id).padStart(4,'0'),
+        title:            t.title || '(ไม่มีหัวข้อ)',
+        detail:           t.detail || '',
+        note:             t.note || '',
+        pri:              t.priority || 'low',
+        status:           t.status || 'pending',
+        reporter:         t.reporter_name || '—',
+        reporterInitials: (t.assignee || '').substring(0, 2) || '—',
+        assignee:         t.assignee || '',
+        created_at:       t.created_at,
+        time:             formatTime(t.created_at),
+        reportDate:       formatDate(t.created_at),
+        deadlineDate:     calcDeadline(t.created_at, t.priority),
+        comments:         [],
+        timeline:         buildTimeline(t),
+      }));
 
     renderAll();
     updateTopbar();
@@ -786,6 +790,7 @@ function renderCards() {
     const col = document.getElementById('col-'+s);
     const cnt = document.getElementById('cnt-'+s);
     const items = filtered.filter(t => t.status === s);
+
     items.sort((a,b) => {
       const sa = getSecsLeft(a) ?? 99999;
       const sb = getSecsLeft(b) ?? 99999;
@@ -807,6 +812,18 @@ function renderCards() {
       const secs    = getSecsLeft(t);
       const cdClass = getCdClass(t, secs);
       const cdHtml  = `<span class="cd-badge ${cdClass}" data-task-id="${t.id}">${getCdLabel(t, secs)}</span>`;
+      
+      // เพิ่ม deadline
+      const isOver   = secs !== null && secs < 0;
+      const isUrgent = secs !== null && secs >= 0 && secs < 3600;
+      const dlColor  = isOver ? '#991B1B' : isUrgent ? '#92400E' : '#065F46';
+      const dlBg     = isOver ? '#FEE2E2' : isUrgent ? '#FEF9C3' : '#DCFCE7';
+      const dlIcon   = isOver ? 'bi-exclamation-triangle-fill' : 'bi-alarm';
+
+      // format deadline
+      const deadlineStr = t.deadlineDate
+      ? `${String(t.deadlineDate.getDate()).padStart(2,'0')}/${String(t.deadlineDate.getMonth()+1).padStart(2,'0')}/${t.deadlineDate.getFullYear()+543} ${String(t.deadlineDate.getHours()).padStart(2,'0')}:${String(t.deadlineDate.getMinutes()).padStart(2,'0')} น.`
+      : '—';
 
       let quickHtml = '';
       if (s === 'pending') {
@@ -838,6 +855,15 @@ function renderCards() {
           <span class="qcard-meta-item"><i class="bi bi-calendar3" style="font-size:10px"></i>${t.reportDate}</span>
           ${t.reporter ? `<span class="qcard-meta-item"><i class="bi bi-person-fill" style="font-size:10px"></i>${escHtml(t.reporter)}</span>` : ''}
         </div>
+
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;
+                background:${dlBg};color:${dlColor};
+                padding:4px 8px;border-radius:6px;font-weight:600">
+        <i class="bi ${dlIcon}" style="font-size:11px"></i>
+          กำหนดส่ง: ${deadlineStr}
+        </div>
+      </div>
         <div class="qcard-footer">
           <div class="avatar-group">${avHtml}</div>
           ${cdHtml}
@@ -917,7 +943,7 @@ function openPanel(id) {
         <span class="priority-badge ${t.pri}">${prioLabel[t.pri]}</span>
       </div>
       <div>
-        <div class="panel-label">ผู้แจ้ง</div>
+        <div class="panel-label">ผู้แจ้งงาน</div>
         <div class="panel-value" style="display:flex;align-items:center;gap:6px">
           ${t.reporter ? `<div class="avatar-sm av-blue" style="width:20px;height:20px;font-size:9px;flex-shrink:0">${t.reporterInitials}</div>` : ''}
           ${escHtml(t.reporter) || '—'}
@@ -977,9 +1003,11 @@ async function changeStatus(id, newStatus) {
         note:     t.note,
         priority: t.pri,
         reporter: t.reporter,
+        assignee: t.assignee,
         status:   newStatus,
       }),
     });
+    await loadTickets();
   } catch {
     showToast('บันทึกลง DB ไม่สำเร็จ','bi-exclamation-triangle-fill','#EF4444');
   }
@@ -1185,7 +1213,7 @@ async function pollNewTickets() {
 
     const SLA_H = { high: 4, med: 24, low: 72 };
     const fresh = raw
-      .filter(t => t.status === 'pending' || t.status === 'inprogress')
+      .filter(t => t.assignee && t.assignee !== '—' && t.assignee.trim() !== '')
       .map(t => ({
         _id:         t.id,
         id:          'TK-' + String(t.id).padStart(4,'0'),
@@ -1215,6 +1243,7 @@ async function pollNewTickets() {
       renderAll();
     }
 
+    await loadTickets();
     buildNotifications();
   } catch { /* silent */ }
 }

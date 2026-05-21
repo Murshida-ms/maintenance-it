@@ -305,8 +305,8 @@ body{font-family:'Sarabun',sans-serif;background:var(--body-bg);color:var(--text
     <a class="nav-item active" onclick="setNav(this); window.location.href='/timeline'"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
     <a class="nav-item" onclick="setNav(this); window.location.href='/history'"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
     <div class="nav-label">เจ้าหน้าที่</div>
-    <a class="nav-item" onclick="setNav(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red">5</span></a>
-    <a class="nav-item" onclick="setNav(this);window.location.href='/queue'"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span><span class="nav-badge" id="nav-pending-count">0</span></a>
+    <a class="nav-item" onclick="setNav(this);window.location.href='/manage'"><i class="bi bi-kanban"></i><span>จัดการงาน</span></a>
+    <a class="nav-item" onclick="setNav(this);window.location.href='/queue'"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span></a>
     <div class="nav-label">Admin</div>
     <a class="nav-item" onclick="setNav(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
     <a class="nav-item" onclick="setNav(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
@@ -554,15 +554,10 @@ function fmtTimeOnly(dateStr) {
 }
 
 // ===== GET INITIALS =====
-function getInitials(name) {
-  if (!name || name === '—') return '?';
-  return name.substring(0, 2);
-}
-
-// ===== GENERATE STEPS =====
 function generateSteps(t) {
-  const assigneeName = t.assignee || '—';
+  const assigneeName     = t.assignee || '—';
   const assigneeInitials = getInitials(assigneeName);
+  const hasAssignee      = assigneeName && assigneeName !== '—'; // ← key flag
 
   const isPending    = t.status === 'pending';
   const isInprogress = t.status === 'inprogress';
@@ -578,40 +573,38 @@ function generateSteps(t) {
         name: t.reporter || 'ผู้ใช้งาน',
         role: 'ผู้แจ้งงาน',
         initials: getInitials(t.reporter),
-        bg: '#E0E7FF',
-        tc: '#3730A3'
+        bg: '#E0E7FF', tc: '#3730A3'
       },
       photos: []
     },
     {
-      status: isPending ? 'active' : 'done',
+      // ยังไม่มี assignee → wait | มีแล้วแต่ pending → active | ไม่ pending → done
+      status: !hasAssignee ? 'wait' : (isPending ? 'active' : 'done'),
       icon: 'bi-person-check',
       title: 'รับเรื่องและมอบหมายงาน',
-      time: isPending ? '' : fmtDate(t.rawUpdatedAt),
-      detail: isPending ? 'รอเจ้าหน้าที่รับมอบหมาย' : `มอบหมายให้: ${assigneeName}`,
-      actor: !isPending ? {
-        name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
-        initials: assigneeInitials,
-        bg: '#BBF7D0',
-        tc: '#166534'
+      time: !hasAssignee ? '' : (isPending ? '' : fmtDate(t.rawUpdatedAt)),
+      detail: !hasAssignee
+        ? 'รอแอดมินมอบหมายงาน'
+        : `มอบหมายให้: ${assigneeName}`,
+      actor: hasAssignee ? {
+        name: assigneeName, role: 'ผู้รับผิดชอบ',
+        initials: assigneeInitials, bg: '#BBF7D0', tc: '#166534'
       } : null,
       photos: []
     },
     {
-      status: isPending ? 'wait' : (isInprogress ? 'active' : 'done'),
+      status: (!hasAssignee || isPending) ? 'wait' : (isInprogress ? 'active' : 'done'),
       icon: 'bi-tools',
       title: 'กำลังดำเนินการซ่อม',
-      time: isInprogress ? fmtDate(t.rawUpdatedAt) : (isDone ? fmtDate(t.rawUpdatedAt) : ''),
-      detail: isPending ? '' : (isInprogress ? 'ช่างกำลังดำเนินการแก้ไข' : 'ดำเนินการเสร็จสิ้น'),
-      actor: !isPending ? {
-        name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
-        initials: assigneeInitials,
-        bg: '#FDE68A',
-        tc: '#92400E'
+      time: (!hasAssignee || isPending) ? ''
+          : (isInprogress || isDone) ? fmtDate(t.rawUpdatedAt) : '',
+      detail: (!hasAssignee || isPending) ? ''
+            : (isInprogress ? 'ช่างกำลังดำเนินการแก้ไข' : 'ดำเนินการเสร็จสิ้น'),
+      actor: (hasAssignee && !isPending) ? {
+        name: assigneeName, role: 'ผู้รับผิดชอบ',
+        initials: assigneeInitials, bg: '#FDE68A', tc: '#92400E'
       } : null,
-      photos: (!isPending) ? ['placeholder', 'placeholder'] : []
+      photos: (hasAssignee && !isPending) ? ['placeholder','placeholder'] : []
     },
     {
       status: isDone ? 'done' : 'wait',
@@ -620,11 +613,8 @@ function generateSteps(t) {
       time: isDone ? fmtDate(t.rawUpdatedAt) : '',
       detail: isDone ? 'งานเสร็จสมบูรณ์ สามารถประเมินความพึงพอใจได้' : '',
       actor: isDone ? {
-        name: assigneeName,
-        role: 'ผู้รับผิดชอบ',
-        initials: assigneeInitials,
-        bg: '#BBF7D0',
-        tc: '#166534'
+        name: assigneeName, role: 'ผู้รับผิดชอบ',
+        initials: assigneeInitials, bg: '#BBF7D0', tc: '#166534'
       } : null,
       photos: []
     }
@@ -647,10 +637,11 @@ async function fetchTickets(silent = false) {
         title: t.title,
         detail: t.detail || '',
         note: t.note || '',
-        reporter: currentUser.fullName,reporterAv: { 
-        initials: currentUser.initials, 
-          bg: '#BFDBFE', 
-          tc: '#1E40AF' 
+        reporter: t.reporter_name || '—',
+        reporterAv: {
+        initials: (t.reporter_name || '—').substring(0, 2),
+        bg: '#BFDBFE',
+        tc: '#1E40AF'
         },
         assignee: assigneeName,
         assigneeAv: {
@@ -715,7 +706,7 @@ function updateCounts() {
 function calcQueue() {
   const assigneeMap = {};
   tickets
-    .filter(t => t.status !== 'done')
+    .filter(t => t.status !== 'done' && t.assignee && t.assignee !== '—')
     .sort((a, b) => new Date(a.rawCreatedAt) - new Date(b.rawCreatedAt))
     .forEach(t => {
       if (!assigneeMap[t.assignee]) assigneeMap[t.assignee] = [];
@@ -723,7 +714,7 @@ function calcQueue() {
     });
 
   tickets.forEach(t => {
-    if (t.status === 'done') {
+    if (t.status === 'done' || noAssignee) {
       t.queuePos  = null;
       t.queueTotal = null;
     } else {

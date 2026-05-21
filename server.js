@@ -146,53 +146,34 @@ app.use('/uploads', express.static('uploads'));
 
 // รับข้อมูลแจ้งงานใหม่ (submit-ticket) พร้อมไฟล์แนบ
 app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
-
     const { title, detail, priority, note, assignee } = req.body;
-
-    // รับไฟล์
     const files = req.files;
 
-    console.log(files);
+    // ดึง userId จาก session
+    const reporterId = req.session.userId || null;
 
-    // เก็บชื่อไฟล์เป็น array
     let attachment = null;
-
     if (files && files.length > 0) {
-        attachment = JSON.stringify(
-            files.map(file => file.filename)
-        );
+        attachment = JSON.stringify(files.map(file => file.filename));
     }
 
     try {
-
         const sql = `
         INSERT INTO it_maintenance
-        (title, detail, priority, note, assignee, attachment, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+        (title, detail, priority, note, assignee, attachment, reporter_id, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
         `;
 
         const [result] = await db.query(sql, [
-            title,
-            detail,
-            priority,
-            note,
-            assignee,
-            attachment
+            title, detail, priority, note, assignee,
+            attachment,
+            reporterId  // บันทึก reporter_id
         ]);
 
-        res.json({
-            success: true,
-            message: "บันทึกข้อมูลเรียบร้อยแล้ว",
-            ticketId: result.insertId
-        });
-
+        res.json({ success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว", ticketId: result.insertId });
     } catch (err) {
-
         console.error("Database Error:", err);
-
-        res.status(500).json({
-            error: "ไม่สามารถบันทึกข้อมูลได้"
-        });
+        res.status(500).json({ error: "ไม่สามารถบันทึกข้อมูลได้" });
     }
 });
 
@@ -227,7 +208,13 @@ app.get('/history', (req, res) => {
 // ดึงข้อมูลมาแสดง
 app.get('/api/tickets', async (req, res) => {
     try {
-        const [rows] = await db.query("SELECT * FROM it_maintenance ORDER BY created_at DESC");
+        // JOIN users เพื่อดึงชื่อของผู้แจ้ง
+        const [rows] = await db.query(`
+            SELECT m.*, u.full_name AS reporter_name
+            FROM it_maintenance m
+            LEFT JOIN users u ON m.reporter_id = u.user_id
+            ORDER BY m.created_at DESC
+        `);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
