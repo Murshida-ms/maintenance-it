@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro — ลงทะเบียน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+
+<div class="page">
+  <div class="left">
+    <div class="left-icon-ring"><i class="ti ti-user-plus"></i></div>
+    <div class="left-name">TaskFlow Pro</div>
+    <div class="left-desc">สมัครสมาชิกเพื่อเข้าถึงระบบจัดการงานและแจ้งซ่อมออนไลน์</div>
+    <div class="left-divider"></div>
+  </div>
+
+  <div class="right">
+    <div class="form-head">
+      <h2>ลงทะเบียนใช้งาน</h2>
+      <p>กรุณากรอกข้อมูลเพื่อสร้างบัญชีใหม่</p>
+    </div>
+
+    <form action="/register" method="POST" class="needs-validation" novalidate>
+      <div class="field">
+        <label>ชื่อผู้ใช้งาน (Username)</label>
+        <div class="field-wrap">
+          <i class="ti ti-user"></i>
+          <input type="text" name="username" id="username-input" placeholder="กรอกชื่อผู้ใช้งาน..." required>
+        </div>
+        <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้งาน</div>
+        <div id="username-error" style="color: #ef4444; font-size: 11px; margin-top: 5px; display: none; align-items: center; gap: 4px;">
+           <i class="ti ti-alert-circle"></i> ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ชื่อ-นามสกุลจริง</label>
+        <div class="field-wrap">
+          <i class="ti ti-id"></i>
+          <input type="text" name="full_name" placeholder="ชื่อ และ นามสกุล" required>
+        </div>
+        <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุลจริง</div>
+      </div>
+
+      <div class="field">
+        <label>อีเมล (Email)</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail"></i>
+          <input type="email" name="email" placeholder="example@email.com" required>
+        </div>
+        <div class="invalid-feedback">กรุณากรอกอีเมล</div>
+      </div>
+
+      <div class="field">
+        <label>รหัสผ่าน (Password)</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock"></i>
+          <input type="password" name="password" placeholder="กรอกรหัสผ่าน..." required>
+        </div>
+        <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn-u">
+        ยืนยันการลงทะเบียน <i class="ti ti-arrow-right"></i>
+      </button>
+    </form>
+
+    <div class="register-row">
+      มีบัญชีอยู่แล้ว? <a href="/login">เข้าสู่ระบบที่นี่</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const usernameInput = document.getElementById('username-input');
+const usernameError = document.getElementById('username-error');
+const submitBtn = document.getElementById('submit-btn');
+
+let timeout = null;
+
+usernameInput.addEventListener('input', () => {
+
+    clearTimeout(timeout);
+
+    const username = usernameInput.value.trim();
+
+    // reset
+    usernameError.style.display = 'none';
+    submitBtn.disabled = false;
+
+    // ถ้ายังไม่กรอก
+    if (username.length < 3) {
+        return;
+    }
+
+    timeout = setTimeout(async () => {
+
+        try {
+
+            const response = await fetch(
+                `/check-username?username=${encodeURIComponent(username)}`
+            );
+
+            const data = await response.json();
+
+            if (data.exists) {
+
+                usernameError.style.display = 'flex';
+
+                usernameInput.style.borderColor = '#ef4444';
+
+                submitBtn.disabled = true;
+
+            } else {
+
+                usernameError.style.display = 'none';
+
+                usernameInput.style.borderColor = '#22c55e';
+
+                submitBtn.disabled = false;
+            }
+
+        } catch (err) {
+
+            console.error(err);
+        }
+
+    }, 400);
+
+});
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const forms = document.querySelectorAll('.needs-validation');
+
+  Array.from(forms).forEach(form => {
+
+    form.addEventListener('submit', event => {
+
+      if (!form.checkValidity()) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        form.classList.add('was-validated');
+
+        return;
+      }
+
+      const btn = form.querySelector('button[type="submit"]');
+
+      if (btn) {
+        btn.disabled = true;
+
+        btn.innerHTML =
+          '<i class="ti ti-loader-2 ti-spin"></i> กำลังเข้าสู่ระบบ...';
+      }
+
+    }, false);
+
+  });
+
+})();
+</script>
+
+</body>
+</html>

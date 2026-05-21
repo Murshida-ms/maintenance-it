@@ -5,10 +5,15 @@ const mysql = require("mysql2/promise");
 const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
+const crypto = require('crypto');
+//const bcrypt = require('bcrypt');
 
 // 1. Middleware ตั้งค่าการรับข้อมูล
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 
 // 2. เชื่อมต่อ Database
@@ -26,29 +31,43 @@ app.use(session({
     saveUninitialized: false
 }));
 
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;
+    next();
+});
+
 let db;
 async function initDB() {
     try {
         db = await mysql.createPool(dbConfig);
-        console.log('Connected to MySQL Database');
+        //console.log('Connected to MySQL Database');
     } catch (err) {
         console.error('Database connection failed:', err);
     }
 }
 initDB();
 
+function isLogin(req, res, next){
+    if(!req.session.user){
+        return res.redirect('/login');
+    }
+    next();
+}
+
 // --- ROUTES ---
 
 // หน้าแรก
 app.get("/", (req, res) => {
-  res.send("<h1>TaskFlow Pro Server is Running</h1>");
+//   res.send("<h1>TaskFlow Pro Server is Running</h1>");
+//   res.sendFile(path.join(__dirname, 'views', 'login.html'));
+  res.render('login');
 });
 
 // --- API สำหรับตรวจสอบ Username ซ้ำ (เพิ่มใหม่) ---
 app.get('/check-username', async (req, res) => {
     const { username } = req.query;
     try {
-        const [rows] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+        const [rows] = await db.query("SELECT user_id FROM users WHERE username = ?", [username]);
         if (rows.length > 0) {
             res.json({ exists: true }); // มีคนใช้แล้ว
         } else {
@@ -56,54 +75,94 @@ app.get('/check-username', async (req, res) => {
         }
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Database Error' });
+        // res.status(500).json({ error: 'Database Error' });
+        res.status(500).send(err.message);
     }
 });
 
 // หน้า Register
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'register.html'));
+    // res.sendFile(path.join(__dirname, 'views', 'register.html'));
+    res.render('register');
 });
 
 // รับข้อมูล Register
 app.post('/register', async (req, res) => {
+
     const { username, password, full_name, email } = req.body;
     try {
-        const sql = "INSERT INTO users (username, password, full_name, email) VALUES (?, ?, ?, ?)";
-        await db.query(sql, [username, password, full_name, email]);
-        
-        // สมัครสำเร็จ -> ไปหน้า Login เลย (ไม่ต้องมี alert)
-        res.redirect('/login'); 
+
+        // bcrypt
+        //const hashedPassword = await bcrypt.hash(password, 10);
+        // sha1
+        const sha1 = crypto
+            .createHash('sha1')
+            .update(password)
+            .digest('hex');
+
+        const sql = `
+            INSERT INTO users
+            (username, password, sha1, full_name, email,role,status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        await db.query(sql, [
+            username,
+            password,
+            sha1,
+            full_name,
+            email,
+            5,
+            'active'
+        ]);
+
+        res.redirect('/login');
+
     } catch (err) {
+
+        console.error(err);
+
         if (err.code === 'ER_DUP_ENTRY') {
-            // ถ้าชื่อซ้ำ -> ให้เด้งกลับหน้าเดิมเฉยๆ (หน้าบ้านเรามี JS ดักโชว์ตัวแดงไว้อยู่แล้ว)
-            res.redirect('/register?error=duplicate');
-        } else {
-            console.error(err);
-            res.status(500).send("Server Error");
+
+            return res.redirect('/register?error=duplicate');
         }
+        res.status(500).send(err.message);
     }
 });
 
 // หน้า Login
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    // res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    res.render('login');
 });
 
 // รับข้อมูล Login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    const sha1Password = crypto
+    .createHash('sha1')
+    .update(password)
+    .digest('hex');
     try {
-        const [rows] = await db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password]);
+        const [rows] = await db.query("SELECT u.user_id,u.username,u.full_name,u.role,r.name AS role_name FROM users u JOIN role r ON u.role = r.id  WHERE u.username = ? AND u.sha1 = ?", [username, sha1Password]);
         
         if (rows.length > 0) {
             // ✅ แก้ไขให้ตรงกับโครงสร้างตารางของคุณ (user_id)
-            req.session.userId = rows[0].user_id; 
-            req.session.fullName = rows[0].full_name;
+             const user = rows[0];
+            // เก็บ session object
+            req.session.user = {
+                id: user.user_id,
+                username: user.username,
+                fullName: user.full_name,
+                role: user.role,
+                roleName: user.role_name
+            };
             
-            res.redirect('/index'); 
+            // res.redirect('/index'); 
+            return res.redirect('/index');
         } else {
-            res.redirect('/login?error=failed'); 
+            // res.redirect('/login?error=failed'); 
+            return res.redirect('/login?error=failed');
         }
     } catch (err) {
         console.error(err);
@@ -112,19 +171,30 @@ app.post('/login', async (req, res) => {
 });
 
 // หน้าหลัก user
-app.get('/index', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'board.html'));
+app.get('/index', isLogin, (req, res) => {
+    // res.sendFile(path.join(__dirname, 'views', 'user', 'board.html'));
+    // res.render('user/board');
+    res.render('user/board', {
+        page: 'index',
+        user: req.session.user
+    });
 });
 
 // API สำหรับดึงข้อมูล User ที่ Login อยู่
 app.get('/api/me', (req, res) => {
-    if (req.session && req.session.userId) {
+
+    if (req.session.user) {
+
         res.json({
-            fullName: req.session.fullName,
-            role: "IT Administrator"
+            fullName: req.session.user.fullName,
+            role: req.session.user.roleName
         });
+
     } else {
-        res.status(401).json({ error: "Unauthorized" });
+
+        res.status(401).json({
+            error: "Unauthorized"
+        });
     }
 });
 
@@ -180,8 +250,13 @@ app.get('/api/next-ticket', async (req, res) => {
 });
 
 // หน้า form แจ้งงานใหม่
-app.get('/form', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'form.html'));
+app.get('/form',isLogin, (req, res) => {
+    // res.sendFile(path.join(__dirname, 'views', 'user', 'form.html'));
+    // res.render('user/form');
+    res.render('user/form', {
+        page: 'form',
+        user: req.session.user
+    });
 });
 
 // หน้า timeline 
@@ -259,6 +334,172 @@ app.get('/manage', (req, res) => {
 // หน้า มอบหมาย
 app.get('/queue', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'queue.html'));
+});
+
+app.get('/report',isLogin, (req, res) => {
+    // res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    // res.render('user/report');
+    res.render('user/report', {
+        page: 'report',
+        user: req.session.user
+    });
+});
+
+app.get('/users',isLogin, (req, res) => {
+    res.render('user/users', {
+        page: 'users',
+        user: req.session.user
+    });
+});
+
+// GET USERS
+app.get('/api/getusers', async (req, res) => {
+
+  try {
+
+    const [rows] = await db.query(`
+      SELECT
+        u.user_id,
+        u.username,
+        u.password,
+        u.full_name,
+        u.email,
+        u.role,
+        r.name AS role_name,
+        u.status,
+        u.created_at
+      FROM users u
+      LEFT JOIN role r ON r.id = u.role
+      ORDER BY u.user_id DESC
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: 'โหลดข้อมูลไม่สำเร็จ'
+    });
+
+  }
+});
+
+// CREATE
+app.post('/api/users', async (req, res) => {
+  try {
+    const {
+      username,
+      password,
+      name,
+      email,
+      role,
+      status
+    } = req.body;
+    // VALIDATE
+    if (
+      !username ||
+      !password ||
+      !name ||
+      !email ||
+      !role
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณากรอกข้อมูลให้ครบ'
+      });
+    }
+    // CHECK USERNAME DUPLICATE
+    const [exists] = await db.query(
+      'SELECT user_id FROM users WHERE username = ? LIMIT 1',
+      [username]
+    );
+    if (exists.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'ชื่อผู้ใช้งานนี้ถูกใช้แล้ว'
+      });
+    }
+    // HASH SHA1
+    const sha1 = crypto
+      .createHash('sha1')
+      .update(password)
+      .digest('hex');
+    // INSERT USER
+    await db.query(`
+      INSERT INTO users (
+        username,
+        password,
+        sha1,
+        full_name,
+        email,
+        role,
+        status,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [
+      username,
+      password,
+      sha1,
+      name,
+      email,
+      role,
+      status
+    ]);
+    res.json({
+      success: true,
+      message: 'เพิ่มผู้ใช้งานสำเร็จ'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+});
+
+// UPDATE
+app.put('/api/users/:id', async (req, res) => {
+  const { username, password, full_name, email, role, status } = req.body;
+  const sha1 = crypto
+      .createHash('sha1')
+      .update(password)
+      .digest('hex');
+  await db.query(`
+    UPDATE users
+    SET username=?,
+        password=?,
+        sha1=?,
+        full_name=?,
+        email=?,
+        role=?,
+        status=?
+    WHERE user_id=?
+  `,[username,password,sha1,full_name,email,role,status,req.params.id]);
+  res.json({ success:true });
+});
+
+// DELETE
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM users WHERE user_id=?',
+      [req.params.id]
+    );
+    res.json({
+      success: true
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาด'
+    });
+  }
 });
 
 // Logout

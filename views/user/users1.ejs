@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบแจ้งงาน - Users Management</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+
+<%- include('sidebar') %>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">ผู้ใช้งาน</div>
+      <div class="topbar-sub">รายการผู้ใช้งานทั้งหมด</div>
+    </div>
+    <div class="topbar-actions">
+      <!-- <button class="btn-ghost-sm" onclick="exportCSV()"><i class="bi bi-download"></i> ส่งออก CSV</button> -->
+      <button class="btn-primary-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="bi bi-person-add"></i> ผู้ใช้งานใหม่
+      </button>
+      <button class="icon-btn" title="แจ้งเตือน">
+        <i class="bi bi-bell" style="font-size:16px"></i>
+        <span class="notif-dot"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">ความเร่งด่วน</span>
+        <select class="filter-select" id="filter-pri" onchange="applyFilters()">
+          <option value="">ทั้งหมด</option>
+          <option value="high">ด่วนมาก</option>
+          <option value="med">ปานกลาง</option>
+          <option value="low">ปกติ</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">วันที่</span>
+        <input class="filter-select" id="filter-date-from" type="date" onchange="applyFilters()">
+        <span style="font-size:12px;color:var(--text-muted)">ถึง</span>
+        <input class="filter-select" id="filter-date-to" type="date" onchange="applyFilters()">
+      </div>
+      <div class="filter-actions">
+        <button class="btn-ghost-sm" onclick="clearFilters()"><i class="bi bi-x-circle"></i> ล้าง</button>
+      </div>
+    </div>
+
+    <!-- SUMMARY CHIPS -->
+    <div class="summary-row" id="summary-row"></div>
+
+    <!-- TABLE -->
+    <div class="card-box">
+      <div class="card-header">
+        <h6><i class="bi bi-people" style="color:var(--primary);margin-right:6px"></i>รายการผู้ใช้งาน</h6>
+        <span style="font-size:12px;color:var(--text-muted)" id="result-count"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th style="width:100px">ID</th>
+              <th>Username</th>
+              <th>password</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>สถานะ</th>
+              <th>สิทธิ์</th>
+              <th>วันที่สร้าง</th>
+              <th style="width:120px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <i class="bi bi-inbox"></i>
+        <p>ไม่พบรายการที่ตรงกับเงื่อนไขการค้นหา</p>
+      </div>
+      <div class="pagination-bar">
+        <span id="page-info"></span>
+        <div class="page-btns" id="page-btns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-person-add"></i> เพิ่มผู้ใช้งาน
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="addUserForm" class="needs-validation" novalidate>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" id="add-username" required>
+            <div id="username-error" style="color: #ef4444; font-size: 11px; margin-top: 5px; display: none; align-items: center; gap: 4px;">
+              <i class="ti ti-alert-circle"></i> ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="add-password" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">ชื่อ-นามสกุลจริง</label>
+            <input type="text" class="form-control" id="add-name" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">อีเมล์</label>
+            <input type="email" class="form-control" id="add-email" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">สิทธิ์</label>
+            <select class="form-select" id="add-role" required>
+              <option value="">-</option>
+              <option value="1">admin</option>
+              <option value="2">manager</option>
+              <option value="3">head</option>
+              <option value="4">staff</option>
+              <option value="5">guest</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">สถานะ</label>
+            <select class="form-select" id="add-status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            ยกเลิก
+          </button>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> บันทึก
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil-square"></i> แก้ไขผู้ใช้งาน
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="editUserForm">
+        <div class="modal-body">
+
+          <input type="hidden" id="edit-id">
+
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" id="edit-username" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="edit-password">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">ชื่อ-นามสกุลจริง</label>
+            <input type="text" class="form-control" id="edit-full_name">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">อีเมล์</label>
+            <input type="email" class="form-control" id="edit-email">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">สิทธิ์</label>
+            <select class="form-select" id="edit-role" required>
+              <option value="">-</option>
+              <option value="1">admin</option>
+              <option value="2">manager</option>
+              <option value="3">head</option>
+              <option value="4">staff</option>
+              <option value="5">guest</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">สถานะ</label>
+            <select class="form-select" id="edit-status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            ยกเลิก
+          </button>
+
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-save"></i> บันทึกการแก้ไข
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let users = [];
+// ======================
+// ELEMENTS
+// ======================
+const usernameInput = document.getElementById('add-username');
+const usernameError = document.getElementById('username-error');
+
+let usernameTimeout = null;
+
+// ======================
+// LOAD LOGIN USER
+// ======================
+async function loadUser() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    const data = await res.json();
+    document.getElementById('user-fullname').textContent = data.fullName;
+    document.getElementById('user-role').textContent = data.role;
+    document.getElementById('user-avatar').textContent = data.fullName.substring(0, 2);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ======================
+// LOAD USERS
+// ======================
+async function loadUsers() {
+
+  try {
+
+    const res = await fetch('/api/getusers');
+
+    users = await res.json();
+
+    renderTable(users);
+
+  } catch (err) {
+
+    console.error(err);
+  }
+}
+
+// ======================
+// RENDER TABLE
+// ======================
+function renderTable(data) {
+
+  const tbody = document.getElementById('users-tbody');
+
+  if (!data.length) {
+
+    tbody.innerHTML = '';
+
+    document.getElementById('empty-state').style.display =
+      'block';
+
+    return;
+  }
+
+  document.getElementById('empty-state').style.display =
+    'none';
+
+  tbody.innerHTML = data.map(user => `
+
+    <tr>
+
+      <td>${user.user_id}</td>
+
+      <td>
+        <div class="fw-semibold">
+          ${user.username}
+        </div>
+      </td>
+
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <span id="pwd-${user.user_id}">••••••••</span>
+          <button
+            type="button"
+            class="btn btn-sm btn-light border"
+            onclick="togglePassword(${user.user_id}, this)"
+            title="แสดงรหัสผ่าน${user.user_id}">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </td>
+
+      <td>
+        <div class="fw-semibold">
+          ${user.full_name}
+        </div>
+      </td>
+
+      <td>
+        <span class="badge ${
+          user.status === 'active'
+            ? 'bg-success'
+            : 'bg-secondary'
+        }">
+          ${user.status}
+        </span>
+      </td>
+
+      <td>${user.role_name}</td>
+
+      <td>
+        ${formatDate(user.created_at)}
+      </td>
+
+      <td>
+
+        <div class="d-flex gap-1">
+
+          <button
+            class="btn btn-warning btn-sm"
+            onclick="openEditModal(${user.user_id})">
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <button
+            class="btn btn-danger btn-sm"
+            onclick="deleteUser(${user.user_id})">
+            <i class="bi bi-trash"></i>
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `).join('');
+
+  document.getElementById('result-count').innerText =
+    `ทั้งหมด ${data.length} รายการ`;
+}
+
+// แสดงรหัสผ่าน
+function togglePassword(user_id, btn) {
+
+  const passwordEl = document.getElementById(`pwd-${user_id}`);
+  const icon = btn.querySelector('i');
+  const user = users.find(x => x.user_id == user_id);
+  if (!user) return;
+  // CURRENTLY HIDDEN
+  if (passwordEl.dataset.show !== 'true') {
+    passwordEl.textContent = user.password;
+    passwordEl.dataset.show = 'true';
+    icon.classList.remove('bi-eye');
+    icon.classList.add('bi-eye-slash');
+  } else {
+    passwordEl.textContent = '••••••••';
+    passwordEl.dataset.show = 'false';
+    icon.classList.remove('bi-eye-slash');
+    icon.classList.add('bi-eye');
+  }
+}
+
+// ======================
+// FORMAT DATE
+// ======================
+function formatDate(dateString) {
+
+  if (!dateString) return '-';
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// ======================
+// CHECK USERNAME
+// ======================
+usernameInput.addEventListener('input', () => {
+
+  clearTimeout(usernameTimeout);
+
+  const username = usernameInput.value.trim();
+
+  usernameError.style.display = 'none';
+
+  usernameInput.classList.remove(
+    'is-invalid',
+    'is-valid'
+  );
+
+  if (username.length < 3) return;
+
+  usernameTimeout = setTimeout(async () => {
+
+    try {
+
+      const response = await fetch(
+        `/check-username?username=${encodeURIComponent(username)}`
+      );
+
+      const data = await response.json();
+
+      if (data.exists) {
+
+        usernameError.style.display = 'flex';
+
+        usernameInput.classList.add('is-invalid');
+
+      } else {
+
+        usernameError.style.display = 'none';
+
+        usernameInput.classList.add('is-valid');
+      }
+
+    } catch (err) {
+
+      console.error(err);
+    }
+
+  }, 400);
+});
+
+// ======================
+// OPEN EDIT MODAL
+// ======================
+function openEditModal(user_id) {
+  const user = users.find(x => x.user_id == user_id);
+  console.log(user);
+  if (!user) return;
+
+  document.getElementById('edit-id').value = user.user_id;
+  document.getElementById('edit-username').value = user.username;
+  document.getElementById('edit-full_name').value = user.full_name;
+  document.getElementById('edit-email').value = user.email;
+  document.getElementById('edit-role').value = user.role;
+  document.getElementById('edit-status').value = user.status;
+  document.getElementById('edit-password').value = user.password;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById('editUserModal')
+  );
+  modal.show();
+}
+
+// ======================
+// ADD USER
+// ======================
+document.getElementById('addUserForm')
+.addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = this;
+  // VALIDATE
+  if (!form.checkValidity()) {
+    e.stopPropagation();
+    form.classList.add('was-validated');
+    return;
+  }
+
+  // CHECK DUPLICATE USERNAME
+  if (usernameInput.classList.contains('is-invalid')) {
+    usernameInput.focus();
+    return;
+  }
+
+  const submitBtn =
+    form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML =
+    '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
+  const body = {
+    username:document.getElementById('add-username').value.trim(),
+    password:document.getElementById('add-password').value.trim(),
+    name:document.getElementById('add-name').value.trim(),
+    email:document.getElementById('add-email').value.trim(),
+    role:document.getElementById('add-role').value,
+    status:document.getElementById('add-status').value
+  };
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      alert(result.message || 'เพิ่มข้อมูลไม่สำเร็จ');
+      return;
+    }
+    bootstrap.Modal
+      .getInstance(
+        document.getElementById('addUserModal')
+      )
+      .hide();
+
+    form.reset();
+    form.classList.remove('was-validated');
+    usernameInput.classList.remove(
+      'is-valid',
+      'is-invalid'
+    );
+    usernameError.style.display = 'none';
+    await loadUsers();
+  } catch (err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาด');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML =
+      '<i class="bi bi-save"></i> บันทึก';
+  }
+});
+
+// ======================
+// UPDATE USER
+// ======================
+document.getElementById('editUserForm')
+.addEventListener('submit', async function(e){
+
+  e.preventDefault();
+
+  const form = this;
+
+  // VALIDATE
+  if (!form.checkValidity()) {
+
+    e.stopPropagation();
+
+    form.classList.add('was-validated');
+
+    return;
+  }
+
+  const submitBtn =
+  form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
+  const id = document.getElementById('edit-id').value;
+  const body = {
+    username:document.getElementById('edit-username').value.trim(),
+    password:document.getElementById('edit-password').value.trim(),
+    full_name:document.getElementById('edit-full_name').value.trim(),
+    email:document.getElementById('edit-email').value.trim(),
+    role:document.getElementById('edit-role').value,
+    status:document.getElementById('edit-status').value
+  };
+  try {
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      alert(result.message || 'แก้ไขไม่สำเร็จ');
+      return;
+    }
+
+    bootstrap.Modal
+      .getInstance(
+        document.getElementById('editUserModal')
+      )
+      .hide();
+
+    form.classList.remove('was-validated');
+
+    await loadUsers();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert('เกิดข้อผิดพลาด');
+
+  } finally {
+
+    submitBtn.disabled = false;
+
+    submitBtn.innerHTML =
+      '<i class="bi bi-save"></i> บันทึกการแก้ไข';
+  }
+});
+
+// ======================
+// DELETE USER
+// ======================
+async function deleteUser(id) {
+
+  if (!confirm('ต้องการลบผู้ใช้งานนี้ ?'))
+    return;
+
+  try {
+
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'DELETE'
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+
+      alert(result.message || 'ลบไม่สำเร็จ');
+
+      return;
+    }
+
+    await loadUsers();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert('เกิดข้อผิดพลาด');
+  }
+}
+
+// ======================
+// INIT
+// ======================
+loadUser();
+loadUsers();
+
+</script>
+</body>
+</html>

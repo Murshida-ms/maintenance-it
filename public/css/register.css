@@ -1,0 +1,103 @@
+    /* CSS ทั้งหมดคงเดิมตามที่คุณส่งมา */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Sans Thai', sans-serif;
+      background: #F3F4F6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      max-width: 800px;
+      min-height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.15);
+      background: #fff;
+    }
+    .left {
+      background: linear-gradient(160deg, #7B2FF7 0%, #4338CA 45%, #0EA5E9 100%);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; gap: 1.1rem;
+    }
+    .left-icon-ring {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.35);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.12);
+    }
+    .left-icon-ring i { font-size: 46px; color: #fff; }
+    .left-name { font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -.2px; }
+    .left-desc { font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.65; max-width: 210px; }
+    .left-divider { width: 40px; height: 2px; background: rgba(255,255,255,.3); border-radius: 2px; }
+
+    .right { padding: 2rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+    .form-head { text-align: center; margin-bottom: 1.5rem; }
+    .form-head h2 { font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 4px; }
+    .form-head p { font-size: 13px; color: #6B7280; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+    .field-wrap { position: relative; }
+    .field-wrap i {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 17px; color: #9CA3AF; pointer-events: none;
+    }
+    .field input {
+      width: 100%; padding: 10px 12px 10px 38px; font-family: inherit; font-size: 13px;
+      border: 1.5px solid #E5E7EB; border-radius: 9px; color: #1F2937; outline: none; transition: all .15s;
+    }
+    .field input:focus { border-color: #7B2FF7; box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.1); }
+
+    .btn-u {
+      width: 100%; padding: 11px; border: none; border-radius: 9px;
+      background: linear-gradient(90deg, #7B2FF7, #4338CA, #0EA5E9);
+      color: #fff; font-size: 14px; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: all 0.2s; margin-top: 5px;
+    }
+    .btn-u:hover { opacity: 0.9; }
+    .btn-u:disabled { background: #9CA3AF; cursor: not-allowed; opacity: 0.6; }
+
+    .register-row { text-align: center; margin-top: 1rem; font-size: 12px; color: #6B7280; }
+    .register-row a { color: #7B2FF7; text-decoration: none; font-weight: 500; }
+    
+    @media (max-width: 600px) { .page { grid-template-columns: 1fr; } .left { padding: 2rem 1.5rem; min-height: 220px; } }
+    @media (max-width: 430px) {
+        .left {
+          display: none;
+        }
+        .right {
+          width: 100%;
+        }
+      }
+
+.invalid-feedback{
+  display:none;
+  width:100%;
+  margin-top:6px;
+  font-size:13px;
+  color:#ef4444;
+}
+
+.was-validated .field input:invalid{
+  border:1px solid #ef4444 !important;
+}
+
+.was-validated .field input:valid{
+  border:1px solid #22c55e !important;
+}
+
+/* แสดงเฉพาะ field ที่ invalid */
+.was-validated .field:has(input:invalid) .invalid-feedback{
+  display:block;
+}

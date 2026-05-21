@@ -164,18 +164,19 @@
         event.preventDefault();
         event.stopPropagation();
 
-      } else {
+        form.classList.add('was-validated');
 
-        const btn = form.querySelector('button[type="submit"]');
-
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML =
-            '<i class="ti ti-loader-2 ti-spin"></i> กำลังเข้าสู่ระบบ...';
-        }
+        return;
       }
 
-      form.classList.add('was-validated');
+      const btn = form.querySelector('button[type="submit"]');
+
+      if (btn) {
+        btn.disabled = true;
+
+        btn.innerHTML =
+          '<i class="ti ti-loader-2 ti-spin"></i> กำลังเข้าสู่ระบบ...';
+      }
 
     }, false);
 
