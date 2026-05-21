@@ -404,20 +404,23 @@ async function loadTickets() {
       }));
 
     // ✅ rebuild assignedMap จากข้อมูล DB
+    // ✅ rebuild assignedMap จากข้อมูล DB
     assignedMap = {};
-    tasks.forEach(t => {
-      if (t.status === 'inprogress' && t.assignee && t.assignee !== '—') {
-        assignedMap[t.id] = {
-          staffId:   null,
-          staffName: t.assignee,
-          at:        t.time + ' น.',
-        };
+    staffList.forEach(s => { s.active = 0; }); // reset ก่อน
 
-        // ✅ sync workload ของ staffList ด้วย
-        const staff = staffList.find(s => s.name === t.assignee);
-        if (staff) staff.active = Math.min(staff.active + 1, staff.max);
-      }
-    });
+    tasks.forEach(t => {
+    if (t.assignee && t.assignee !== '—') {
+    assignedMap[t.id] = {
+      staffId:   null,
+      staffName: t.assignee,
+      at:        t.time + ' น.',
+    };
+
+    // sync workload
+    const staff = staffList.find(s => s.name === t.assignee);
+    if (staff) staff.active = Math.min(staff.active + 1, staff.max);
+  }
+});
 
     renderDispatch();
   } catch {
@@ -700,8 +703,7 @@ async function doDispatchAssign() {
         detail:   dSelTicket.detail,
         note:     dSelTicket.note,
         priority: dSelTicket.pri,
-        assignee: sname,
-        status:   'inprogress',   
+        assignee: sname, 
       }),
     });
 
@@ -716,7 +718,7 @@ async function doDispatchAssign() {
   dSelStaff.active = Math.min(dSelStaff.active + 1, dSelStaff.max);
 
   const task = tasks.find(t => t.id === tid);
-  if (task) { task.assignee = sname; task.status = 'inprogress'; }
+  if (task) { task.assignee = sname; }
 
   dSelTicket = null;
   dSelStaff  = null;
@@ -739,7 +741,6 @@ async function resetDispatch() {
         note:     t.note,
         priority: t.pri,
         assignee: '—',
-        status:   'pending',
       }),
     })
   ));

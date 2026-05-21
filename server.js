@@ -247,23 +247,23 @@ app.put('/api/tickets/:id', async (req, res) => {
         let sql, params;
 
         if (status) {
-            // กรณีส่ง status มาด้วย (จากหน้า queue)
             sql = `UPDATE it_maintenance 
-                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, status = ?, updated_at = NOW()
+                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, 
+                       status = ?, updated_at = NOW()
                    WHERE id = ?`;
             params = [title, detail, note, priority, assignee, status, id];
         } else {
-            // กรณีแก้ไขปกติ (จากหน้า timeline)
             sql = `UPDATE it_maintenance 
-                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, updated_at = NOW()
-                   WHERE id = ? AND status IN ('pending', 'inprogress')`;
+                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?,
+                       updated_at = NOW()
+                   WHERE id = ?`;
             params = [title, detail, note, priority, assignee, id];
         }
 
         const [result] = await db.query(sql, params);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'ไม่พบ Ticket หรือไม่สามารถแก้ไขได้' });
+            return res.status(404).json({ error: 'ไม่พบ Ticket' });
         }
 
         res.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว' });
