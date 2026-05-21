@@ -56,60 +56,30 @@ body {
 .nav-item .bi { font-size:17px;width:20px;flex-shrink:0; }
 .nav-badge { margin-left:auto;background:var(--primary);color:#fff;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:600; }
 .nav-badge.red { background:var(--rejected); }
-/* ======= SIDEBAR USER (รวมปุ่ม logout) ======= */
-  .sidebar-user {
-    padding: 14px 12px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .user-avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .user-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .sidebar-user .user-name {
-    color: #F1F5F9;
-    font-size: 13px;
-    font-weight: 500;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sidebar-user .user-role {
-    color: var(--sidebar-text);
-    font-size: 11px;
-    display: block;
-  }
-  /* ปุ่ม logout แบบ icon เล็กๆ ข้างชื่อ */
-  .btn-logout-icon {
-    width: 30px; height: 30px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255,255,255,0.08);
-    background: transparent;
-    color: var(--sidebar-text);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    flex-shrink: 0;
-    font-size: 15px;
-  }
-  .btn-logout-icon:hover {
-    background: rgba(239,68,68,0.15);
-    color: #F87171;
-    border-color: rgba(239,68,68,0.3);
-  }
+.sidebar-user {
+  padding: 14px 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.sidebar-user .user-name {
+  color: #F1F5F9; font-size: 13px; font-weight: 500;
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-user .user-role { color: var(--sidebar-text); font-size: 11px; display: block; }
+.btn-logout-icon {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.08); background: transparent;
+  color: var(--sidebar-text); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s; flex-shrink: 0; font-size: 15px;
+}
+.btn-logout-icon:hover { background: rgba(239,68,68,0.15); color: #F87171; border-color: rgba(239,68,68,0.3); }
 
 /* MAIN */
 .main { margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh; }
@@ -127,13 +97,9 @@ body {
 /* TICKET ID BAR */
 .ticket-bar {
   background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
-  border-radius: var(--radius);
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  color: #fff;
+  border-radius: var(--radius); padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; color: #fff;
 }
 .ticket-bar .tk-num { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; font-family: 'Courier New', monospace; }
 .ticket-bar .tk-label { font-size: 12px; opacity: 0.75; margin-bottom: 2px; }
@@ -142,12 +108,7 @@ body {
 .ticket-bar .tk-status::before { content:''; width:7px;height:7px;border-radius:50%;background:#FCD34D;display:inline-block; }
 
 /* FORM LAYOUT */
-.form-layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 20px;
-  align-items: start;
-}
+.form-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
 
 /* CARD */
 .card-box { background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:20px; }
@@ -163,29 +124,21 @@ body {
 .form-label { display:block;font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:7px; }
 .form-label .req { color:var(--rejected);margin-left:2px; }
 .form-label .hint { font-size:11px;font-weight:400;color:var(--text-muted);margin-left:6px; }
-
 .form-control, .form-select {
   width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
   font-size:14px;font-family:'Sarabun',sans-serif;color:var(--text-main);background:var(--card-bg);
   outline:none;transition:border-color .15s, box-shadow .15s;appearance:none;
 }
-.form-control:focus, .form-select:focus {
-  border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(37,99,235,0.12);
-}
+.form-control:focus, .form-select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,0.12); }
 .form-control::placeholder { color:#CBD5E1;font-size:13px; }
 textarea.form-control { resize:vertical;min-height:100px; }
-
 .input-icon-wrap { position:relative; }
 .input-icon-wrap .bi { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:15px;pointer-events:none; }
 .input-icon-wrap .form-control { padding-left:36px; }
 
 /* PRIORITY RADIO */
 .priority-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-.priority-card {
-  border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;
-  transition:all .15s;text-align:center;
-}
+.priority-card { border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;transition:all .15s;text-align:center; }
 .priority-card:hover { border-color:#94A3B8; }
 .priority-card input[type=radio] { display:none; }
 .priority-card .pc-icon { font-size:20px;margin-bottom:4px;display:block; }
@@ -197,9 +150,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
 
 /* ===================== SLA BLOCK ===================== */
 .sla-block {
-  margin-top: 14px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  margin-top: 14px; border-radius: var(--radius-sm); overflow: hidden;
   border: 1.5px solid var(--sla-color, var(--border));
   background: var(--sla-bg, #F8FAFC);
   animation: slaFadeIn .25s ease;
@@ -209,65 +160,19 @@ textarea.form-control { resize:vertical;min-height:100px; }
   to   { opacity:1; transform:translateY(0); }
 }
 .sla-header {
-  background: var(--sla-color, #64748B);
-  color: #fff;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
+  background: var(--sla-color, #64748B); color: #fff;
+  padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 600;
 }
 .sla-header .sla-badge {
-  background: rgba(255,255,255,.22);
-  border-radius: 99px;
-  padding: 2px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .03em;
+  background: rgba(255,255,255,.22); border-radius: 99px;
+  padding: 2px 10px; font-size: 11px; font-weight: 700; letter-spacing: .03em;
 }
-.sla-body { padding: 12px 14px; display: flex; gap: 12px; align-items: stretch; }
+.sla-body { padding: 12px 14px; }
 .sla-deadline-col { flex:1; }
 .sla-dl-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .sla-dl-time { font-size: 15px; font-weight: 700; color: var(--text-main); font-family: 'Courier New', monospace; letter-spacing: .02em; }
 .sla-dl-date { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-.sla-divider { width: 1px; background: var(--border); flex-shrink: 0; margin: 0 4px; }
-.sla-countdown-col { flex:1; text-align: center; }
-.sla-cd-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.sla-cd-digits {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-}
-.sla-digit-group { text-align: center; }
-.sla-digit {
-  background: var(--sla-color, #64748B);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  border-radius: 5px;
-  padding: 3px 7px;
-  min-width: 34px;
-  display: inline-block;
-  line-height: 1.3;
-  transition: background .3s;
-}
-.sla-digit-unit { font-size: 9px; color: var(--text-muted); margin-top: 2px; font-weight: 600; letter-spacing: .04em; }
-.sla-colon { font-size: 18px; font-weight: 700; color: var(--text-muted); padding: 0 1px; line-height: 1.6; animation: blink 1s step-start infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-.sla-progress-wrap { padding: 0 14px 12px; }
-.sla-prog-row { display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:4px; }
-.sla-progress { height: 5px; border-radius: 99px; background: var(--border); overflow:hidden; }
-.sla-progress-fill { height: 100%; border-radius: 99px; background: var(--sla-color, #64748B); transition: width .5s ease; }
-.sla-block.urgent .sla-digit {
-  animation: urgentPulse 1.5s ease-in-out infinite;
-}
-@keyframes urgentPulse {
-  0%,100% { opacity:1; }
-  50% { opacity:.7; }
-}
 /* ===================== END SLA ===================== */
 
 /* FILE UPLOAD */
@@ -291,57 +196,33 @@ textarea.form-control { resize:vertical;min-height:100px; }
   background:rgba(0,0,0,0.5);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
 
-/* ===================== RECENT TASKS ===================== */
+/* RECENT TASKS */
 .recent-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background .12s;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .12s;
 }
 .recent-item:last-child { border-bottom: none; padding-bottom: 0; }
 .recent-item:first-child { padding-top: 0; }
 .recent-item:hover { background: #F8FAFC; margin: 0 -20px; padding-left: 20px; padding-right: 20px; border-radius: var(--radius-sm); }
-
-.ri-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0; margin-top: 5px;
-}
+.ri-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 .ri-dot.pending  { background: var(--pending); box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
 .ri-dot.done     { background: var(--done);    box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
 .ri-dot.progress { background: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
-
 .ri-body { flex: 1; min-width: 0; }
 .ri-title { font-size: 13px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
 .ri-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ri-ticket { font-size: 10px; font-family: monospace; color: var(--primary); font-weight: 700; background: var(--primary-light); padding: 1px 6px; border-radius: 4px; }
 .ri-time { font-size: 11px; color: var(--text-muted); }
-
-.ri-badge {
-  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap;
-}
+.ri-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; }
 .ri-badge.pending  { background: #FFFBEB; color: #D97706; }
 .ri-badge.done     { background: #ECFDF5; color: #059669; }
 .ri-badge.progress { background: var(--primary-light); color: var(--primary); }
-
-.recent-empty {
-  text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px;
-}
+.recent-empty { text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px; }
 .recent-empty .bi { font-size: 32px; display: block; margin-bottom: 8px; opacity: .35; }
-
-.recent-footer {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  text-align: center;
-}
-.recent-footer a {
-  font-size: 12px; color: var(--primary); text-decoration: none; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 4px;
-}
+.recent-footer { padding: 12px 20px; border-top: 1px solid var(--border); text-align: center; }
+.recent-footer a { font-size: 12px; color: var(--primary); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 .recent-footer a:hover { text-decoration: underline; }
-/* ===================== END RECENT ===================== */
 
 /* SUBMIT AREA */
 .submit-area {
@@ -358,9 +239,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
 .btn-cancel:hover { color:var(--rejected); }
 
 /* SUCCESS MODAL */
-.modal-overlay {
-  position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:200;display:none;align-items:center;justify-content:center;
-}
+.modal-overlay { position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:200;display:none;align-items:center;justify-content:center; }
 .modal-overlay.show { display:flex; }
 .modal-box { background:#fff;border-radius:20px;padding:40px;text-align:center;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15); }
 .modal-icon { width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:36px;color:#10B981;margin:0 auto 20px; }
@@ -394,9 +273,6 @@ textarea.form-control { resize:vertical;min-height:100px; }
   .priority-grid { grid-template-columns:1fr 1fr; }
   .content { padding:16px; }
   .submit-area { padding:12px 16px;flex-wrap:wrap;gap:8px; }
-  .sla-body { flex-direction: column; gap: 8px; }
-  .sla-divider { width:100%; height:1px; margin:4px 0; }
-  .sla-countdown-col { text-align:left; }
 }
 </style>
 </head>
@@ -423,8 +299,6 @@ textarea.form-control { resize:vertical;min-height:100px; }
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
     <a class="nav-item" onclick="setActive(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
   </nav>
-
-  <!-- USER + LOGOUT ในแถวเดียวกัน -->
   <div class="sidebar-user">
     <div class="user-avatar" id="user-avatar">--</div>
     <div class="user-info">
@@ -441,7 +315,6 @@ textarea.form-control { resize:vertical;min-height:100px; }
 <!-- MAIN -->
 <div class="main">
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div>
       <div class="topbar-title">แจ้งงานใหม่</div>
@@ -453,7 +326,6 @@ textarea.form-control { resize:vertical;min-height:100px; }
     </div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
 
     <!-- TICKET ID BAR -->
@@ -468,13 +340,12 @@ textarea.form-control { resize:vertical;min-height:100px; }
       </div>
     </div>
 
-    <!-- MAIN FORM LAYOUT -->
     <div class="form-layout">
 
-      <!-- LEFT: FORM -->
+      <!-- LEFT -->
       <div>
 
-        <!-- SECTION 1: ข้อมูลพื้นฐาน -->
+        <!-- ข้อมูลพื้นฐาน -->
         <div class="card-box">
           <div class="card-header">
             <h6>
@@ -503,7 +374,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
           </div>
         </div>
 
-        <!-- SECTION 3: ความเร่งด่วน -->
+        <!-- ความเร่งด่วน -->
         <div class="card-box">
           <div class="card-header">
             <h6>
@@ -533,7 +404,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
               </label>
             </div>
 
-            <!-- SLA BLOCK -->
+            <!-- SLA BLOCK — แสดงแค่ deadline ไม่มี countdown -->
             <div id="sla-block" class="sla-block" style="display:none">
               <div class="sla-header">
                 <span><i class="bi bi-clock-history" style="margin-right:5px"></i>กำหนด SLA</span>
@@ -545,33 +416,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
                   <div class="sla-dl-time" id="sla-dl-time">—</div>
                   <div class="sla-dl-date" id="sla-dl-date">—</div>
                 </div>
-                <div class="sla-divider"></div>
-                <div class="sla-countdown-col">
-                  <div class="sla-cd-label">⏱ เวลาที่เหลือ</div>
-                  <div class="sla-cd-digits">
-                    <div class="sla-digit-group">
-                      <div class="sla-digit" id="cd-d">00</div>
-                      <div class="sla-digit-unit">วัน</div>
-                    </div>
-                    <div class="sla-colon">:</div>
-                    <div class="sla-digit-group">
-                      <div class="sla-digit" id="cd-h">00</div>
-                      <div class="sla-digit-unit">ชม.</div>
-                    </div>
-                    <div class="sla-colon">:</div>
-                    <div class="sla-digit-group">
-                      <div class="sla-digit" id="cd-m">00</div>
-                      <div class="sla-digit-unit">นาที</div>
-                    </div>
-                    <div class="sla-colon">:</div>
-                    <div class="sla-digit-group">
-                      <div class="sla-digit" id="cd-s">00</div>
-                      <div class="sla-digit-unit">วินาที</div>
-                    </div>
-                  </div>
-                </div>
               </div>
-
             </div>
 
             <div style="margin-top:16px">
@@ -582,7 +427,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
           </div>
         </div>
 
-        <!-- SECTION 4: แนบรูป -->
+        <!-- แนบรูป -->
         <div class="card-box">
           <div class="card-header">
             <h6>
@@ -592,12 +437,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
           </div>
           <div class="card-body-pad">
             <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-              <input type="file"
-                     id="file-input"
-                     name="files"
-                     accept="image/*,.pdf"
-                     multiple
-                     onchange="handleFiles(this.files)">
+              <input type="file" id="file-input" name="files" accept="image/*,.pdf" multiple onchange="handleFiles(this.files)">
               <div class="fd-icon"><i class="bi bi-cloud-arrow-up"></i></div>
               <div class="fd-title">คลิกหรือลากไฟล์มาวางที่นี่</div>
               <div class="fd-sub">รองรับ JPG, PNG, PDF · สูงสุด 10MB ต่อไฟล์</div>
@@ -608,10 +448,8 @@ textarea.form-control { resize:vertical;min-height:100px; }
 
       </div>
 
-      <!-- RIGHT: SIDEBAR -->
+      <!-- RIGHT -->
       <div>
-
-        <!-- RECENT TASKS CARD -->
         <div class="card-box">
           <div class="card-header">
             <h6>
@@ -621,7 +459,6 @@ textarea.form-control { resize:vertical;min-height:100px; }
             <span style="font-size:11px;color:var(--text-muted)" id="recent-count">—</span>
           </div>
           <div class="card-body-pad" id="recent-list">
-            <!-- populated by JS -->
             <div class="recent-empty">
               <i class="bi bi-inbox"></i>
               ยังไม่มีรายการ
@@ -631,8 +468,8 @@ textarea.form-control { resize:vertical;min-height:100px; }
             <a href="/history"><i class="bi bi-arrow-right-circle"></i> ดูประวัติทั้งหมด</a>
           </div>
         </div>
-
       </div>
+
     </div>
   </div>
 
@@ -649,7 +486,7 @@ textarea.form-control { resize:vertical;min-height:100px; }
     </div>
   </div>
 
-</div><!-- /main -->
+</div>
 
 <!-- SUCCESS MODAL -->
 <div class="modal-overlay" id="success-modal">
@@ -683,14 +520,13 @@ textarea.form-control { resize:vertical;min-height:100px; }
 // SLA CONFIG
 // =====================================================================
 const SLA_CONFIG = {
-  low:  { hours: 72, label: 'ปกติ (72 ชม.)',     color: '#10B981', bg: '#ECFDF5', emoji: '🟢' },
+  low:  { hours: 72, label: 'ปกติ (72 ชม.)',    color: '#10B981', bg: '#ECFDF5', emoji: '🟢' },
   med:  { hours: 24, label: 'ปานกลาง (24 ชม.)', color: '#F59E0B', bg: '#FFFBEB', emoji: '🟡' },
-  high: { hours:  4, label: 'ด่วน (4 ชม.)',      color: '#EF4444', bg: '#FEF2F2', emoji: '🔴' },
+  high: { hours:  4, label: 'ด่วน (4 ชม.)',     color: '#EF4444', bg: '#FEF2F2', emoji: '🔴' },
 };
 
 let slaDeadline = null;
 let slaLevel    = null;
-let cdInterval  = null;
 
 // =====================================================================
 // PRIORITY + SLA
@@ -707,48 +543,12 @@ function selectPriority(el, level) {
   const block = document.getElementById('sla-block');
   block.style.setProperty('--sla-color', cfg.color);
   block.style.setProperty('--sla-bg', cfg.bg);
-  block.classList.toggle('urgent', level === 'high');
 
   document.getElementById('sla-badge-label').textContent = cfg.label;
-  document.getElementById('sla-dl-time').textContent = formatTime(slaDeadline);
-  document.getElementById('sla-dl-date').textContent  = formatDateThai(slaDeadline);
+  document.getElementById('sla-dl-time').textContent     = formatTime(slaDeadline);
+  document.getElementById('sla-dl-date').textContent     = formatDateThai(slaDeadline);
 
   block.style.display = 'block';
-
-  if (cdInterval) clearInterval(cdInterval);
-  tickCountdown();
-  cdInterval = setInterval(tickCountdown, 1000);
-}
-
-function tickCountdown() {
-  if (!slaDeadline) return;
-  const cfg = SLA_CONFIG[slaLevel];
-  const now  = new Date();
-  const diff = slaDeadline - now;
-
-  if (diff <= 0) {
-    ['cd-d','cd-h','cd-m','cd-s'].forEach(id => document.getElementById(id).textContent = '00');
-    document.getElementById('sla-pct').textContent  = '100%';
-    document.getElementById('sla-fill').style.width = '100%';
-    clearInterval(cdInterval);
-    return;
-  }
-
-  const totalMs = cfg.hours * 3600 * 1000;
-  const elapsed = totalMs - diff;
-  const pct = Math.min(100, Math.round((elapsed / totalMs) * 100));
-
-  const days  = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  const mins  = Math.floor((diff % 3600000)  / 60000);
-  const secs  = Math.floor((diff % 60000)    / 1000);
-
-  document.getElementById('cd-d').textContent = String(days).padStart(2,'0');
-  document.getElementById('cd-h').textContent = String(hours).padStart(2,'0');
-  document.getElementById('cd-m').textContent = String(mins).padStart(2,'0');
-  document.getElementById('cd-s').textContent = String(secs).padStart(2,'0');
-  document.getElementById('sla-pct').textContent  = pct + '%';
-  document.getElementById('sla-fill').style.width = pct + '%';
 }
 
 // =====================================================================
@@ -773,7 +573,7 @@ function formatDateThai(d) {
 function timeAgo(dateStr) {
   const now  = new Date();
   const past = new Date(dateStr);
-  const diff = Math.floor((now - past) / 60000); // minutes
+  const diff = Math.floor((now - past) / 60000);
   if (diff < 1)  return 'เพิ่งสักครู่';
   if (diff < 60) return `${diff} นาทีที่แล้ว`;
   const h = Math.floor(diff / 60);
@@ -786,12 +586,11 @@ function timeAgo(dateStr) {
 // RECENT TASKS
 // =====================================================================
 const STATUS_MAP = {
-  pending:    { label: 'รอดำเนินการ', cls: 'pending' },
+  pending:    { label: 'รอดำเนินการ',    cls: 'pending' },
   inprogress: { label: 'กำลังดำเนินการ', cls: 'progress' },
-  done:       { label: 'เสร็จแล้ว', cls: 'done' },
+  done:       { label: 'เสร็จแล้ว',      cls: 'done' },
 };
 
-// cache of tasks shown (max 6)
 let recentCache = [];
 
 function taskToHtml(t) {
@@ -815,38 +614,28 @@ function renderRecentTasks(tasks) {
   const list    = document.getElementById('recent-list');
   const countEl = document.getElementById('recent-count');
   recentCache   = tasks.slice(0, 6);
-
   if (recentCache.length === 0) {
     list.innerHTML = `<div class="recent-empty"><i class="bi bi-inbox"></i>ยังไม่มีรายการ</div>`;
     countEl.textContent = '0 รายการ';
     return;
   }
-
   countEl.textContent = `${recentCache.length} รายการล่าสุด`;
   list.innerHTML = recentCache.map(taskToHtml).join('');
 }
 
 function prependRecentTask(t) {
-  // remove empty state if present
   const list    = document.getElementById('recent-list');
   const countEl = document.getElementById('recent-count');
   const empty   = list.querySelector('.recent-empty');
   if (empty) empty.remove();
-
-  // prepend to DOM
   list.insertAdjacentHTML('afterbegin', taskToHtml(t));
-
-  // update cache & trim to 6
   recentCache.unshift(t);
   if (recentCache.length > 6) {
     recentCache.pop();
     const items = list.querySelectorAll('.recent-item');
     if (items.length > 6) items[items.length - 1].remove();
   }
-
   countEl.textContent = `${Math.min(recentCache.length, 6)} รายการล่าสุด`;
-
-  // flash highlight
   const newEl = list.querySelector('.recent-item');
   if (newEl) {
     newEl.style.transition = 'background .4s';
@@ -874,6 +663,7 @@ async function loadRecentTasks() {
 // FILE UPLOAD
 // =====================================================================
 let uploadedFiles = [];
+
 function handleFiles(files) {
   const preview = document.getElementById('file-preview');
   [...files].slice(0, 5 - uploadedFiles.length).forEach(file => {
@@ -891,12 +681,14 @@ function handleFiles(files) {
     }
   });
 }
+
 function removeFile(idx) {
   uploadedFiles.splice(idx, 1);
   const el = document.getElementById('ft-' + idx);
   if (el) el.remove();
 }
-function dragOver(e) { e.preventDefault(); document.getElementById('file-drop').classList.add('drag'); }
+
+function dragOver(e)  { e.preventDefault(); document.getElementById('file-drop').classList.add('drag'); }
 function dragLeave()  { document.getElementById('file-drop').classList.remove('drag'); }
 function dropFile(e)  { e.preventDefault(); dragLeave(); handleFiles(e.dataTransfer.files); }
 
@@ -934,10 +726,7 @@ async function submitForm() {
     formData.append('priority', priorityEl.value);
     formData.append('note',     document.getElementById('priority-note').value.trim());
     if (slaDeadline) formData.append('sla_deadline', slaDeadline.toISOString());
-    // แนบหลายไฟล์
-    uploadedFiles.forEach(file => {
-  formData.append('files', file);
-});
+    uploadedFiles.forEach(file => formData.append('files', file));
 
     const res  = await fetch('/api/submit-ticket', { method:'POST', body:formData });
     const data = await res.json();
@@ -954,13 +743,11 @@ async function submitForm() {
           `${formatDateThai(slaDeadline)} · ${formatTime(slaDeadline)}`;
       }
       document.getElementById('success-modal').classList.add('show');
-
-      // prepend new ticket into recent list immediately
       prependRecentTask({
-        id:        data.ticketId,
-        title:     title,
-        status:    'pending',
-        priority:  priorityEl.value,
+        id:         data.ticketId,
+        title:      title,
+        status:     'pending',
+        priority:   priorityEl.value,
         created_at: new Date().toISOString(),
       });
     } else {
@@ -975,8 +762,8 @@ function closeModal() { document.getElementById('success-modal').classList.remov
 
 function resetForm() {
   closeModal();
-  if (cdInterval) { clearInterval(cdInterval); cdInterval = null; }
-  slaDeadline = null; slaLevel = null;
+  slaDeadline = null;
+  slaLevel    = null;
   document.getElementById('task-title').value    = '';
   document.getElementById('task-detail').value   = '';
   document.getElementById('priority-note').value = '';
@@ -1006,7 +793,7 @@ function setThaiDateTime() {
   const thaiYear = now.getFullYear() + 543;
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
                   'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  const day  = now.getDate();
+  const day   = now.getDate();
   const month = months[now.getMonth()];
   const hour  = String(now.getHours()).padStart(2,'0');
   const min   = String(now.getMinutes()).padStart(2,'0');

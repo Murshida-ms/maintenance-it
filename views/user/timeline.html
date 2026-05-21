@@ -518,10 +518,10 @@ let tickets = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let currentTicket = null;
-let currentUser   = { fullName: '—', initials: '??' }; // populated after /api/me
+let currentUser   = { fullName: '—', initials: '??' };
 
 // Lightbox state
-let lbImages = []; // array of {dataURL, name}
+let lbImages = [];
 let lbIndex  = 0;
 
 // ===== FORMAT DATE =====
@@ -553,11 +553,17 @@ function fmtTimeOnly(dateStr) {
   } catch(e) { return dateStr; }
 }
 
-// ===== GET INITIALS =====
+// ===== GET INITIALS ===== 
+function getInitials(name) {
+  if (!name || name === '—') return '?';
+  return name.substring(0, 2);
+}
+
+// ===== GENERATE STEPS =====
 function generateSteps(t) {
   const assigneeName     = t.assignee || '—';
   const assigneeInitials = getInitials(assigneeName);
-  const hasAssignee      = assigneeName && assigneeName !== '—'; // ← key flag
+  const hasAssignee      = assigneeName && assigneeName !== '—';
 
   const isPending    = t.status === 'pending';
   const isInprogress = t.status === 'inprogress';
@@ -578,7 +584,6 @@ function generateSteps(t) {
       photos: []
     },
     {
-      // ยังไม่มี assignee → wait | มีแล้วแต่ pending → active | ไม่ pending → done
       status: !hasAssignee ? 'wait' : (isPending ? 'active' : 'done'),
       icon: 'bi-person-check',
       title: 'รับเรื่องและมอบหมายงาน',
@@ -639,9 +644,9 @@ async function fetchTickets(silent = false) {
         note: t.note || '',
         reporter: t.reporter_name || '—',
         reporterAv: {
-        initials: (t.reporter_name || '—').substring(0, 2),
-        bg: '#BFDBFE',
-        tc: '#1E40AF'
+          initials: (t.reporter_name || '—').substring(0, 2),
+          bg: '#BFDBFE',
+          tc: '#1E40AF'
         },
         assignee: assigneeName,
         assigneeAv: {
@@ -653,7 +658,7 @@ async function fetchTickets(silent = false) {
         rawCreatedAt: t.created_at,
         rawUpdatedAt: t.updated_at,
         chatMessages: [],
-        attachments: []   // { name, type, dataURL, isPdf }
+        attachments: []
       };
 
       ticket.steps = generateSteps(ticket);
@@ -668,7 +673,6 @@ async function fetchTickets(silent = false) {
       if (currentTicket) {
         const updated = tickets.find(t => t.id === currentTicket.id);
         if (updated) {
-          // preserve local attachments & chat on silent refresh
           updated.attachments  = currentTicket.attachments;
           updated.chatMessages = currentTicket.chatMessages;
           currentTicket = updated;
@@ -702,7 +706,7 @@ function updateCounts() {
   document.getElementById('cnt-done').textContent       = tickets.filter(t => t.status === 'done').length;
 }
 
-// ===== CALC QUEUE =====
+// ===== CALC QUEUE ===== ← แก้ bug noAssignee ไม่ได้ declare
 function calcQueue() {
   const assigneeMap = {};
   tickets
@@ -714,8 +718,9 @@ function calcQueue() {
     });
 
   tickets.forEach(t => {
+    const noAssignee = !t.assignee || t.assignee === '—'; // ← declare ตรงนี้
     if (t.status === 'done' || noAssignee) {
-      t.queuePos  = null;
+      t.queuePos   = null;
       t.queueTotal = null;
     } else {
       const q = assigneeMap[t.assignee] || [];
@@ -774,9 +779,8 @@ function renderList() {
           </span>`
       : '';
 
-    // Attachment indicator
     const attachBadge = t.attachments && t.attachments.length > 0
-      ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;margin-left:4px">
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#F0FDF4;color:#166634;border:1px solid #BBF7D0;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;margin-left:4px">
            <i class="bi bi-paperclip" style="font-size:9px"></i>${t.attachments.length}
          </span>`
       : '';
@@ -818,10 +822,9 @@ function selectTicket(id) {
   document.getElementById('tab-rating').style.display   = 'none';
 }
 
-// ===== BUILD ATTACHMENT HTML for info tab =====
+// ===== BUILD ATTACHMENT HTML =====
 function buildAttachmentSection(t) {
   const attachments = t.attachments || [];
-  const imgAttachments = attachments.filter(a => !a.isPdf);
 
   let gridHtml = '';
   if (attachments.length === 0) {
@@ -888,7 +891,6 @@ function renderDetail() {
   const t = currentTicket;
   if (!t) return;
 
-  // --- HEADER ---
   const queueInfo = t.queuePos
     ? `<div style="
           margin-top:14px;padding:10px 16px;
@@ -931,7 +933,7 @@ function renderDetail() {
   // --- TIMELINE ---
   let tlHtml = '<div class="timeline">';
   t.steps.forEach((step, i) => {
-    const isLast = i === t.steps.length - 1;
+    const isLast     = i === t.steps.length - 1;
     const lineClass  = step.status === 'done' ? 'done' : step.status === 'active' ? 'active' : '';
     const iconClass  = step.status === 'done' ? 'done' : step.status === 'active' ? 'active' : step.status === 'rejected' ? 'rejected' : 'wait';
     const titleColor = step.status === 'wait' ? 'var(--text-muted)' : 'var(--text-main)';
@@ -1000,7 +1002,7 @@ function renderDetail() {
   tlHtml += '</div>';
   document.getElementById('tab-timeline').innerHTML = tlHtml;
 
-  // --- INFO TAB (with attachment section) ---
+  // --- INFO TAB ---
   document.getElementById('tab-info').innerHTML = `
   <table class="info-table">
     <tr><td class="it-label">หมายเลข Ticket</td><td class="it-val" style="font-family:monospace;color:var(--primary)">${t.id}</td></tr>
@@ -1107,9 +1109,7 @@ function sortTickets(by) {
     const ord = { inprogress:0, pending:1, done:2 };
     tickets.sort((a,b) => ord[a.status] - ord[b.status]);
   } else {
-    tickets.sort((a,b) =>
-  new Date(b.rawCreatedAt) - new Date(a.rawCreatedAt)
-);
+    tickets.sort((a,b) => new Date(b.rawCreatedAt) - new Date(a.rawCreatedAt));
   }
   renderList();
 }
@@ -1120,19 +1120,18 @@ async function loadUser() {
     const res = await fetch('/api/me');
     if (res.status === 401) { window.location.href = '/login'; return; }
     const data = await res.json();
-    
-    // เก็บข้อมูล user ไว้ใช้งาน
+
     currentUser.fullName = data.fullName;
     currentUser.initials = data.fullName.substring(0, 2);
 
     document.getElementById('user-fullname').textContent = data.fullName;
-    document.getElementById('user-role').textContent = data.role;
-    document.getElementById('user-avatar').textContent = data.fullName.substring(0, 2);
+    document.getElementById('user-role').textContent     = data.role;
+    document.getElementById('user-avatar').textContent   = data.fullName.substring(0, 2);
 
-    // โหลด tickets หลังจากได้ชื่อ user แล้ว
     await fetchTickets();
   } catch(e) { console.error(e); }
 }
+
 // ===== CHAT =====
 function sendChat(id) {
   const inp  = document.getElementById('chat-inp-' + id);
@@ -1194,13 +1193,11 @@ function openAttach(ticketId, idx) {
     return;
   }
 
-  // Build image gallery for lightbox (images only)
   lbImages = t.attachments
     .map((att, i) => ({ ...att, originalIdx: i }))
     .filter(att => !att.isPdf && att.dataURL);
   lbIndex = lbImages.findIndex(att => att.originalIdx === idx);
   if (lbIndex < 0) lbIndex = 0;
-
   showLightboxAt(lbIndex);
 }
 
@@ -1215,9 +1212,7 @@ function showLightboxAt(i) {
   document.body.style.overflow = 'hidden';
 }
 
-function navigateLightbox(dir) {
-  showLightboxAt(lbIndex + dir);
-}
+function navigateLightbox(dir) { showLightboxAt(lbIndex + dir); }
 
 function closeLightbox(e) {
   if (e.target === document.getElementById('lightbox')) {
@@ -1226,22 +1221,21 @@ function closeLightbox(e) {
   }
 }
 
-// Keyboard navigation for lightbox
 document.addEventListener('keydown', e => {
   const lb = document.getElementById('lightbox');
   if (!lb.classList.contains('show')) return;
-  if (e.key === 'Escape') { lb.classList.remove('show'); document.body.style.overflow = ''; }
-  if (e.key === 'ArrowRight') navigateLightbox(1);
-  if (e.key === 'ArrowLeft')  navigateLightbox(-1);
+  if (e.key === 'Escape')      { lb.classList.remove('show'); document.body.style.overflow = ''; }
+  if (e.key === 'ArrowRight')  navigateLightbox(1);
+  if (e.key === 'ArrowLeft')   navigateLightbox(-1);
 });
 
 // ===== DELETE =====
 function confirmDelete(id) {
   const t = tickets.find(x => x.id === id);
   if (!t) return;
-  document.getElementById('delete-ticket-id').textContent  = t.id;
+  document.getElementById('delete-ticket-id').textContent    = t.id;
   document.getElementById('delete-ticket-title').textContent = t.title;
-  document.getElementById('delete-modal').dataset.ticketId = id;
+  document.getElementById('delete-modal').dataset.ticketId   = id;
   document.getElementById('delete-modal').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
@@ -1305,8 +1299,8 @@ function openEditModal(id) {
 
   editFiles = [];
   document.getElementById('upload-preview').innerHTML = '';
-  document.getElementById('file-chips').innerHTML = '';
-  document.getElementById('edit-file-input').value = '';
+  document.getElementById('file-chips').innerHTML     = '';
+  document.getElementById('edit-file-input').value   = '';
 
   document.getElementById('edit-modal').dataset.ticketId = id;
   document.getElementById('edit-modal').classList.add('show');
@@ -1346,9 +1340,7 @@ function handleFileSelect(e) {
       reader.readAsDataURL(file);
     } else {
       const reader = new FileReader();
-      reader.onload = ev => {
-        editFiles[idx].dataURL = ev.target.result;
-      };
+      reader.onload = ev => { editFiles[idx].dataURL = ev.target.result; };
       reader.readAsDataURL(file);
       const chips = document.getElementById('file-chips');
       chips.innerHTML += `
@@ -1364,7 +1356,7 @@ function handleFileSelect(e) {
 function removeFile(idx) {
   editFiles[idx] = null;
   document.getElementById('thumb-' + idx)?.remove();
-  document.getElementById('chip-' + idx)?.remove();
+  document.getElementById('chip-'  + idx)?.remove();
 }
 
 async function submitEdit() {
@@ -1392,20 +1384,12 @@ async function submitEdit() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
     const t = tickets.find(x => x.id === id);
-
-    // Merge new attachments into ticket
     const newAttachments = editFiles
       .filter(f => f !== null)
-      .map(f => ({
-        name: f.name,
-        type: f.type,
-        dataURL: f.dataURL,
-        isPdf: f.isPdf
-      }));
+      .map(f => ({ name: f.name, type: f.type, dataURL: f.dataURL, isPdf: f.isPdf }));
 
     Object.assign(t, payload);
     t.attachments = [...(t.attachments || []), ...newAttachments];
@@ -1459,7 +1443,6 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('beforeunload', () => {
   clearTimeout(refreshTimer);
 });
-
 </script>
 </body>
 </html>

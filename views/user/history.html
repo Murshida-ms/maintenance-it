@@ -539,7 +539,11 @@ function renderTable() {
         </td>
         <td><span class="badge-status ${t.status}">${statusLabel[t.status]}</span></td>
         <td><span class="priority-badge ${t.pri}">${prioLabel[t.pri]}</span></td>
-        <td><div class="avatar-group">${avHtml}</div></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;color:var(--text-main);white-space:nowrap">${t.assigneeFull}</span>
+        </div>
+        </td>
         <td style="font-size:12px;color:var(--text-muted)">${t.adminNote}</td>
         <td> 
           <div style="font-size:13px; font-weight:500; color:var(--text-main); white-space:nowrap">${t.dateClose}</div>
