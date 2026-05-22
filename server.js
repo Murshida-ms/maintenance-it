@@ -98,7 +98,7 @@ app.post('/login', async (req, res) => {
         const [rows] = await db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password]);
         
         if (rows.length > 0) {
-            // ✅ แก้ไขให้ตรงกับโครงสร้างตารางของคุณ (user_id)
+            // แก้ไขให้ตรงกับโครงสร้างตารางของคุณ (user_id)
             req.session.userId = rows[0].user_id; 
             req.session.fullName = rows[0].full_name;
             
@@ -208,7 +208,7 @@ app.get('/history', (req, res) => {
 // ดึงข้อมูลมาแสดง
 app.get('/api/tickets', async (req, res) => {
     try {
-        // JOIN users เพื่อดึงชื่อของผู้แจ้ง
+        // JOIN users เพื่อดึง full_name ของผู้แจ้ง
         const [rows] = await db.query(`
             SELECT m.*, u.full_name AS reporter_name
             FROM it_maintenance m

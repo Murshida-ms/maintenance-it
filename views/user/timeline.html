@@ -600,7 +600,7 @@ function generateSteps(t) {
     {
       status: (!hasAssignee || isPending) ? 'wait' : (isInprogress ? 'active' : 'done'),
       icon: 'bi-tools',
-      title: 'กำลังดำเนินการซ่อม',
+      title: 'กำลังดำเนินการ',
       time: (!hasAssignee || isPending) ? ''
           : (isInprogress || isDone) ? fmtDate(t.rawUpdatedAt) : '',
       detail: (!hasAssignee || isPending) ? ''
@@ -825,15 +825,17 @@ function selectTicket(id) {
 // ===== BUILD ATTACHMENT HTML =====
 function buildAttachmentSection(t) {
   const attachments = t.attachments || [];
+  const isDone = t.status === 'done';
 
   let gridHtml = '';
   if (attachments.length === 0) {
-    gridHtml = `
-      <div class="attach-empty">
-        <i class="bi bi-images"></i>
-        ยังไม่มีไฟล์แนบ
-        <div class="attach-empty-hint">กดปุ่ม "แก้ไข" เพื่อเพิ่มรูปภาพหรือเอกสารประกอบ</div>
-      </div>`;
+    gridHtml = isDone
+      ? '' // งานเสร็จแล้ว ไม่มีไฟล์ → ไม่แสดงอะไรเลย
+      : `<div class="attach-empty">
+           <i class="bi bi-images"></i>
+           ยังไม่มีไฟล์แนบ
+           <div class="attach-empty-hint">กดปุ่ม "แก้ไข" เพื่อเพิ่มรูปภาพหรือเอกสารประกอบ</div>
+         </div>`;
   } else {
     attachments.forEach((a, i) => {
       const ext = a.name.split('.').pop().toUpperCase();
@@ -878,11 +880,14 @@ function buildAttachmentSection(t) {
           <i class="bi bi-paperclip"></i> รูปภาพ / เอกสารแนบ
         </div>
         <span class="attach-count-badge">${attachments.length} ไฟล์</span>
+        ${!isDone ? `
         <button class="attach-add-btn" onclick="openEditModal('${t.id}')">
           <i class="bi bi-plus-lg"></i> เพิ่มไฟล์
-        </button>
+        </button>` : ''}
       </div>
-      <div class="attach-grid">${gridHtml}</div>
+      ${gridHtml 
+        ? `<div class="attach-grid">${gridHtml}</div>` 
+        : (isDone && attachments.length === 0 ? '' : `<div class="attach-grid">${gridHtml}</div>`)}
     </div>`;
 }
 
@@ -916,8 +921,11 @@ function renderDetail() {
       <span class="dp-ticket-id">${t.id}</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge-s ${t.status}">${statusLabel[t.status]}</span>
-        <button class="btn-act btn-ghost-act" style="padding:4px 12px;font-size:12px" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil"></i> แก้ไข</button>
-        <button class="btn-act btn-danger-act" style="padding:4px 12px;font-size:12px" onclick="confirmDelete('${t.id}')"><i class="bi bi-trash3"></i> ลบ</button>
+        ${t.status === 'done' 
+        ? `<span style="font-size:12px;color:var(--done);font-weight:600;display:flex;align-items:center;gap:5px"> </span>`
+        : `<button class="btn-act btn-ghost-act" style="padding:4px 12px;font-size:12px" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil"></i> แก้ไข</button>
+     <button class="btn-act btn-danger-act" style="padding:4px 12px;font-size:12px" onclick="confirmDelete('${t.id}')"><i class="bi bi-trash3"></i> ลบ</button>`
+}
       </div>
     </div>
     <div class="dp-title">${t.title}</div>
@@ -1289,7 +1297,10 @@ let editFiles = [];
 function openEditModal(id) {
   const t = tickets.find(x => x.id === id);
   if (!t) return;
-
+  // ถ้างานเสร็จแล้ว ห้ามแก้ไข
+  if (t.status === 'done') {
+    return;
+  }
   document.getElementById('modal-ticket-id').textContent = t.id;
   document.getElementById('edit-title').value    = t.title;
   document.getElementById('edit-detail').value   = t.detail;

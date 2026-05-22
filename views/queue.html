@@ -767,11 +767,14 @@ function buildNotifications() {
   const newNotifs = [];
   tasks.forEach(t => {
     const nid = t.id + '_new';
-    if (t.status === 'pending' && !knownTaskIds.has(nid)) {
+
+    if (t.status === 'pending' && (!t.assignee || t.assignee === '—') && !knownTaskIds.has(nid)) {
       if (!isFirstLoad) {
+        //  มีงานใหม่ สร้าง notification
         newNotifs.push({
           id: nid, type: 'new-task', icon: 'bi-plus-circle-fill',
-          title: `งานใหม่: ${t.id}`, sub: t.title,
+          title: `งานใหม่รอมอบหมาย: ${t.id}`,
+          sub: `${t.title}${t.reporter !== '—' ? ' · ผู้แจ้ง: ' + t.reporter : ''}`,
           time: t.createdDate + ' ' + t.time + ' น.',
           read: false, taskId: t.id,
         });
@@ -779,6 +782,7 @@ function buildNotifications() {
       knownTaskIds.add(nid);
     }
   });
+
   isFirstLoad = false;
   newNotifs.forEach(n => { if (!notifications.find(x => x.id === n.id)) notifications.unshift(n); });
   renderNotifDropdown();
@@ -789,22 +793,41 @@ async function pollNewTickets() {
     const res = await fetch('/api/tickets');
     if (!res.ok) return;
     const data = await res.json();
+
     const fresh = data.filter(t => t.status === 'pending' || t.status === 'inprogress')
       .map(t => ({
         id: 'TK-' + String(t.id).padStart(4,'0'), _id: t.id,
         title: t.title, detail: t.detail || '',
         pri: t.priority || 'low', status: t.status, note: t.note || '',
         time: formatTime(t.created_at), createdDate: formatDate(t.created_at),
-        reporter: t.reporter || t.reported_by || t.created_by || '—',
+        reporter: t.reporter_name || '—',  
         assignee: t.assignee || '—', needs: [],
         deadlineDate: calcDeadline(t.created_at, t.priority),
         get deadlineStr() { return formatDeadline(this.deadlineDate); },
         get secsLeft() { if (!this.deadlineDate) return null; return Math.floor((this.deadlineDate.getTime() - Date.now()) / 1000); },
       }));
+
     const freshIds   = fresh.map(x => x.id).sort().join(',');
     const currentIds = tasks.map(x => x.id).sort().join(',');
-    if (freshIds !== currentIds) { tasks = fresh; renderDispatch(); }
+
+    if (freshIds !== currentIds) {
+      // มีงานใหม่หรืองานหาย → อัปเดต tasks และ rebuild
+      tasks = fresh;
+      assignedMap = {};
+      staffList.forEach(s => { s.active = 0; });
+      tasks.forEach(t => {
+        if (t.assignee && t.assignee !== '—') {
+          assignedMap[t.id] = { staffId: null, staffName: t.assignee, at: t.time + ' น.' };
+          const staff = staffList.find(s => s.name === t.assignee);
+          if (staff) staff.active = Math.min(staff.active + 1, staff.max);
+        }
+      });
+      renderDispatch();
+    }
+
+    // ✅ เรียก buildNotifications ทุกครั้ง ไม่ใช่แค่ตอน ID เปลี่ยน
     buildNotifications();
+
   } catch { /* silent */ }
 }
 
@@ -872,7 +895,9 @@ async function loadUser() {
 }
 
 loadUser();
-loadTickets().then(() => buildNotifications());
+loadTickets().then(() => {
+  buildNotifications(); 
+});
 setInterval(pollNewTickets, 30000);
 </script>
 </body>
