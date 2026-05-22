@@ -255,6 +255,18 @@
 }
 .btn-danger-sm:hover { opacity: 0.85; }
 
+/* DRAG & DROP */
+.qcard[draggable="true"] { cursor: grab; }
+.qcard[draggable="true"]:active { cursor: grabbing; }
+
+.qcol-body.drag-over {
+  background: #EFF6FF;
+  outline: 2px dashed var(--primary);
+  outline-offset: -6px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
 /* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
 .modal-overlay.show { display: flex; }

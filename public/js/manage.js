@@ -28,18 +28,19 @@ async function loadTickets() {
       .map(t => ({
         _id:              t.id,
         id:               'TK-' + String(t.id).padStart(4,'0'),
-        title:            t.title || '(ไม่มีหัวข้อ)',
+        title:            t.title || '',
         detail:           t.detail || '',
         note:             t.note || '',
         pri:              t.priority || 'low',
         status:           t.status || 'pending',
         reporter:         t.reporter_name || '—',
-        reporterInitials: (t.assignee || '').substring(0, 2) || '—',
+        reporterInitials: (t.reporter_name || '').substring(0, 2) || '—',
         assignee:         t.assignee || '',
         created_at:       t.created_at,
         time:             formatTime(t.created_at),
         reportDate:       formatDate(t.created_at),
         deadlineDate:     calcDeadline(t.created_at, t.priority),
+        attachments:      t.attachments || [],
         comments:         [],
         timeline:         buildTimeline(t),
       }));
@@ -204,9 +205,10 @@ function renderCards() {
       return;
     }
     items.forEach(t => {
+      const reporterInitials = (t.reporter || '').substring(0, 2) || '—';
       const avHtml = t.reporter
-        ? `<div class="avatar-sm av-blue">${t.reporterInitials}</div>`
-        : `<div class="avatar-sm av-blue" style="color:#94A3B8;background:#F1F5F9">—</div>`;
+      ? `<div class="avatar-sm av-blue" title="${escHtml(t.reporter)}">${reporterInitials}</div>`
+      : `<div class="avatar-sm av-blue" style="color:#94A3B8;background:#F1F5F9">—</div>`;
 
       const secs    = getSecsLeft(t);
       const cdClass = getCdClass(t, secs);
@@ -223,6 +225,24 @@ function renderCards() {
       const deadlineStr = t.deadlineDate
       ? `${String(t.deadlineDate.getDate()).padStart(2,'0')}/${String(t.deadlineDate.getMonth()+1).padStart(2,'0')}/${t.deadlineDate.getFullYear()+543} ${String(t.deadlineDate.getHours()).padStart(2,'0')}:${String(t.deadlineDate.getMinutes()).padStart(2,'0')} น.`
       : '—';
+
+      // ไฟล์แนบ/รูป
+      const attachCount = (t.attachments && t.attachments.length) ? t.attachments.length : 0;
+      const attachHtml = `
+      <div style="margin-top:6px">
+    ${attachCount > 0
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;
+            background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;
+            padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
+           <i class="bi bi-paperclip" style="font-size:10px"></i> ${attachCount} ไฟล์แนบ
+         </span>`
+      : `<span style="display:inline-flex;align-items:center;gap:4px;
+            background:#F8FAFC;color:var(--text-muted);border:1px solid var(--border);
+            padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
+           <i class="bi bi-paperclip" style="font-size:10px"></i> 0 ไฟล์แนบ
+         </span>`
+    }
+    </div>`;
 
       let quickHtml = '';
       if (s === 'pending') {
@@ -243,6 +263,18 @@ function renderCards() {
       card.className = 'qcard';
       card.setAttribute('data-task-id', t.id);
       card.onclick = () => openPanel(t.id);
+
+    
+      card.draggable = true;
+      card.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', t.id);
+      setTimeout(() => card.style.opacity = '0.4', 0);
+    });
+      card.addEventListener('dragend', () => {
+      card.style.opacity = '';
+      document.querySelectorAll('.qcol-body').forEach(c => c.classList.remove('drag-over'));
+    });
       card.innerHTML = `
         <div class="qcard-accent"></div>
         <div class="qcard-top">
@@ -252,9 +284,9 @@ function renderCards() {
         <div class="qcard-title">${escHtml(t.title)}</div>
         <div class="qcard-meta">
           <span class="qcard-meta-item"><i class="bi bi-calendar3" style="font-size:10px"></i>${t.reportDate}</span>
-          ${t.reporter ? `<span class="qcard-meta-item"><i class="bi bi-person-fill" style="font-size:10px"></i>${escHtml(t.reporter)}</span>` : ''}
-        </div>
-
+          </div>
+        ${attachHtml}
+        
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
         <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;
                 background:${dlBg};color:${dlColor};
@@ -264,13 +296,17 @@ function renderCards() {
         </div>
       </div>
         <div class="qcard-footer">
-          <div class="avatar-group">${avHtml}</div>
-          ${cdHtml}
-        </div>
+        <div class="avatar-group" style="display:flex;align-items:center;gap:6px">
+        ${avHtml}
+        <span style="font-size:11px;color:var(--text-muted);font-weight:500">${escHtml(t.reporter || '—')}</span>
+       </div>
+        ${cdHtml}
+       </div>
         ${quickHtml}`;
       col.appendChild(card);
     });
   });
+   initDropZones();
 }
 
 // ===================================================
@@ -293,12 +329,8 @@ function openPanel(id) {
   const slaRow = t.status !== 'done' ? `
     <div class="sla-row">
       <div>
-        <div class="sla-label">กำหนดเสร็จ</div>
+        <div class="sla-label">กำหนดส่ง</div>
         <div style="font-size:12px;font-weight:500">${deadlineStr}</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sla-label">เวลาที่เหลือ</div>
-        <div id="panel-cd" style="font-size:16px;font-weight:700;color:${secs!==null&&secs<0?'#991B1B':secs!==null&&secs<3600?'#991B1B':'#065F46'}">${fmtCountdown(secs)}</div>
       </div>
       <span class="cd-badge ${cdClass}">${cdLabel}</span>
     </div>` : `
@@ -359,6 +391,47 @@ function openPanel(id) {
         <div class="panel-label">หมายเหตุ</div>
         <div class="panel-value" style="font-size:13px">${escHtml(t.note) || '—'}</div>
       </div>
+    
+      <div class="panel-section">
+      <div class="panel-label"><i class="bi bi-paperclip"></i> รูปภาพ / เอกสารแนบ</div>
+      ${t.attachments && t.attachments.length
+      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+        ${t.attachments.map((a, i) => {
+          const ext = (a.name || '').split('.').pop().toUpperCase();
+          const isPdf = a.isPdf || ext === 'PDF';
+          const docExts = ['DOC','DOCX','XLS','XLSX','PPT','PPTX','TXT','CSV'];
+          if (isPdf) {
+            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#FEF2F2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+                <i class="bi bi-file-earmark-pdf-fill" style="font-size:28px;color:#EF4444"></i>
+                <span style="font-size:9px;font-weight:700;color:#EF4444">${ext}</span>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+            </div>`;
+          } else if (docExts.includes(ext)) {
+            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#EFF6FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+                <i class="bi bi-file-earmark-text-fill" style="font-size:28px;color:var(--primary)"></i>
+                <span style="font-size:9px;font-weight:700;color:var(--primary)">${ext}</span>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+            </div>`;
+          } else {
+            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);overflow:hidden;position:relative">
+                <img src="${a.dataURL || a.url || a}" style="width:100%;height:100%;object-fit:cover">
+                <div style="position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='rgba(0,0,0,0.3)'" onmouseout="this.style.background='rgba(0,0,0,0)'">
+                  <i class="bi bi-zoom-in" style="color:#fff;font-size:18px;opacity:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"></i>
+                </div>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+            </div>`;
+          }
+        }).join('')}
+      </div>`
+    : `<span style="font-size:13px;color:var(--text-muted)">—</span>`
+    }
+    </div>
     </div>
     <div class="panel-section">
       <div class="panel-label">ไทม์ไลน์</div>
@@ -372,6 +445,28 @@ function openPanel(id) {
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('backdrop').classList.add('show');
   panelOpenTaskId = t.id;
+}
+
+function initDropZones() {
+  document.querySelectorAll('.qcol-body').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', e => {
+      // ป้องกัน flicker เมื่อ hover ลูก element
+      if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const taskId  = e.dataTransfer.getData('text/plain');
+      const newStatus = col.id.replace('col-', '');
+      const t = tasks.find(x => x.id === taskId);
+      if (!t || t.status === newStatus) return;
+      await changeStatus(taskId, newStatus);
+    });
+  });
 }
 
 function closePanel() {
@@ -709,6 +804,24 @@ document.addEventListener('click', e => {
   const wrap = document.getElementById('notif-wrap');
   if (wrap && !wrap.contains(e.target)) closeNotif();
 });
+
+function openAttachFromManage(taskId, idx) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t || !t.attachments || !t.attachments[idx]) return;
+  const a = t.attachments[idx];
+  const url = a.dataURL || a.url || a;
+  const win = window.open();
+  if (win) {
+    win.document.write(`
+      <!DOCTYPE html><html><head><title>${a.name || 'ไฟล์แนบ'}</title></head>
+      <body style="margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh">
+        ${(a.isPdf || (a.name||'').toLowerCase().endsWith('.pdf'))
+          ? `<iframe src="${url}" style="width:100vw;height:100vh;border:none"></iframe>`
+          : `<img src="${url}" style="max-width:100vw;max-height:100vh;object-fit:contain">`
+        }
+      </body></html>`);
+  }
+}
 
 async function loadUser() {
   try {

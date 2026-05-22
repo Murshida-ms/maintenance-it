@@ -80,7 +80,7 @@ function generateSteps(t) {
       title: 'รับเรื่องและมอบหมายงาน',
       time: !hasAssignee ? '' : (isPending ? '' : fmtDate(t.rawUpdatedAt)),
       detail: !hasAssignee
-        ? 'รอแอดมินมอบหมายงาน'
+        ? 'รออนุมัติ'
         : `มอบหมายให้: ${assigneeName}`,
       actor: hasAssignee ? {
         name: assigneeName, role: 'ผู้รับผิดชอบ',

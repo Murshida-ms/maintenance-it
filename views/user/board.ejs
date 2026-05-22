@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบแจ้งงาน - Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/sidebar.css">
+<link rel="stylesheet" href="/css/board.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<%- include('../partials/sidebar', { page: 'index' }) %>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Dashboard ภาพรวม</div>
+      <div class="topbar-sub">อัปเดตล่าสุด: วันจันทร์, 11 พฤษภาคม 2568</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="tab-nav">
+        <button class="tab-btn active">วันนี้</button>
+        <button class="tab-btn" onclick="switchTab(this)">สัปดาห์</button>
+        <button class="tab-btn" onclick="switchTab(this)">เดือน</button>
+      </div>
+      <button class="icon-btn" title="แจ้งเตือน">
+        <i class="bi bi-bell" style="font-size:16px"></i>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="icon-btn" title="ดาวน์โหลดรายงาน">
+        <i class="bi bi-download" style="font-size:16px"></i>
+      </button>
+      <button class="btn-primary-sm" onclick="window.location='/form'">
+        <i class="bi bi-plus-lg"></i> แจ้งงานใหม่
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stat-cards">
+      <div class="stat-card sc-pending">
+        <div class="sc-icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="sc-num" id="num-pending">24</div>
+        <div class="sc-label">รอดำเนินการ</div>
+        <div class="sc-trend up"><i class="bi bi-arrow-up-short"></i> +3 จากเมื่อวาน</div>
+      </div>
+      <div class="stat-card sc-inprogress">
+        <div class="sc-icon"><i class="bi bi-gear-wide-connected"></i></div>
+        <div class="sc-num" id="num-inprogress">18</div>
+        <div class="sc-label">กำลังดำเนินการ</div>
+        <div class="sc-trend up"><i class="bi bi-arrow-up-short"></i> +2 วันนี้</div>
+      </div>
+      <div class="stat-card sc-done">
+        <div class="sc-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="sc-num" id="num-done">142</div>
+        <div class="sc-label">เสร็จสิ้นแล้ว</div>
+        <div class="sc-trend up"><i class="bi bi-arrow-up-short"></i> +8 วันนี้</div>
+      </div>
+      <div class="stat-card sc-rejected">
+        <div class="sc-icon"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="sc-num" id="num-rejected">5</div>
+        <div class="sc-label">ถูกตีกลับ</div>
+        <div class="sc-trend down"><i class="bi bi-arrow-down-short"></i> -1 จากเมื่อวาน</div>
+      </div>
+    </div>
+
+    <!-- ROW 1 -->
+    <div class="grid-2">
+      <!-- TASK LIST -->
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-list-task" style="color:var(--primary);margin-right:6px"></i>งานล่าสุด</h6>
+          <a href="#" class="card-link">ดูทั้งหมด →</a>
+        </div>
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Ticket</th>
+              <th>รายละเอียด</th>
+              <th>สถานะ</th>
+              <th>ความเร่งด่วน</th>
+              <th>ผู้รับงาน</th>
+              <th>วันที่</th>
+            </tr>
+          </thead>
+          <tbody id="task-tbody">
+            <!-- JS fill -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SIDEBAR CARDS -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- QUEUE -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6><i class="bi bi-list-ol" style="color:var(--primary);margin-right:6px"></i>คิวงานรอดำเนินการ</h6>
+            <span style="font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:99px;font-weight:600;">12 รายการ</span>
+          </div>
+          <div class="card-body-pad">
+            <div class="queue-item">
+              <div class="queue-num">1</div>
+              <div>
+                <div class="queue-title">เครื่องปรับอากาศห้องประชุม A1 ไม่เย็น</div>
+                <div class="queue-meta"><i class="bi bi-geo-alt-fill" style="font-size:10px"></i> ห้อง 203 · 🔴 ด่วนมาก · 09:00 น.</div>
+              </div>
+            </div>
+            <div class="queue-item">
+              <div class="queue-num">2</div>
+              <div>
+                <div class="queue-title">ไฟดับชั้น 3 อาคาร B</div>
+                <div class="queue-meta"><i class="bi bi-geo-alt-fill" style="font-size:10px"></i> อาคาร B · 🟡 ปานกลาง · 09:15 น.</div>
+              </div>
+            </div>
+            <div class="queue-item">
+              <div class="queue-num">3</div>
+              <div>
+                <div class="queue-title">อินเทอร์เน็ตช้า ห้อง IT-Lab</div>
+                <div class="queue-meta"><i class="bi bi-geo-alt-fill" style="font-size:10px"></i> อาคาร C · 🟢 ปกติ · 09:30 น.</div>
+              </div>
+            </div>
+            <div class="queue-item">
+              <div class="queue-num">4</div>
+              <div>
+                <div class="queue-title">ประตูห้องน้ำชำรุด ชั้น 2</div>
+                <div class="queue-meta"><i class="bi bi-geo-alt-fill" style="font-size:10px"></i> อาคาร A · 🟡 ปานกลาง · 10:00 น.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="card-box">
+          <div class="card-header">
+            <h6><i class="bi bi-bell-fill" style="color:var(--primary);margin-right:6px"></i>แจ้งเตือนล่าสุด</h6>
+            <a href="#" class="card-link">ทั้งหมด</a>
+          </div>
+          <div class="card-body-pad">
+            <div class="notif-item">
+              <div class="notif-icon" style="background:#EFF6FF;color:#2563EB"><i class="bi bi-check-circle"></i></div>
+              <div style="flex:1">
+                <div class="notif-title">TK-0238 เสร็จสิ้นแล้ว</div>
+                <div class="notif-time">ช่างวิชัยปิดงาน · 5 นาทีที่แล้ว</div>
+              </div>
+              <div class="notif-unread"></div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon" style="background:#FFFBEB;color:#D97706"><i class="bi bi-exclamation-triangle"></i></div>
+              <div style="flex:1">
+                <div class="notif-title">TK-0241 ใกล้ครบกำหนด</div>
+                <div class="notif-time">เหลือ 2 ชั่วโมง · 12 นาทีที่แล้ว</div>
+              </div>
+              <div class="notif-unread"></div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-icon" style="background:#ECFDF5;color:#059669"><i class="bi bi-person-check"></i></div>
+              <div style="flex:1">
+                <div class="notif-title">รับงาน TK-0245 แล้ว</div>
+                <div class="notif-time">ช่างสมชาย · 1 ชั่วโมงที่แล้ว</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="grid-3">
+
+      <!-- BAR CHART -->
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-bar-chart-line-fill" style="color:var(--primary);margin-right:6px"></i>งานรายวัน (สัปดาห์นี้)</h6>
+        </div>
+        <div class="card-body-pad">
+          <div class="bar-chart" id="bar-chart"></div>
+          <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;">
+            <span style="display:flex;align-items:center;gap:5px;color:var(--text-muted)">
+              <span style="width:10px;height:10px;border-radius:3px;background:#BFDBFE;display:inline-block"></span>เข้าใหม่
+            </span>
+            <span style="display:flex;align-items:center;gap:5px;color:var(--text-muted)">
+              <span style="width:10px;height:10px;border-radius:3px;background:#2563EB;display:inline-block"></span>เสร็จ
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONUT -->
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-pie-chart-fill" style="color:var(--primary);margin-right:6px"></i>ประเภทงาน</h6>
+        </div>
+        <div class="card-body-pad">
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="110" height="110" viewBox="0 0 110 110">
+              <g id="donut-g"></g>
+              <text x="55" y="51" text-anchor="middle" font-size="18" font-weight="700" fill="#0F172A" id="donut-center-num">189</text>
+              <text x="55" y="65" text-anchor="middle" font-size="10" fill="#64748B">ทั้งหมด</text>
+            </svg>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-activity" style="color:var(--primary);margin-right:6px"></i>ติดตาม TK-0245</h6>
+          <span class="badge-status inprogress">กำลังทำ</span>
+        </div>
+        <div class="card-body-pad">
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-dot done"><i class="bi bi-check-lg" style="font-size:11px"></i></div>
+              <div class="tl-text">
+                <h6>แจ้งงานสำเร็จ</h6>
+                <small>09:00 น. · ผู้ใช้งาน: สมหมาย</small>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot done"><i class="bi bi-check-lg" style="font-size:11px"></i></div>
+              <div class="tl-text">
+                <h6>หัวหน้ารับเรื่องแล้ว</h6>
+                <small>09:15 น. · กำหนด: วันนี้ 17:00 น.</small>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot active"><i class="bi bi-arrow-repeat" style="font-size:11px"></i></div>
+              <div class="tl-text">
+                <h6>กำลังดำเนินการ</h6>
+                <small>ช่างสมชาย กำลังซ่อม...</small>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot wait"><i class="bi bi-circle" style="font-size:11px"></i></div>
+              <div class="tl-text">
+                <h6>เสร็จสิ้น</h6>
+                <small>รอดำเนินการ</small>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;">
+            <button class="btn-ghost-sm"><i class="bi bi-chat-dots"></i> แชท</button>
+            <button class="btn-ghost-sm"><i class="bi bi-qr-code"></i> QR</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROW 3: SLA / STAFF -->
+    <div class="grid-2">
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-shield-check" style="color:var(--primary);margin-right:6px"></i>SLA ประจำเดือน</h6>
+          <span style="font-size:12px;color:var(--text-muted)">พฤษภาคม 2568</span>
+        </div>
+        <div class="card-body-pad">
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span style="font-size:13px;font-weight:500">ไฟฟ้า / อาคาร</span>
+              <span style="font-size:12px;font-weight:600;color:var(--done)">94%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width:94%;background:var(--done)"></div>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span style="font-size:13px;font-weight:500">IT / คอมพิวเตอร์</span>
+              <span style="font-size:12px;font-weight:600;color:var(--inprogress)">87%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width:87%;background:var(--inprogress)"></div>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span style="font-size:13px;font-weight:500">ระบบน้ำ / ท่อ</span>
+              <span style="font-size:12px;font-weight:600;color:var(--pending)">76%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width:76%;background:var(--pending)"></div>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span style="font-size:13px;font-weight:500">เครือข่าย / Network</span>
+              <span style="font-size:12px;font-weight:600;color:var(--done)">98%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width:98%;background:var(--done)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div class="card-header">
+          <h6><i class="bi bi-people-fill" style="color:var(--primary);margin-right:6px"></i>ประสิทธิภาพเจ้าหน้าที่</h6>
+          <a href="#" class="card-link">ดูทั้งหมด</a>
+        </div>
+        <div class="card-body-pad">
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:6px 0;font-size:11px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)">ชื่อเจ้าหน้าที่</th>
+                <th style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)">รับงาน</th>
+                <th style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)">เสร็จ</th>
+                <th style="text-align:right;padding:6px 0;font-size:11px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)">อัตรา</th>
+              </tr>
+            </thead>
+            <tbody id="staff-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/board.js"></script>
+</body>
+</html>

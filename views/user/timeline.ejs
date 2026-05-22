@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ติดตามงาน - ระบบแจ้งงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/sidebar.css">
+<link rel="stylesheet" href="/css/timeline.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<%- include('../partials/sidebar', { page: 'timeline' }) %>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">ติดตามงาน</div>
+      <div class="breadcrumb-nav">
+        <a href="#">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:10px"></i>
+        <span>ติดตามงาน</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-act btn-primary-act" onclick="window.location='/form'"><i class="bi bi-plus-lg"></i> แจ้งงานใหม่</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SEARCH BAR -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" class="search-input" placeholder="ค้นหาด้วยหมายเลข Ticket, ชื่อผู้แจ้ง, หัวข้อปัญหา..." oninput="filterTickets(this.value)">
+      </div>
+      <div class="filter-chips">
+        <button class="fc active" onclick="filterStatus('all',this)">ทั้งหมด <span id="cnt-all" style="margin-left:3px;background:rgba(37,99,235,.15);padding:1px 7px;border-radius:99px;font-size:10px">0</span></button>
+        <button class="fc pending" onclick="filterStatus('pending',this)">🟡 รอดำเนินการ <span id="cnt-pending" style="margin-left:3px;background:rgba(245,158,11,.15);padding:1px 7px;border-radius:99px;font-size:10px">0</span></button>
+        <button class="fc inprogress" onclick="filterStatus('inprogress',this)">🔵 กำลังทำ <span id="cnt-inprogress" style="margin-left:3px;background:rgba(59,130,246,.15);padding:1px 7px;border-radius:99px;font-size:10px">0</span></button>
+        <button class="fc done" onclick="filterStatus('done',this)">🟢 เสร็จแล้ว <span id="cnt-done" style="margin-left:3px;background:rgba(16,185,129,.15);padding:1px 7px;border-radius:99px;font-size:10px">0</span></button>
+      </div>
+    </div>
+
+    <!-- TRACK LAYOUT -->
+    <div class="track-layout">
+
+      <!-- TICKET LIST -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:600;color:var(--text-muted)">งานทั้งหมด (<span id="list-count">0</span> รายการ)</span>
+          <select style="font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;outline:none;color:var(--text-muted);background:var(--card-bg)" onchange="sortTickets(this.value)">
+            <option value="date">ล่าสุดก่อน</option>
+            <option value="priority">ความเร่งด่วน</option>
+            <option value="status">สถานะ</option>
+          </select>
+        </div>
+        <div class="ticket-list" id="ticket-list">
+          <div style="text-align:center;padding:40px;color:var(--text-muted)">
+            <i class="bi bi-hourglass-split" style="font-size:32px;display:block;margin-bottom:8px"></i>
+            กำลังโหลดข้อมูล...
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL PANEL -->
+      <div class="detail-panel" id="detail-panel">
+        <div class="dp-header" id="dp-header">
+          <div style="text-align:center;padding:20px;color:var(--text-muted)">
+            <i class="bi bi-card-list" style="font-size:32px;display:block;margin-bottom:8px"></i>
+            เลือก Ticket เพื่อดูรายละเอียด
+          </div>
+        </div>
+        <div class="dp-tabs">
+          <div class="dp-tab active" onclick="switchTab('timeline',this)"><i class="bi bi-activity"></i> Timeline</div>
+          <div class="dp-tab" onclick="switchTab('info',this)"><i class="bi bi-info-circle"></i> รายละเอียด</div>
+          <div class="dp-tab" onclick="switchTab('chat',this)"><i class="bi bi-chat-dots"></i> แชท</div>
+          <div class="dp-tab" onclick="switchTab('rating',this)"><i class="bi bi-star"></i> ประเมิน</div>
+        </div>
+        <div class="dp-body" id="tab-timeline">
+          <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">
+            กรุณาเลือก Ticket จากรายการด้านซ้าย
+          </div>
+        </div>
+        <div class="dp-body" id="tab-info" style="display:none"></div>
+        <div class="dp-body" id="tab-chat" style="display:none"></div>
+        <div class="dp-body" id="tab-rating" style="display:none"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h5><i class="bi bi-pencil-square" style="color:var(--primary);margin-right:6px"></i> แก้ไขงาน <span id="modal-ticket-id" style="font-family:monospace;color:var(--primary);font-size:13px"></span></h5>
+      <button class="modal-close" onclick="closeEditModal(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">หัวข้อปัญหา <span style="color:var(--rejected)">*</span></label>
+        <input type="text" class="form-control" id="edit-title" placeholder="ระบุหัวข้อปัญหา">
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียด</label>
+        <textarea class="form-control" id="edit-detail" rows="3" placeholder="อธิบายรายละเอียดเพิ่มเติม" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <input type="text" class="form-control" id="edit-note" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">ความเร่งด่วน</label>
+          <select class="form-control form-select" id="edit-priority">
+            <option value="low">🟢 ปกติ</option>
+            <option value="med">🟡 ปานกลาง</option>
+            <option value="high">🔴 ด่วน</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">ผู้รับผิดชอบ</label>
+          <input type="text" class="form-control" id="edit-assignee" placeholder="ชื่อผู้รับผิดชอบ">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:16px;margin-bottom:0">
+        <label class="form-label">แนบรูปภาพ / เอกสาร</label>
+        <div class="upload-area" onclick="document.getElementById('edit-file-input').click()">
+          <i class="bi bi-cloud-upload" style="font-size:24px;display:block;margin-bottom:6px"></i>
+          คลิกเพื่อเลือกไฟล์ หรือลากวางที่นี่<br>
+          <small style="font-size:11px">รองรับ JPG, PNG, PDF (สูงสุด 10MB ต่อไฟล์)</small>
+        </div>
+        <input type="file" id="edit-file-input" multiple accept="image/*,.pdf" style="display:none" onchange="handleFileSelect(event)">
+        <div class="upload-preview" id="upload-preview"></div>
+        <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-act btn-ghost-act" onclick="closeEditModal(null)">ยกเลิก</button>
+      <button class="btn-act btn-primary-act" onclick="submitEdit()">
+        <i class="bi bi-check-lg"></i> บันทึกการแก้ไข
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="delete-modal" onclick="closeDeleteModal(event)">
+  <div class="modal-box danger" style="max-width:420px">
+    <div class="modal-head">
+      <h5><i class="bi bi-trash3-fill" style="color:var(--rejected);margin-right:6px"></i> ยืนยันการลบ</h5>
+      <button class="modal-close" onclick="closeDeleteModal(null)">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--rejected-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;color:var(--rejected)">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">ต้องการลบ Ticket นี้?</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          <span id="delete-ticket-id" style="font-family:monospace;font-weight:700;color:var(--primary)"></span><br>
+          <span id="delete-ticket-title" style="font-weight:500;color:var(--text-main)"></span>
+        </div>
+        <div style="margin-top:14px;padding:10px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius-sm);font-size:12px;color:#991B1B">
+          <i class="bi bi-info-circle" style="margin-right:4px"></i>
+          การลบไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะหายไปถาวร
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-act btn-ghost-act" onclick="closeDeleteModal(null)">ยกเลิก</button>
+      <button class="btn-act btn-danger-solid" onclick="submitDelete()">
+        <i class="bi bi-trash3"></i> ลบ Ticket
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('show')">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-nav">
+      <button class="lightbox-nav-btn" onclick="navigateLightbox(-1)"><i class="bi bi-chevron-left"></i></button>
+      <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+      <button class="lightbox-nav-btn" onclick="navigateLightbox(1)"><i class="bi bi-chevron-right"></i></button>
+    </div>
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+  </div>
+</div>
+
+<script src="/js/timeline.js"></script>
+</body>
+</html>

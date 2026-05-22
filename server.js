@@ -44,7 +44,6 @@ initDB();
 
 // --- ROUTES ---
 
-// หน้าแรก
 app.get("/", (req, res) => {
   res.send("<h1>TaskFlow Pro Server is Running</h1>");
 });
@@ -92,7 +91,7 @@ app.post('/register', async (req, res) => {
 
 // หน้า Login
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'auth', 'login.ejs'));
+    res.sendFile(path.join(__dirname, 'views', 'auth', 'login.html'));
 });
 
 // รับข้อมูล Login
@@ -114,11 +113,6 @@ app.post('/login', async (req, res) => {
         console.error(err);
         res.status(500).send("Server Error");
     }
-});
-
-// หน้าหลัก user
-app.get('/index', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'board.html'));
 });
 
 // API สำหรับดึงข้อมูล User ที่ Login อยู่
@@ -192,21 +186,6 @@ app.get('/api/next-ticket', async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
-});
-
-// หน้า form แจ้งงานใหม่
-app.get('/form', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'form.html'));
-});
-
-// หน้า timeline 
-app.get('/timeline', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'timeline.html'));
-});
-
-// หน้า history
-app.get('/history', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'user', 'history.html'));
 });
 
 // ดึงข้อมูลมาแสดง
@@ -285,15 +264,21 @@ app.delete('/api/tickets/:id', async (req, res) => {
     }
 });
 
+// dashboard
+app.get('/index',    (req, res) => res.render('user/board',     { page: 'index' }));
+// หน้า form
+app.get('/form',     (req, res) => res.render('user/form',      { page: 'form' }));
+// หน้า timeline 
+app.get('/timeline', (req, res) => res.render('user/timeline',  { page: 'timeline' }));
+// หน้า history
+app.get('/history',  (req, res) => res.render('user/history',   { page: 'history' }));
 // หน้า manage
-app.get('/manage', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'admin','manage.html'));
-});
-
+app.get('/manage',   (req, res) => res.render('admin/manage',   { page: 'manage' }));
 // หน้า มอบหมาย
-app.get('/queue', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'admin','queue.html'));
-});
+app.get('/queue',    (req, res) => res.render('admin/queue',     { page: 'queue' }));
+app.get('/report',   (req, res) => res.render('admin/report',   { page: 'report' }));
+app.get('/users',    (req, res) => res.render('admin/users',    { page: 'users' }));
+app.get('/settings', (req, res) => res.render('admin/settings', { page: 'settings' }));
 
 // Logout
 app.get('/logout', (req, res) => {

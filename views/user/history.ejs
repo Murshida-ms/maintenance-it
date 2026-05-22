@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบแจ้งงาน - ประวัติงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/sidebar.css">
+<link rel="stylesheet" href="/css/history.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<%- include('../partials/sidebar', { page: 'history' }) %>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">ประวัติงานทั้งหมด</div>
+      <div class="topbar-sub">รายการงานย้อนหลัง</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-ghost-sm" onclick="exportCSV()"><i class="bi bi-download"></i> ส่งออก CSV</button>
+      <button class="icon-btn" title="แจ้งเตือน">
+        <i class="bi bi-bell" style="font-size:16px"></i>
+        <span class="notif-dot"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label"><i class="bi bi-search"></i></span>
+        <input class="filter-input" id="search-input" type="text" placeholder="ค้นหา Ticket, หัวข้อ, ผู้แจ้ง..." oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">ความเร่งด่วน</span>
+        <select class="filter-select" id="filter-pri" onchange="applyFilters()">
+          <option value="">ทั้งหมด</option>
+          <option value="high">ด่วนมาก</option>
+          <option value="med">ปานกลาง</option>
+          <option value="low">ปกติ</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">วันที่</span>
+        <input class="filter-select" id="filter-date-from" type="date" onchange="applyFilters()">
+        <span style="font-size:12px;color:var(--text-muted)">ถึง</span>
+        <input class="filter-select" id="filter-date-to" type="date" onchange="applyFilters()">
+      </div>
+      <div class="filter-actions">
+        <button class="btn-ghost-sm" onclick="clearFilters()"><i class="bi bi-x-circle"></i> ล้าง</button>
+      </div>
+    </div>
+
+    <!-- SUMMARY CHIPS -->
+    <div class="summary-row" id="summary-row"></div>
+
+    <!-- TABLE -->
+    <div class="card-box">
+      <div class="card-header">
+        <h6><i class="bi bi-clock-history" style="color:var(--primary);margin-right:6px"></i>รายการประวัติงาน</h6>
+        <span style="font-size:12px;color:var(--text-muted)" id="result-count"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th style="width:100px">Ticket</th>
+              <th>วันที่แจ้ง</th>
+              <th>รายละเอียด</th>
+              <th>สถานะ</th>
+              <th>ความเร่งด่วน</th>
+              <th>ผู้รับผิดชอบ</th>
+              <th>หมายเหตุ</th>
+              <th>วันที่ปิด</th>
+              <th style="width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <i class="bi bi-inbox"></i>
+        <p>ไม่พบรายการที่ตรงกับเงื่อนไขการค้นหา</p>
+      </div>
+      <div class="pagination-bar">
+        <span id="page-info"></span>
+        <div class="page-btns" id="page-btns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="panel-backdrop" id="backdrop" onclick="closePanel()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="panel-id"></div>
+      <div id="panel-status-badge"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="/js/history.js"></script>
+</body>
+</html>
