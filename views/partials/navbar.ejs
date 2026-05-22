@@ -1,0 +1,17 @@
+<div class="topbar">
+  <div>
+    <div class="topbar-title"><%= title %></div>
+    <% if (typeof breadcrumb !== 'undefined' && breadcrumb) { %>
+      <div class="breadcrumb-nav">
+        <a href="/index">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:10px"></i>
+        <span><%= title %></span>
+      </div>
+    <% } else { %>
+      <div class="topbar-sub" id="topbar-sub"><%= typeof subtitle !== 'undefined' ? subtitle : '' %></div>
+    <% } %>
+  </div>
+  <div class="topbar-actions">
+    <%- typeof actions !== 'undefined' ? actions : '' %>
+  </div>
+</div>

@@ -6,11 +6,15 @@ const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
+const crypto = require('crypto');
+//const bcrypt = require('bcrypt');
 
 // 1. Middleware ตั้งค่าการรับข้อมูล
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // 2. เชื่อมต่อ Database
 const dbConfig = {
@@ -63,7 +67,7 @@ app.get('/check-username', async (req, res) => {
 
 // หน้า Register
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'register.html'));
+    res.sendFile(path.join(__dirname, 'views', 'auth','register.html'));
 });
 
 // รับข้อมูล Register
@@ -88,7 +92,7 @@ app.post('/register', async (req, res) => {
 
 // หน้า Login
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    res.sendFile(path.join(__dirname, 'views', 'auth', 'login.ejs'));
 });
 
 // รับข้อมูล Login
@@ -142,7 +146,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // เปิดให้เข้าถึงโฟลเดอร์ uploads ผ่าน URL ได้ (เช่น http://localhost:4000/uploads/filename.jpg)
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('public/uploads'));
 
 // รับข้อมูลแจ้งงานใหม่ (submit-ticket) พร้อมไฟล์แนบ
 app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
@@ -283,12 +287,12 @@ app.delete('/api/tickets/:id', async (req, res) => {
 
 // หน้า manage
 app.get('/manage', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'manage.html'));
+    res.sendFile(path.join(__dirname, 'views', 'admin','manage.html'));
 });
 
 // หน้า มอบหมาย
 app.get('/queue', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'queue.html'));
+    res.sendFile(path.join(__dirname, 'views', 'admin','queue.html'));
 });
 
 // Logout

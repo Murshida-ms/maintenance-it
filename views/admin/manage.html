@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการงาน - ระบบแจ้งงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/sidebar.css">
+<link rel="stylesheet" href="/css/manage.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="bi bi-tools"></i></div>
+    <h6>ระบบแจ้งงาน</h6>
+    <small>Task Management v2.0</small>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">หลัก</div>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/index'"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/form'"><i class="bi bi-plus-circle-fill"></i><span>แจ้งงาน</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/timeline'"><i class="bi bi-search"></i><span>ติดตามงาน</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/history'"><i class="bi bi-clock-history"></i><span>ประวัติงาน</span></a>
+    <div class="nav-label">เจ้าหน้าที่</div>
+    <a class="nav-item active" onclick="setActive(this)"><i class="bi bi-kanban"></i><span>จัดการงาน</span><span class="nav-badge red" id="nav-pending-badge">0</span></a>
+    <a class="nav-item" onclick="setActive(this);window.location.href='/queue'"><i class="bi bi-diagram-3"></i><span>มอบหมายงาน</span></a>
+    <div class="nav-label">Admin</div>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-bar-chart-line"></i><span>รายงาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-people"></i><span>ผู้ใช้งาน</span></a>
+    <a class="nav-item" onclick="setActive(this)"><i class="bi bi-gear"></i><span>ตั้งค่า</span></a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">--</div>
+    <div class="user-info">
+      <span class="user-name" id="user-fullname">กำลังโหลด...</span>
+      <small class="user-role" id="user-role">--</small>
+    </div>
+    <button class="btn-logout-icon" title="ออกจากระบบ"
+      onclick="if(confirm('ออกจากระบบ?')){ window.location.href='/logout'; }">
+      <i class="bi bi-box-arrow-right"></i>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">จัดการงาน</div>
+      <div class="topbar-sub" id="topbar-sub">กำลังโหลด...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="รีเฟรช" onclick="loadTickets()">
+        <i class="bi bi-arrow-clockwise" style="font-size:16px"></i>
+      </button>
+      <!-- NOTIFICATION BUTTON + DROPDOWN -->
+      <div class="notif-wrap" id="notif-wrap">
+        <button class="icon-btn" id="notif-btn" title="แจ้งเตือน" onclick="toggleNotif(event)" style="position:relative">
+          <i class="bi bi-bell" style="font-size:16px"></i>
+          <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-head">
+            <span class="notif-head-title">การแจ้งเตือน</span>
+            <button class="notif-mark-all" onclick="markAllRead()">อ่านทั้งหมด</button>
+          </div>
+          <div class="notif-list" id="notif-list">
+            <div class="notif-empty"><i class="bi bi-bell-slash"></i>ไม่มีการแจ้งเตือน</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary-sm" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> แจ้งงานใหม่
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- [FIX] stat-strip เป็น div เปล่า ให้ JS renderStats() ใส่เนื้อหา -->
+    <div class="stat-strip" id="stat-strip"></div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="search-input" placeholder="ค้นหา Ticket, ชื่องาน..." oninput="filterCards()">
+      </div>
+      <select class="filter-select" id="filter-priority" onchange="filterCards()">
+        <option value="">ทุกความเร่งด่วน</option>
+        <option value="high">ด่วนมาก</option>
+        <option value="med">ปานกลาง</option>
+        <option value="low">ปกติ</option>
+      </select>
+      <button class="btn-ghost-sm" onclick="clearFilters()"><i class="bi bi-x-lg"></i> ล้างตัวกรอง</button>
+    </div>
+
+    <div class="queue-cols">
+      <div class="qcol col-pending">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-hourglass-split" style="color:var(--pending)"></i>รอดำเนินการ</div>
+          <span class="qcol-count" id="cnt-pending">0</span>
+        </div>
+        <div class="qcol-body" id="col-pending"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+      <div class="qcol col-inprogress">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-gear-wide-connected" style="color:var(--inprogress)"></i>กำลังดำเนินการ</div>
+          <span class="qcol-count" id="cnt-inprogress">0</span>
+        </div>
+        <div class="qcol-body" id="col-inprogress"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+      <div class="qcol col-done">
+        <div class="qcol-header">
+          <div class="qcol-title"><i class="bi bi-check-circle-fill" style="color:var(--done)"></i>เสร็จสิ้น</div>
+          <span class="qcol-count" id="cnt-done">0</span>
+        </div>
+        <div class="qcol-body" id="col-done"><div class="empty-state"><i class="bi bi-inbox"></i>กำลังโหลด...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL POPUP -->
+<div class="panel-backdrop" id="backdrop" onclick="closePanel()">
+  <div class="detail-panel" id="detail-panel" onclick="event.stopPropagation()">
+    <div class="panel-header">
+      <div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="panel-id"></div>
+        <div id="panel-status-badge"></div>
+      </div>
+      <button class="panel-close" onclick="closePanel()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="panel-body" id="panel-body"></div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h6><i class="bi bi-plus-circle-fill" style="color:var(--primary);margin-right:6px"></i>แจ้งงานใหม่</h6>
+      <button class="panel-close" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">ชื่องาน / รายละเอียดปัญหา *</label>
+        <input class="form-control" id="new-title" placeholder="เช่น เครื่องปรับอากาศไม่เย็น...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ความเร่งด่วน</label>
+          <select class="form-control" id="new-priority">
+            <option value="high">ด่วนมาก (SLA 4 ชม.)</option>
+            <option value="med">ปานกลาง (SLA 24 ชม.)</option>
+            <option value="low">ปกติ (SLA 72 ชม.)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้แจ้ง</label>
+          <input class="form-control" id="new-reporter" placeholder="ชื่อผู้แจ้งงาน...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียด</label>
+        <textarea class="form-control" id="new-detail" rows="3" placeholder="อธิบายปัญหา..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="new-note" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost-sm" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-primary-sm" onclick="addTask()"><i class="bi bi-check-lg"></i> บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL CONFIRM MODAL -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal-box" style="width:400px">
+    <div class="modal-header">
+      <h6><i class="bi bi-exclamation-triangle-fill" style="color:var(--rejected);margin-right:6px"></i>ยืนยันการยกเลิกงาน</h6>
+      <button class="panel-close" onclick="closeCancelModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">คุณต้องการยกเลิกงานนี้ใช่หรือไม่?</p>
+      <div style="background:var(--body-bg);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px">
+        <div style="font-weight:600" id="cancel-task-title">—</div>
+        <div style="color:var(--text-muted);font-size:11px;margin-top:3px" id="cancel-task-id">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost-sm" onclick="closeCancelModal()">ไม่ยกเลิก</button>
+      <button class="btn-danger-sm" onclick="confirmCancel()"><i class="bi bi-x-lg"></i> ยืนยันยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/manage.js"></script>
+</body>
+</html>
