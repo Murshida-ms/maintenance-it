@@ -17,7 +17,7 @@
 
 <body>
 
-<%- include('sidebar') %>
+<%- include('../layout/sidebar') %>
 
 <div class="main">
 
@@ -89,7 +89,7 @@
 <div class="offcanvas offcanvas-end"
      tabindex="-1"
      id="addUserCanvas"
-     style="width:520px;">
+     style="width:450px;">
 
   <div class="offcanvas-header border-bottom">
 
@@ -238,7 +238,7 @@
 <div class="offcanvas offcanvas-end"
      tabindex="-1"
      id="editUserCanvas"
-     style="width:520px;">
+     style="width:450px;">
   <div class="offcanvas-header border-bottom">
     <h5 class="offcanvas-title">
       <i class="bi bi-pencil-square"></i>
@@ -367,6 +367,22 @@ const usernameError =
   document.getElementById('username-error');
 
 let usernameTimeout = null;
+
+async function loadUser() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    const data = await res.json();
+    document.getElementById('user-fullname').textContent = data.fullName;
+    document.getElementById('user-role').textContent = data.role;
+    document.getElementById('user-avatar').textContent = data.fullName.substring(0, 2);
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 // LOAD USERS
 async function loadUsers(){
@@ -855,6 +871,7 @@ async function deleteUser(id){
 }
 
 // INIT
+loadUser();
 loadUsers();
 
 </script>

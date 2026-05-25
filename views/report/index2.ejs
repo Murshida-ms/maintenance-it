@@ -1,0 +1,78 @@
+<div class="page-header">
+    <div>
+        <h4>รายงานทั้งหมด</h4>
+        <p class="text-muted">จัดการ Template รายงาน</p>
+    </div>
+
+    <a href="/report/create" class="btn btn-primary">
+        <i class="ti ti-plus"></i>
+        สร้างรายงาน
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ชื่อรายงาน</th>
+                    <th>รายละเอียด</th>
+                    <th>วันที่สร้าง</th>
+                    <th width="220">จัดการ</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <% reports.forEach((item,index)=> { %>
+
+                    <tr>
+
+                        <td>
+                            <%= index + 1 %>
+                        </td>
+
+                        <td>
+                            <strong>
+                                <%= item.report_name %>
+                            </strong>
+                        </td>
+
+                        <td>
+                            <%= item.report_description %>
+                        </td>
+
+                        <td>
+                            <%= item.created_at %>
+                        </td>
+
+                        <td>
+
+                            <a href="/report/run/<%= item.report_id %>"
+                               class="btn btn-success btn-sm">
+                                Run
+                            </a>
+
+                            <a href="/report/designer/<%= item.report_id %>"
+                               class="btn btn-warning btn-sm">
+                                Designer
+                            </a>
+
+                            <a href="/report/delete/<%= item.report_id %>"
+                               class="btn btn-danger btn-sm">
+                                Delete
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                <% }) %>
+
+            </tbody>
+        </table>
+
+    </div>
+</div>

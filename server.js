@@ -6,6 +6,7 @@ const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
 const crypto = require('crypto');
+const dayjs = require('dayjs');
 //const bcrypt = require('bcrypt');
 
 // 1. Middleware ตั้งค่าการรับข้อมูล
@@ -500,6 +501,73 @@ app.delete('/api/users/:id', async (req, res) => {
       message: 'เกิดข้อผิดพลาด'
     });
   }
+});
+
+app.get('/dynamic-report', isLogin, async (req, res) => {
+
+    // ตัวอย่าง query
+    const [results] = await db.query(`
+        SELECT
+        u.user_id,
+        u.username,
+        u.password,
+        u.full_name,
+        u.email,
+        u.role,
+        r.name AS role_name,
+        u.status,
+        u.created_at
+      FROM users u
+      LEFT JOIN role r ON r.id = u.role
+      ORDER BY u.user_id DESC
+    `);
+
+    res.render('dynamic-report', {
+
+        report: {
+            report_name: 'รายงานผู้ป่วยเบาหวาน',
+            report_description: 'แสดงข้อมูลผู้ป่วยที่ได้รับการวินิจฉัยโรคเบาหวาน'
+        },
+
+        generatedAt: dayjs().format('DD/MM/YYYY HH:mm'),
+
+        filters: {
+            วันที่เริ่มต้น: '01/01/2026',
+            วันที่สิ้นสุด: '31/01/2026'
+        },
+
+        columns: [
+            {
+                label: 'ลำดับ',
+                type: 'running',
+                align: 'text-center'
+            },
+            {
+                label: 'HN',
+                field: 'hn'
+            },
+            {
+                label: 'ชื่อ-สกุล',
+                field: 'patient_name'
+            },
+            {
+                label: 'อายุ',
+                field: 'age_y',
+                format: 'number',
+                align: 'text-center'
+            },
+            {
+                label: 'ยอดค่าใช้จ่าย',
+                field: 'income',
+                format: 'decimal',
+                align: 'text-right'
+            }
+        ],
+
+        rows: results
+
+    });
+
 });
 
 // Logout

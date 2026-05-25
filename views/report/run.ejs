@@ -1,0 +1,123 @@
+<div class="card mb-3">
+
+    <div class="card-body">
+
+        <form method="GET">
+
+            <div class="row">
+
+                <% filters.forEach(filter => { %>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+                            <%= filter.filter_label %>
+                        </label>
+
+                        <% if(filter.filter_type === 'date') { %>
+
+                            <input type="date"
+                                   name="<%= filter.query_param %>"
+                                   class="form-control">
+
+                        <% } %>
+
+                        <% if(filter.filter_type === 'text') { %>
+
+                            <input type="text"
+                                   name="<%= filter.query_param %>"
+                                   class="form-control">
+
+                        <% } %>
+
+                    </div>
+
+                <% }) %>
+
+            </div>
+
+            <button class="btn btn-primary">
+                Run Report
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between mb-3">
+
+            <h5>
+                ผลลัพธ์รายงาน
+            </h5>
+
+            <div>
+
+                <button class="btn btn-success btn-sm">
+                    Export Excel
+                </button>
+
+                <button class="btn btn-danger btn-sm">
+                    Export PDF
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-sm">
+
+                <thead>
+
+                    <tr>
+
+                        <% if(rows.length > 0) { %>
+
+                            <% Object.keys(rows[0]).forEach(col => { %>
+
+                                <th>
+                                    <%= col %>
+                                </th>
+
+                            <% }) %>
+
+                        <% } %>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <% rows.forEach(row => { %>
+
+                        <tr>
+
+                            <% Object.values(row).forEach(val => { %>
+
+                                <td>
+                                    <%= val %>
+                                </td>
+
+                            <% }) %>
+
+                        </tr>
+
+                    <% }) %>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,213 @@
+# dynamic-report.ejs
+
+```ejs
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= report.report_name %></title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Sarabun", sans-serif;
+    }
+
+    body {
+      margin: 20px;
+      color: #222;
+      font-size: 14px;
+    }
+
+    .report-header {
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+    }
+
+    .report-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .report-subtitle {
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .report-date {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .filter-box {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+
+    .filter-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .filter-item {
+      display: inline-block;
+      margin-right: 20px;
+      margin-bottom: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table thead {
+      background: #2c3e50;
+      color: white;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: right;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+      }
+
+      .no-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-header">
+    <div class="report-title">
+      <%= report.report_name %>
+    </div>
+
+    <% if (report.report_description) { %>
+      <div class="report-subtitle">
+        <%= report.report_description %>
+      </div>
+    <% } %>
+
+    <div class="report-date">
+      วันที่ออกรายงาน : <%= generatedAt %>
+    </div>
+  </div>
+
+  <% if (filters && Object.keys(filters).length > 0) { %>
+    <div class="filter-box">
+      <div class="filter-title">เงื่อนไขการค้นหา</div>
+
+      <% Object.keys(filters).forEach(key => { %>
+        <div class="filter-item">
+          <strong><%= key %> :</strong>
+          <%= filters[key] %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (rows && rows.length > 0) { %>
+
+    <table>
+      <thead>
+        <tr>
+          <% columns.forEach(col => { %>
+            <th class="<%= col.align || 'text-left' %>">
+              <%= col.label %>
+            </th>
+          <% }) %>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% rows.forEach((row, index) => { %>
+          <tr>
+
+            <% columns.forEach(col => { %>
+              <td class="<%= col.align || 'text-left' %>">
+
+                <% if (col.type === 'running') { %>
+                  <%= index + 1 %>
+
+                <% } else if (col.format === 'number') { %>
+                  <%= Number(row[col.field] || 0).toLocaleString() %>
+
+                <% } else if (col.format === 'decimal') { %>
+                  <%= Number(row[col.field] || 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) %>
+
+                <% } else if (col.format === 'date') { %>
+                  <%= row[col.field] || '-' %>
+
+                <% } else { %>
+                  <%= row[col.field] ?? '-' %>
+                <% } %>
+
+              </td>
+            <% }) %>
+
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      จำนวนข้อมูลทั้งหมด <strong><%= rows.length %></strong> รายการ
+    </div>
+
+  <% } else { %>
+
+    <div class="no-data">
+      ไม่พบข้อมูล
+    </div>
+
+  <% } %>
+
+</body>
+</html>

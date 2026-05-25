@@ -1,0 +1,183 @@
+<div class="card">
+
+    <div class="card-header d-flex justify-content-between">
+
+        <div>
+            <h5>
+                <%= report.report_name %>
+            </h5>
+        </div>
+
+        <div>
+
+            <a href="/report/run/<%= report.report_id %>"
+               class="btn btn-success">
+                Run Report
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <ul class="nav nav-tabs" role="tablist">
+
+            <li class="nav-item">
+                <button class="nav-link active"
+                        data-bs-toggle="tab"
+                        data-bs-target="#sql-tab">
+                    SQL
+                </button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#columns-tab">
+                    Columns
+                </button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#filters-tab">
+                    Filters
+                </button>
+            </li>
+
+        </ul>
+
+        <div class="tab-content pt-3">
+
+            <!-- SQL TAB -->
+            <div class="tab-pane fade show active"
+                 id="sql-tab">
+
+                <form action="/report/save-sql/<%= report.report_id %>"
+                      method="POST">
+
+                    <textarea name="report_sql"
+                              rows="18"
+                              class="form-control font-monospace"><%= report.report_sql %></textarea>
+
+                    <button class="btn btn-primary mt-3">
+                        Save SQL
+                    </button>
+
+                </form>
+
+            </div>
+
+            <!-- COLUMNS TAB -->
+            <div class="tab-pane fade"
+                 id="columns-tab">
+
+                <table class="table">
+
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Label</th>
+                            <th>Type</th>
+                            <th>Visible</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <% columns.forEach(col => { %>
+
+                            <tr>
+
+                                <td>
+                                    <%= col.column_name %>
+                                </td>
+
+                                <td>
+                                    <input type="text"
+                                           value="<%= col.column_label %>"
+                                           class="form-control">
+                                </td>
+
+                                <td>
+                                    <select class="form-select">
+                                        <option>text</option>
+                                        <option>number</option>
+                                        <option>date</option>
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="checkbox"
+                                           <%= col.is_visible ? 'checked' : '' %>>
+                                </td>
+
+                            </tr>
+
+                        <% }) %>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- FILTER TAB -->
+            <div class="tab-pane fade"
+                 id="filters-tab">
+
+                <a href="#"
+                   class="btn btn-primary mb-3">
+                    Add Filter
+                </a>
+
+                <table class="table">
+
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Param</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <% filters.forEach(filter => { %>
+
+                            <tr>
+
+                                <td>
+                                    <%= filter.filter_label %>
+                                </td>
+
+                                <td>
+                                    <%= filter.query_param %>
+                                </td>
+
+                                <td>
+                                    <%= filter.filter_type %>
+                                </td>
+
+                                <td>
+                                    <%= filter.is_required %>
+                                </td>
+
+                            </tr>
+
+                        <% }) %>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
