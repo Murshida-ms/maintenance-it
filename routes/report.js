@@ -16,4 +16,12 @@ router.post('/delete/:id', isLogin, reportController.delete);
 
 router.get('/designer/:id', isLogin, reportController.designer);
 
+router.get('/run/:id', isLogin, reportController.run);
+
+router.get('/print/:id', isLogin, reportController.print);
+
+router.post('/test-sql', isLogin, reportController.testSQL);
+
+router.post('/save-sql/:id', reportController.saveSQL);
+
 module.exports = router;

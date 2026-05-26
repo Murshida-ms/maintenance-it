@@ -1,309 +1,191 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ระบบแจ้งงาน - Report</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="/css/history.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแจ้งงาน - Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/history.css">
 </head>
 
 <body>
+    <%- include('../layout/sidebar') %>
+    <!-- MAIN -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div>
 
-<%- include('../layout/sidebar') %>
+                <div class="topbar-title">
+                    รายงาน
+                </div>
 
-<!-- MAIN -->
-<div class="main">
+                <div class="topbar-sub">
+                    รายงานทั้งหมด
+                </div>
 
-    <!-- TOPBAR -->
-    <div class="topbar">
-
-        <div>
-
-            <div class="topbar-title">
-                รายงาน
             </div>
 
-            <div class="topbar-sub">
-                รายงานทั้งหมด
+            <div class="topbar-actions">
+
+                <!-- CREATE BUTTON -->
+                <button class="btn-ghost-sm"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#createReportCanvas">
+
+                    <i class="bi bi-file-text"></i>
+
+                    สร้างรายงาน
+
+                </button>
+
+                <button class="icon-btn"
+                        title="แจ้งเตือน">
+
+                    <i class="bi bi-bell"
+                    style="font-size:16px"></i>
+                    <span class="notif-dot"></span>
+
+                </button>
+
             </div>
 
         </div>
 
-        <div class="topbar-actions">
+        <!-- CONTENT -->
+        <div class="content">
+            <!-- TABLE -->
+            <div class="card-box">
+                <div class="card-header">
+                    <h6>
+                        <i class="bi bi-file-earmark-bar-graph"
+                        style="color:var(--primary);margin-right:6px"></i>
+                        รายการ Template Report
+                    </h6>
+                </div>
 
-            <!-- CREATE BUTTON -->
-            <button class="btn-ghost-sm"
-                    data-bs-toggle="offcanvas"
-                    data-bs-target="#createReportCanvas">
+                <div style="overflow-x:auto">
 
-                <i class="bi bi-file-text"></i>
+                    <table class="history-table">
 
-                สร้างรายงาน
-
-            </button>
-
-            <button class="icon-btn"
-                    title="แจ้งเตือน">
-
-                <i class="bi bi-bell"
-                   style="font-size:16px"></i>
-                <span class="notif-dot"></span>
-
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- CONTENT -->
-    <div class="content">
-        <!-- TABLE -->
-        <div class="card-box">
-            <div class="card-header">
-                <h6>
-                    <i class="bi bi-file-earmark-bar-graph"
-                       style="color:var(--primary);margin-right:6px"></i>
-                    รายการ Template Report
-                </h6>
-            </div>
-
-            <div style="overflow-x:auto">
-
-                <table class="history-table">
-
-                    <thead>
-
-                        <tr>
-
-                            <th width="80">#</th>
-
-                            <th>ชื่อรายงาน</th>
-
-                            <th>รายละเอียด</th>
-
-                            <th width="180">วันที่สร้าง</th>
-
-                            <th width="250">จัดการ</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <% reports.forEach((item,index)=> { %>
-
+                        <thead>
                             <tr>
-
-                                <td>
-                                    <%= index + 1 %>
-                                </td>
-
-                                <td>
-
-                                    <strong>
-                                        <%= item.report_name %>
-                                    </strong>
-
-                                </td>
-
-                                <td>
-
-                                    <%= item.report_description || '-' %>
-
-                                </td>
-
-                                <td>
-
-                                    <%= item.created_at %>
-
-                                </td>
-
-                                <td>
-
-                                    <!-- DESIGN -->
-                                    <a href="/report/designer/<%= item.report_id %>"
-                                       class="btn btn-primary btn-sm">
-
-                                        <i class="bi bi-palette"></i>
-
-                                        Design
-
-                                    </a>
-
-                                    <!-- EDIT -->
-                                    <button class="btn btn-warning btn-sm"
-
-                                            data-item='<%- JSON.stringify(item) %>'
-
-                                            onclick="openEditModal(this)">
-
-                                        <i class="bi bi-pencil-square"></i>
-
-                                        Edit
-
-                                    </button>
-
-                                    <!-- DELETE -->
-                                    <button class="btn btn-danger btn-sm"
-        data-id="<%= item.report_id %>"
-        onclick="deleteReport(this)">
-
-    <i class="bi bi-trash"></i>
-
-    Delete
-
-</button>
-
-                                </td>
-
+                                <th width="80">#</th>
+                                <th>ชื่อรายงาน</th>
+                                <th>รายละเอียด</th>
+                                <th>SQL</th>
+                                <th width="180">วันที่สร้าง</th>
+                                <th>จัดการ</th>
                             </tr>
+                        </thead>
+                        <tbody>
+                            <% reports.forEach((item,index)=> { %>
+                                <tr>
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            <%= item.report_name %>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <%= item.report_description || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.report_sql || '-' %>
+                                    </td>
+                                    <td>
+                                        <%= item.created_at %>
+                                    </td>
 
-                        <% }) %>
+                                    <td>
+                                        <!-- PRINT -->
+                                        <button
+                                        class="btn btn-success btn-sm"
+                                        data-item='<%- JSON.stringify(item) %>'
+                                        onclick="openPrintModal(this)">
+                                            <i class="bi bi-printer"></i>
+                                            Print
+                                        </button>
+                                        <!-- DESIGN -->
+                                        <a href="/report/designer/<%= item.report_id %>"
+                                        class="btn btn-primary btn-sm">
+                                            <i class="bi bi-palette"></i>
+                                            Design
+                                        </a>
+                                        <!-- EDIT -->
+                                        <button class="btn btn-warning btn-sm"
+                                                data-item='<%- JSON.stringify(item) %>'
+                                                onclick="openEditModal(this)">
+                                            <i class="bi bi-pencil-square"></i>
+                                            Edit
+                                        </button>
 
-                    </tbody>
+                                        <!-- DELETE -->
+                                        <button class="btn btn-danger btn-sm"
+            data-id="<%= item.report_id %>"
+            onclick="deleteReport(this)">
 
-                </table>
+        <i class="bi bi-trash"></i>
+
+        Delete
+
+    </button>
+
+                                    </td>
+
+                                </tr>
+
+                            <% }) %>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 
         </div>
 
     </div>
+    <!-- CREATE OFFCANVAS -->
+    <div class="offcanvas offcanvas-end"
 
-</div>
+        tabindex="-1"
 
-<!-- ========================= -->
-<!-- CREATE OFFCANVAS -->
-<!-- ========================= -->
+        id="createReportCanvas"
 
-<div class="offcanvas offcanvas-end"
+        style="width:450px;">
 
-     tabindex="-1"
+        <div class="offcanvas-header border-bottom">
 
-     id="createReportCanvas"
+            <div>
 
-     style="width:450px;">
+                <h5 class="offcanvas-title">
+                    สร้างรายงาน
+                </h5>
 
-    <div class="offcanvas-header border-bottom">
+                <small class="text-muted">
+                    สร้าง Template รายงานใหม่
+                </small>
 
-        <div>
+            </div>
 
-            <h5 class="offcanvas-title">
-                สร้างรายงาน
-            </h5>
-
-            <small class="text-muted">
-                สร้าง Template รายงานใหม่
-            </small>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="offcanvas">
+            </button>
 
         </div>
 
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="offcanvas">
-        </button>
+        <div class="offcanvas-body">
 
-    </div>
-
-    <div class="offcanvas-body">
-
-        <form action="/report/create"
-            method="POST">
-
-          <div class="mb-3">
-
-              <label class="form-label">
-                  ชื่อรายงาน
-              </label>
-
-              <input type="text"
-                    name="report_name"
-                    class="form-control"
-                    required>
-
-          </div>
-
-          <div class="mb-3">
-
-              <label class="form-label">
-                  รายละเอียด
-              </label>
-
-              <textarea name="report_description"
-                        rows="3"
-                        class="form-control"></textarea>
-
-          </div>
-
-          <div class="mb-3">
-
-              <label class="form-label">
-                  SQL Report
-              </label>
-
-              <textarea name="report_sql"
-                        rows="12"
-                        class="form-control font-monospace"
-                        placeholder="SELECT * FROM vn_stat"></textarea>
-
-          </div>
-
-          <button class="btn btn-primary w-100">
-
-              <i class="bi bi-save"></i>
-
-              บันทึกรายงาน
-
-          </button>
-
-      </form>
-
-    </div>
-
-</div>
-
-<!-- ========================= -->
-<!-- EDIT OFFCANVAS -->
-<!-- ========================= -->
-
-<div class="offcanvas offcanvas-end"
-
-     tabindex="-1"
-
-     id="editCanvas"
-
-     style="width:450px;">
-
-    <div class="offcanvas-header border-bottom">
-
-        <div>
-
-            <h5 class="offcanvas-title">
-                แก้ไขรายงาน
-            </h5>
-        </div>
-
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="offcanvas">
-        </button>
-
-    </div>
-
-    <div class="offcanvas-body">
-
-        <form id="editForm"
-              method="POST">
+            <form action="/report/create"
+                method="POST">
 
             <div class="mb-3">
 
@@ -312,10 +194,9 @@
                 </label>
 
                 <input type="text"
-                       id="edit_report_name"
-                       name="report_name"
-                       class="form-control"
-                       required>
+                        name="report_name"
+                        class="form-control"
+                        required>
 
             </div>
 
@@ -325,10 +206,9 @@
                     รายละเอียด
                 </label>
 
-                <textarea id="edit_report_description"
-                          name="report_description"
-                          rows="3"
-                          class="form-control"></textarea>
+                <textarea name="report_description"
+                            rows="3"
+                            class="form-control"></textarea>
 
             </div>
 
@@ -338,175 +218,321 @@
                     SQL Report
                 </label>
 
-                <textarea id="edit_report_sql"
-                          name="report_sql"
-                          rows="12"
-                          class="form-control font-monospace"></textarea>
+                <textarea name="report_sql"
+                            rows="12"
+                            class="form-control font-monospace"
+                            placeholder="SELECT * FROM vn_stat"></textarea>
 
             </div>
 
-            <button class="btn btn-warning w-100">
+            <button class="btn btn-primary w-100">
 
-                <i class="bi bi-pencil-square"></i>
+                <i class="bi bi-save"></i>
 
-                บันทึกการแก้ไข
+                บันทึกรายงาน
 
             </button>
 
         </form>
 
+        </div>
+
+    </div>
+    <!-- EDIT OFFCANVAS -->
+    <div class="offcanvas offcanvas-end"
+
+        tabindex="-1"
+
+        id="editCanvas"
+
+        style="width:450px;">
+
+        <div class="offcanvas-header border-bottom">
+
+            <div>
+
+                <h5 class="offcanvas-title">
+                    แก้ไขรายงาน
+                </h5>
+            </div>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="offcanvas">
+            </button>
+
+        </div>
+
+        <div class="offcanvas-body">
+
+            <form id="editForm"
+                method="POST">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        ชื่อรายงาน
+                    </label>
+
+                    <input type="text"
+                        id="edit_report_name"
+                        name="report_name"
+                        class="form-control"
+                        required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        รายละเอียด
+                    </label>
+
+                    <textarea id="edit_report_description"
+                            name="report_description"
+                            rows="3"
+                            class="form-control"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        SQL Report
+                    </label>
+
+                    <textarea id="edit_report_sql"
+                            name="report_sql"
+                            rows="12"
+                            class="form-control font-monospace"></textarea>
+
+                </div>
+
+                <button class="btn btn-warning w-100">
+
+                    <i class="bi bi-pencil-square"></i>
+
+                    บันทึกการแก้ไข
+
+                </button>
+
+            </form>
+
+        </div>
+
     </div>
 
-</div>
+    <div class="modal fade" id="printReportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="printReportTitle">Print Report</h5>
+                        <small class="text-muted">Fill parameters before printing</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="printReportForm" onsubmit="submitPrintReport(event)">
+                    <div class="modal-body">
+                        <div id="printParamList" class="row g-3"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-success">
+                            <i class="bi bi-printer"></i>
+                            Print
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-<!-- ========================= -->
-<!-- JS -->
-<!-- ========================= -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function loadUser() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await res.json();
+                const fullname = document.getElementById('user-fullname');
+                const role = document.getElementById('user-role');
+                const avatar = document.getElementById('user-avatar');
+                if(fullname) {
+                    fullname.textContent = data.fullName;
+                }
+                if(role) {
+                    role.textContent = data.role;
+                }
+                if(avatar) {
+                    avatar.textContent =
+                        data.fullName.substring(0, 2);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        loadUser();
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        let currentPrintReport = null;
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        function parseReportParams(item) {
+            try {
+                const params = item.report_params
+                    ? JSON.parse(item.report_params)
+                    : [];
 
-<script>
+                if (Array.isArray(params) && params.length > 0) {
+                    return params;
+                }
+            } catch (err) {
+                console.error(err);
+            }
 
-async function loadUser() {
+            const sql = item.report_sql || '';
+            const names = [
+                ...new Set(
+                    [...sql.matchAll(/\{([a-zA-Z0-9_]+)\}/g)]
+                        .map(match => match[1])
+                )
+            ];
 
-    try {
-
-        const res = await fetch('/api/me');
-
-        if (res.status === 401) {
-
-            window.location.href = '/login';
-
-            return;
+            return names.map(name => ({
+                name,
+                label: name,
+                type: name.toLowerCase().includes('date') ? 'date' : 'text',
+                defaultValue: ''
+            }));
         }
 
-        const data = await res.json();
+        function openPrintModal(button) {
+            const item = JSON.parse(button.dataset.item);
+            const params = parseReportParams(item);
+            const list = document.getElementById('printParamList');
 
-        const fullname =
-            document.getElementById('user-fullname');
+            currentPrintReport = item;
+            document.getElementById('printReportTitle').textContent = item.report_name || 'Print Report';
 
-        const role =
-            document.getElementById('user-role');
+            if (params.length === 0) {
+                list.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">
+                            This report has no parameters. Click Print to continue.
+                        </div>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = params.map(param => `
+                    <div class="col-md-6">
+                        <label class="form-label">${escapeHtml(param.label || param.name)}</label>
+                        <input
+                            type="${param.type === 'number' ? 'number' : (param.type === 'date' ? 'date' : 'text')}"
+                            name="${escapeHtml(param.name)}"
+                            value="${escapeHtml(param.defaultValue || '')}"
+                            class="form-control"
+                            placeholder="{${escapeHtml(param.name)}}">
+                        <small class="text-muted">{${escapeHtml(param.name)}}</small>
+                    </div>
+                `).join('');
+            }
 
-        const avatar =
-            document.getElementById('user-avatar');
-
-        if(fullname) {
-            fullname.textContent = data.fullName;
+            const modal = new bootstrap.Modal(
+                document.getElementById('printReportModal')
+            );
+            modal.show();
         }
 
-        if(role) {
-            role.textContent = data.role;
+        function submitPrintReport(event) {
+            event.preventDefault();
+
+            if (!currentPrintReport) {
+                return;
+            }
+
+            const params = new URLSearchParams(
+                new FormData(
+                    document.getElementById('printReportForm')
+                )
+            );
+
+            window.open(
+                '/report/print/' + currentPrintReport.report_id + '?' + params.toString(),
+                '_blank'
+            );
         }
 
-        if(avatar) {
-            avatar.textContent =
-                data.fullName.substring(0, 2);
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
 
-    } catch (e) {
-
-        console.error(e);
-
-    }
-}
-
-loadUser();
-
-function openEditModal(button) {
-
-    const item = JSON.parse(
-        button.dataset.item
-    );
-
-    document.getElementById('edit_report_name').value =
-        item.report_name;
-
-    document.getElementById('edit_report_description').value =
-        item.report_description || '';
-
-    document.getElementById('editForm').action =
-        '/report/update/' + item.report_id;
-
-    const canvas = new bootstrap.Offcanvas(
-        document.getElementById('editCanvas')
-    );
-
-    canvas.show();
-}
-
-async function deleteReport(button) {
-
-    const id = button.dataset.id;
-
-    const confirm = await Swal.fire({
-
-        title: 'ยืนยันการลบ?',
-
-        text: 'ลบแล้วไม่สามารถย้อนกลับได้',
-
-        icon: 'warning',
-
-        showCancelButton: true,
-
-        confirmButtonText: 'ลบ',
-
-        cancelButtonText: 'ยกเลิก'
-
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-
-        const res = await fetch('/report/delete/' + id, {
-
-            method: 'POST'
-
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-
-            Swal.fire({
-
-                icon: 'success',
-
-                title: 'ลบสำเร็จ',
-
-                timer: 1200,
-
-                showConfirmButton: false
-
+        function openEditModal(button) {
+            const item = JSON.parse(
+                button.dataset.item
+            );
+            document.getElementById('edit_report_name').value = item.report_name;
+            document.getElementById('edit_report_description').value = item.report_description || '';
+            document.getElementById('edit_report_sql').value = item.report_sql || '';
+            document.getElementById('editForm').action = '/report/update/' + item.report_id;
+            const canvas = new bootstrap.Offcanvas(
+                document.getElementById('editCanvas')
+            );
+            canvas.show();
+        }
+        async function deleteReport(button) {
+            const id = button.dataset.id;
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: 'ลบแล้วไม่สามารถย้อนกลับได้',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก'
             });
+            if (!confirm.isConfirmed) return;
+            try {
+                const res = await fetch('/report/delete/' + id, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบสำเร็จ',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
 
-            setTimeout(() => {
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1200);
 
-                location.reload();
+                }
 
-            }, 1200);
+            } catch (err) {
 
+                console.error(err);
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'เกิดข้อผิดพลาด'
+
+                });
+
+            }
         }
 
-    } catch (err) {
-
-        console.error(err);
-
-        Swal.fire({
-
-            icon: 'error',
-
-            title: 'เกิดข้อผิดพลาด'
-
-        });
-
-    }
-}
-
-</script>
+    </script>
 
 </body>
 </html>

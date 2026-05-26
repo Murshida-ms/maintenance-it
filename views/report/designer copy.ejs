@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Report Designer</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+    background:#f5f7fb;
+}
+
+.editor-box{
+    min-height:500px;
+}
+
+.sql-editor{
+    min-height:400px;
+    font-family:Consolas, monospace;
+    font-size:14px;
+}
+
+.preview-table{
+    font-size:13px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container-fluid py-3">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-1">
+                Report Designer
+            </h3>
+            <small class="text-muted">
+                ออกแบบรายงาน
+            </small>
+        </div>
+
+        <div>
+            <a href="/report"
+               class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                กลับ
+            </a>
+
+            <button class="btn btn-success"
+                    onclick="saveReport()">
+                <i class="bi bi-save"></i>
+                Save
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- LEFT PANEL -->
+        <div class="col-md-3">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    Template Information
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            ชื่อรายงาน
+                        </label>
+
+                        <input type="text"
+                               id="report_name"
+                               class="form-control"
+                               value="<%= report.report_name %>">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            รายละเอียด
+                        </label>
+
+                        <textarea id="report_description"
+                                  rows="4"
+                                  class="form-control"><%= report.report_description || '' %></textarea>
+
+                    </div>
+
+                    <div class="alert alert-info">
+
+                        <strong>ID :</strong>
+                        <%= report.report_id %>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        <!-- SQL EDITOR -->
+        <div class="col-md-5">
+            <div class="card editor-box">
+                <div class="card-header d-flex justify-content-between">
+                    <span>
+                        SQL Editor
+                    </span>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="testSQL()">
+                        <i class="bi bi-play-fill"></i>
+                        Test SQL
+                    </button>
+                </div>
+                <div class="card-body">
+                    <textarea id="report_sql"
+                              class="form-control sql-editor"><%= report.report_sql || '' %></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Preview Result
+                </div>
+                <div class="card-body">
+                    <div id="previewArea">
+                        <div class="text-center text-muted py-5">
+                            ยังไม่ได้ทดสอบ SQL
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function saveReport(){
+    try{
+        const payload = {
+            report_name:document.getElementById('report_name').value,
+            report_description:document.getElementById('report_description').value,
+            report_sql:document.getElementById('report_sql').value
+        };
+
+        const response = await fetch(
+            '/report/save-sql/<%= report.report_id %>',
+            {
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify(payload)
+            }
+        );
+
+        const result = await response.json();
+        if(result.success){
+            alert('บันทึกสำเร็จ');
+        }
+    }
+    catch(err){
+        console.error(err);
+        alert('เกิดข้อผิดพลาด');
+    }
+}
+
+async function testSQL(){
+    try{
+        const sql =
+            document.getElementById('report_sql').value;
+        const response = await fetch(
+            '/report/test-sql',
+            {
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({
+                    sql
+                })
+            }
+        );
+        const result = await response.json();
+        renderPreview(result);
+    }
+    catch(err){
+        console.error(err);
+        alert('SQL Error');
+    }
+}
+
+function renderPreview(data){
+    let html = '';
+    if(!data.rows || data.rows.length===0){
+        html = '<div class="alert alert-warning">ไม่พบข้อมูล</div>';
+        document.getElementById('previewArea').innerHTML = html;
+        return;
+    }
+    html += '<table class="table table-bordered preview-table">';
+    html += '<thead><tr>';
+    Object.keys(data.rows[0]).forEach(col=>{
+        html += `<th>${col}</th>`;
+    });
+    html += '</tr></thead>';
+    html += '<tbody>';
+    data.rows.forEach(row=>{
+        html += '<tr>';
+        Object.values(row).forEach(val=>{
+            html += `<td>${val ?? ''}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    html += '</table>';
+    document.getElementById('previewArea').innerHTML =
+        html;
+
+}
+</script>
+
+</body>
+</html>

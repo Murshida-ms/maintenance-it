@@ -1,183 +1,743 @@
-<div class="card">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Report Designer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/designer.css">
+</head>
+<body>
+    <div class="designer-shell">
+        <% if (!(typeof embed !== 'undefined' && embed)) { %>
+            <!--
+            <div class="top-menu">
+                <span>File</span>
+                <span>Edit</span>
+                <span>View</span>
+                <span>Report</span>
+                <span>Help</span>
+            </div>
+            -->
 
-    <div class="card-header d-flex justify-content-between">
+            <div class="designer-header">
+                <div>
+                    <strong>Report Designer</strong>
+                    <span class="text-muted ms-2"><%= report.report_name %></span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/report" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i>
+                        Back
+                    </a>
+                    <button class="btn btn-success btn-sm" onclick="saveLayout()">
+                        <i class="bi bi-save"></i>
+                        Save
+                    </button>
+                </div>
+            </div>
+        <% } %>
 
-        <div>
-            <h5>
-                <%= report.report_name %>
-            </h5>
-        </div>
-
-        <div>
-
-            <a href="/report/run/<%= report.report_id %>"
-               class="btn btn-success">
-                Run Report
-            </a>
-
-        </div>
-
-    </div>
-
-    <div class="card-body">
-
-        <ul class="nav nav-tabs" role="tablist">
-
-            <li class="nav-item">
-                <button class="nav-link active"
-                        data-bs-toggle="tab"
-                        data-bs-target="#sql-tab">
+        <ul class="nav nav-tabs builder-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#sqlPane" type="button" role="tab">
+                    <i class="bi bi-database"></i>
                     SQL
                 </button>
             </li>
-
-            <li class="nav-item">
-                <button class="nav-link"
-                        data-bs-toggle="tab"
-                        data-bs-target="#columns-tab">
-                    Columns
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#designPane" type="button" role="tab" onclick="renderDesignCanvas()">
+                    <i class="bi bi-layout-text-window"></i>
+                    Design
                 </button>
             </li>
-
-            <li class="nav-item">
-                <button class="nav-link"
-                        data-bs-toggle="tab"
-                        data-bs-target="#filters-tab">
-                    Filters
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#previewPane" type="button" role="tab" onclick="renderPreview()">
+                    <i class="bi bi-eye"></i>
+                    Preview
                 </button>
             </li>
-
         </ul>
 
-        <div class="tab-content pt-3">
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="sqlPane" role="tabpanel" tabindex="0">
+                <div class="toolbar">
+                    <button class="tool-btn" title="Test SQL" onclick="testSQL()"><i class="bi bi-play-fill"></i></button>
+                    <button class="tool-btn" title="Add Param" onclick="addParameter()"><i class="bi bi-plus-circle"></i></button>
+                    <button class="tool-btn" title="Scan SQL" onclick="scanVariables()"><i class="bi bi-search"></i></button>
+                    <button class="tool-btn" title="Save" onclick="saveLayout()"><i class="bi bi-save"></i></button>
+                </div>
 
-            <!-- SQL TAB -->
-            <div class="tab-pane fade show active"
-                 id="sql-tab">
+                <div class="container-fluid py-3">
+                    <div class="row g-3">
+                        <div class="col-lg-7">
+                            <div class="card mb-3">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>SQL Editor</span>
+                                    <button class="btn btn-primary btn-sm" onclick="testSQL()">
+                                        <i class="bi bi-play-fill"></i>
+                                        Test SQL
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <textarea id="report_sql" class="form-control sql-editor"><%= report.report_sql || '' %></textarea>
+                                </div>
+                            </div>
 
-                <form action="/report/save-sql/<%= report.report_id %>"
-                      method="POST">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Parameters</span>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span id="param-count" class="badge text-bg-light">0 params</span>
+                                        <button class="btn btn-success btn-sm" onclick="addParameter()">
+                                            <i class="bi bi-plus-circle"></i>
+                                            Add Param
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" onclick="scanVariables()">Scan SQL</button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="parameter-list"></div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <textarea name="report_sql"
-                              rows="18"
-                              class="form-control font-monospace"><%= report.report_sql %></textarea>
+                        <div class="col-lg-5">
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-12 col-xl-6">
+                                    <div class="card">
+                                        <div class="card-header">SQL Fields</div>
+                                        <div class="card-body">
+                                            <div id="field-list">
+                                                <div class="text-muted">Press Test SQL first</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <button class="btn btn-primary mt-3">
-                        Save SQL
-                    </button>
+                                <div class="col-md-6 col-lg-12 col-xl-6">
+                                    <div class="card">
+                                        <div class="card-header">Report Columns</div>
+                                        <div class="card-body">
+                                            <div id="selected-columns"></div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                </form>
-
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">SQL Result Sample</div>
+                                        <div class="card-body">
+                                            <div id="sample-data" style="max-height:260px;overflow:auto;font-size:12px;">
+                                                <div class="text-muted">No data</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- COLUMNS TAB -->
-            <div class="tab-pane fade"
-                 id="columns-tab">
+            <div class="tab-pane fade" id="designPane" role="tabpanel" tabindex="0">
+                <div class="toolbar">
+                    <button class="tool-btn" title="Refresh" onclick="renderDesignCanvas()"><i class="bi bi-arrow-clockwise"></i></button>
+                    <button class="tool-btn" title="Save" onclick="saveLayout()"><i class="bi bi-save"></i></button>
+                    <button class="tool-btn" title="Preview" onclick="openPreviewTab()"><i class="bi bi-eye"></i></button>
+                    <button class="tool-btn" title="Bold"><strong>B</strong></button>
+                    <button class="tool-btn" title="Italic"><em>I</em></button>
+                    <button class="tool-btn" title="Table"><i class="bi bi-table"></i></button>
+                    <button class="tool-btn" title="Image"><i class="bi bi-image"></i></button>
+                </div>
 
-                <table class="table">
+                <div class="workbench">
+                    <div class="report-tree">
+                        <div class="panel-title">Report Tree</div>
+                        <div class="tree-node"><i class="bi bi-file-earmark-text"></i> Report</div>
+                        <div class="tree-node child"><i class="bi bi-braces"></i> Parameters</div>
+                        <div id="design-param-tree"></div>
+                        <div class="tree-node child"><i class="bi bi-layers"></i> Design Layers</div>
+                        <div class="tree-node child"><i class="bi bi-list-columns"></i> Detail</div>
+                        <div id="design-column-tree"></div>
+                    </div>
 
-                    <thead>
-                        <tr>
-                            <th>Column</th>
-                            <th>Label</th>
-                            <th>Type</th>
-                            <th>Visible</th>
-                        </tr>
-                    </thead>
+                    <div class="design-surface">
+                        <div class="design-paper">
+                            <div class="report-title"><%= report.report_name %></div>
+                            <div class="design-band">
+                                <strong>Report Header</strong>
+                                <textarea id="report_header" rows="5" class="form-control mt-2"><%= report.report_header || '' %></textarea>
+                            </div>
+                            <div class="design-band">
+                                <strong>Detail Band</strong>
+                                <div class="table-builder">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-semibold">
+                                            <i class="bi bi-table"></i>
+                                            Table Layout
+                                        </span>
+                                        <small class="text-muted">Click field to add, drag header to reorder</small>
+                                    </div>
+                                    <div id="design-available-fields" class="field-palette"></div>
+                                    <div id="design-table-builder"></div>
+                                </div>
+                                <div id="design-canvas-fields" class="mt-2"></div>
+                            </div>
+                            <div class="design-band">
+                                <strong>Report Footer</strong>
+                                <textarea id="report_footer" rows="4" class="form-control mt-2"><%= report.report_footer || '' %></textarea>
+                            </div>
+                        </div>
+                    </div>
 
-                    <tbody>
-
-                        <% columns.forEach(col => { %>
-
-                            <tr>
-
-                                <td>
-                                    <%= col.column_name %>
-                                </td>
-
-                                <td>
-                                    <input type="text"
-                                           value="<%= col.column_label %>"
-                                           class="form-control">
-                                </td>
-
-                                <td>
-                                    <select class="form-select">
-                                        <option>text</option>
-                                        <option>number</option>
-                                        <option>date</option>
-                                    </select>
-                                </td>
-
-                                <td>
-                                    <input type="checkbox"
-                                           <%= col.is_visible ? 'checked' : '' %>>
-                                </td>
-
-                            </tr>
-
-                        <% }) %>
-
-                    </tbody>
-
-                </table>
-
+                    <div class="property-panel">
+                        <div class="panel-title">Properties</div>
+                        <div class="property-row"><span>Report</span><span><%= report.report_name %></span></div>
+                        <div class="property-row"><span>Params</span><span id="prop-param-count">0</span></div>
+                        <div class="property-row"><span>Columns</span><span id="prop-column-count">0</span></div>
+                        <div class="property-row"><span>Paper</span><span>A4 Portrait</span></div>
+                        <div class="property-row"><span>Pipeline</span><span>SQL Query</span></div>
+                    </div>
+                </div>
             </div>
 
-            <!-- FILTER TAB -->
-            <div class="tab-pane fade"
-                 id="filters-tab">
-
-                <a href="#"
-                   class="btn btn-primary mb-3">
-                    Add Filter
-                </a>
-
-                <table class="table">
-
-                    <thead>
-                        <tr>
-                            <th>Label</th>
-                            <th>Param</th>
-                            <th>Type</th>
-                            <th>Required</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <% filters.forEach(filter => { %>
-
-                            <tr>
-
-                                <td>
-                                    <%= filter.filter_label %>
-                                </td>
-
-                                <td>
-                                    <%= filter.query_param %>
-                                </td>
-
-                                <td>
-                                    <%= filter.filter_type %>
-                                </td>
-
-                                <td>
-                                    <%= filter.is_required %>
-                                </td>
-
-                            </tr>
-
-                        <% }) %>
-
-                    </tbody>
-
-                </table>
-
+            <div class="tab-pane fade" id="previewPane" role="tabpanel" tabindex="0">
+                <div class="toolbar">
+                    <button class="tool-btn" title="Refresh" onclick="renderPreview()"><i class="bi bi-arrow-clockwise"></i></button>
+                    <button class="tool-btn" title="Print" onclick="window.print()"><i class="bi bi-printer"></i></button>
+                    <span class="ms-2">Preview</span>
+                </div>
+                <div class="preview-stage">
+                    <div class="preview-paper" id="previewArea">
+                        <div class="text-center text-muted py-5">Press Test SQL or Refresh Preview</div>
+                    </div>
+                </div>
             </div>
-
         </div>
-
     </div>
 
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedColumns = <%- JSON.stringify(layout.columns || []) %>;
+        let reportParams = <%- JSON.stringify(params || []) %>;
+        let lastRows = [];
+        let allSqlColumns = [...selectedColumns];
+        let draggedColumnIndex = null;
+        let paramSequence = reportParams.length + 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderParams();
+            renderSelectedColumns();
+            renderDesignCanvas();
+        });
+
+        function normalizeParamName(value) {
+            return (value || '').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+        }
+
+        function createUniqueParamName() {
+            let name = 'param_' + paramSequence;
+            while (reportParams.some(param => param.name === name)) {
+                paramSequence++;
+                name = 'param_' + paramSequence;
+            }
+            paramSequence++;
+            return name;
+        }
+
+        function addParameter() {
+            const name = createUniqueParamName();
+            reportParams.push({
+                name,
+                label: name,
+                type: 'text',
+                defaultValue: ''
+            });
+            renderParams();
+            renderDesignCanvas();
+        }
+
+        function removeParameter(index) {
+            reportParams.splice(index, 1);
+            renderParams();
+            renderDesignCanvas();
+        }
+
+        function updateParameter(index, field, value) {
+            if (field === 'name') {
+                const nextName = normalizeParamName(value);
+                if (!nextName) return;
+
+                const duplicated = reportParams.some((param, paramIndex) => paramIndex !== index && param.name === nextName);
+                if (duplicated) {
+                    alert('Param name already exists');
+                    renderParams();
+                    return;
+                }
+
+                reportParams[index].name = nextName;
+                if (!reportParams[index].label) {
+                    reportParams[index].label = nextName;
+                }
+                renderParams();
+                renderDesignCanvas();
+                return;
+            }
+
+            reportParams[index][field] = value;
+
+            if (field === 'type') {
+                renderParams();
+            }
+
+            renderDesignCanvas();
+        }
+
+        function insertParamToken(index) {
+            const param = reportParams[index];
+            if (!param) return;
+
+            const editor = document.getElementById('report_sql');
+            const token = '{' + param.name + '}';
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+
+            editor.value = editor.value.substring(0, start) + token + editor.value.substring(end);
+            editor.focus();
+            editor.selectionStart = editor.selectionEnd = start + token.length;
+        }
+
+        function scanVariables() {
+            const sql = document.getElementById('report_sql').value;
+            const matches = [...sql.matchAll(/\{([a-zA-Z0-9_]+)\}/g)];
+            const names = [...new Set(matches.map(item => item[1]))];
+
+            names.forEach(name => {
+                if (reportParams.some(param => param.name === name)) return;
+
+                reportParams.push({
+                    name,
+                    label: name,
+                    type: name.toLowerCase().includes('date') ? 'date' : 'text',
+                    defaultValue: ''
+                });
+            });
+
+            renderParams();
+            renderDesignCanvas();
+        }
+
+        function renderParams() {
+            const count = document.getElementById('param-count');
+            if (count) count.textContent = reportParams.length + ' params';
+
+            const list = document.getElementById('parameter-list');
+
+            if (reportParams.length === 0) {
+                list.innerHTML = '<div class="text-muted">No parameters. Add param or scan SQL tokens such as {date_start}.</div>';
+                return;
+            }
+
+            list.innerHTML = reportParams.map((param, index) => `
+                <div class="param-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="param-token">{${param.name}}</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="insertParamToken(${index})">
+                                <i class="bi bi-braces"></i>
+                                Insert to SQL
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="removeParameter(${index})">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label class="form-label">Param Name</label>
+                            <input class="form-control" value="${param.name || ''}" onchange="updateParameter(${index}, 'name', this.value)">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Label</label>
+                            <input class="form-control" value="${param.label || ''}" onchange="updateParameter(${index}, 'label', this.value)">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" onchange="updateParameter(${index}, 'type', this.value)">
+                                <option value="text" ${param.type === 'text' ? 'selected' : ''}>Text</option>
+                                <option value="date" ${param.type === 'date' ? 'selected' : ''}>Date</option>
+                                <option value="number" ${param.type === 'number' ? 'selected' : ''}>Number</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Test Value</label>
+                            <input
+                                id="param_${param.name}"
+                                type="${param.type === 'number' ? 'number' : (param.type === 'date' ? 'date' : 'text')}"
+                                class="form-control"
+                                value="${param.defaultValue || ''}"
+                                onchange="updateParameter(${index}, 'defaultValue', this.value)">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getParamValues() {
+            const values = {};
+
+            reportParams.forEach(param => {
+                values[param.name] = document.getElementById('param_' + param.name)?.value || param.defaultValue || '';
+            });
+
+            return values;
+        }
+
+        async function testSQL() {
+            try {
+                const sql = document.getElementById('report_sql').value;
+                const response = await fetch('/report/test-sql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sql,
+                        params: reportParams,
+                        values: getParamValues()
+                    })
+                });
+
+                const responseText = await response.text();
+                let result = {};
+
+                try {
+                    result = responseText ? JSON.parse(responseText) : {};
+                } catch (parseErr) {
+                    throw new Error(`HTTP ${response.status}: ${responseText.slice(0, 300)}`);
+                }
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `HTTP ${response.status}`);
+                }
+
+                lastRows = result.rows || [];
+                allSqlColumns = result.columns || [];
+                renderFields(result.columns || []);
+                renderSampleData();
+                renderPreview();
+                renderDesignCanvas();
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'SQL Error');
+            }
+        }
+
+        function renderFields(columns) {
+            const list = document.getElementById('field-list');
+
+            if (columns.length === 0) {
+                list.innerHTML = '<div class="text-muted">No columns found</div>';
+                return;
+            }
+
+            list.innerHTML = columns.map(col => `
+                <div class="field-item" onclick="addColumn('${escapeJs(col)}')">
+                    <i class="bi bi-plus-circle"></i>
+                    ${escapeHtml(col)}
+                </div>
+            `).join('');
+        }
+
+        function addColumn(column) {
+            if (selectedColumns.includes(column)) return;
+            selectedColumns.push(column);
+            renderSelectedColumns();
+            renderDesignCanvas();
+            renderPreview();
+        }
+
+        function removeColumn(column) {
+            selectedColumns = selectedColumns.filter(item => item !== column);
+            renderSelectedColumns();
+            renderDesignCanvas();
+            renderPreview();
+        }
+
+        function moveColumn(index, direction) {
+            const nextIndex = index + direction;
+
+            if (nextIndex < 0 || nextIndex >= selectedColumns.length) {
+                return;
+            }
+
+            const current = selectedColumns[index];
+            selectedColumns[index] = selectedColumns[nextIndex];
+            selectedColumns[nextIndex] = current;
+
+            renderSelectedColumns();
+            renderDesignCanvas();
+            renderPreview();
+        }
+
+        function startColumnDrag(index) {
+            draggedColumnIndex = index;
+        }
+
+        function allowColumnDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+
+        function leaveColumnDrop(event) {
+            event.currentTarget.classList.remove('drag-over');
+        }
+
+        function dropColumn(event, targetIndex) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+
+            if (draggedColumnIndex === null || draggedColumnIndex === targetIndex) {
+                draggedColumnIndex = null;
+                return;
+            }
+
+            const moved = selectedColumns.splice(draggedColumnIndex, 1)[0];
+            selectedColumns.splice(targetIndex, 0, moved);
+            draggedColumnIndex = null;
+
+            renderSelectedColumns();
+            renderDesignCanvas();
+            renderPreview();
+        }
+
+        function renderSelectedColumns() {
+            const list = document.getElementById('selected-columns');
+
+            if (selectedColumns.length === 0) {
+                list.innerHTML = '<div class="text-muted">Choose SQL fields for report output</div>';
+                return;
+            }
+
+            list.innerHTML = selectedColumns.map(col => `
+                <div class="selected-column">
+                    <span>${escapeHtml(col)}</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeColumn('${escapeJs(col)}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderSampleData() {
+            document.getElementById('sample-data').innerHTML = `<pre>${escapeHtml(JSON.stringify(lastRows.slice(0, 5), null, 2))}</pre>`;
+        }
+
+        function renderDesignCanvas() {
+            const paramTree = document.getElementById('design-param-tree');
+            const columnTree = document.getElementById('design-column-tree');
+            const canvas = document.getElementById('design-canvas-fields');
+            const availableFields = document.getElementById('design-available-fields');
+            const tableBuilder = document.getElementById('design-table-builder');
+            const propParam = document.getElementById('prop-param-count');
+            const propColumn = document.getElementById('prop-column-count');
+
+            if (paramTree) {
+                paramTree.innerHTML = reportParams.map(param => `
+                    <div class="tree-node child"><i class="bi bi-dot"></i> ${escapeHtml(param.name)}</div>
+                `).join('');
+            }
+
+            if (columnTree) {
+                columnTree.innerHTML = selectedColumns.map(col => `
+                    <div class="tree-node child"><i class="bi bi-fonts"></i> ${escapeHtml(col)}</div>
+                `).join('');
+            }
+
+            if (canvas) {
+                const paramsHtml = reportParams.map(param => `
+                    <span class="design-dbtext">{${escapeHtml(param.name)}}</span>
+                `).join('');
+
+                canvas.innerHTML = `
+                    <div class="mb-2">
+                        <span class="design-label">Parameters</span>
+                        ${paramsHtml || '<span class="text-muted ms-2">No params</span>'}
+                    </div>
+                `;
+            }
+
+            if (availableFields) {
+                const candidates = allSqlColumns.filter(col => !selectedColumns.includes(col));
+
+                availableFields.innerHTML = candidates.length > 0
+                    ? candidates.map(col => `
+                        <button class="field-chip" onclick="addColumn('${escapeJs(col)}')">
+                            <i class="bi bi-plus-circle"></i>
+                            ${escapeHtml(col)}
+                        </button>
+                    `).join('')
+                    : '<span class="text-muted small">No more fields. Press Test SQL to load fields.</span>';
+            }
+
+            if (tableBuilder) {
+                tableBuilder.innerHTML = renderDesignTable();
+            }
+
+            if (propParam) propParam.textContent = reportParams.length;
+            if (propColumn) propColumn.textContent = selectedColumns.length;
+        }
+
+        function renderDesignTable() {
+            if (selectedColumns.length === 0) {
+                return '<div class="empty-table">Select columns from SQL Fields to build a table.</div>';
+            }
+
+            const headers = selectedColumns.map((col, index) => `
+                <th
+                    draggable="true"
+                    ondragstart="startColumnDrag(${index})"
+                    ondragover="allowColumnDrop(event)"
+                    ondragleave="leaveColumnDrop(event)"
+                    ondrop="dropColumn(event, ${index})">
+                    ${escapeHtml(col)}
+                    <span class="column-tools">
+                        <button class="column-tool" onclick="moveColumn(${index}, -1)" title="Move left">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="column-tool" onclick="moveColumn(${index}, 1)" title="Move right">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <button class="column-tool" onclick="removeColumn('${escapeJs(col)}')" title="Remove">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </span>
+                </th>
+            `).join('');
+
+            const sampleCells = selectedColumns.map(col => `
+                <td>
+                    <span class="design-dbtext">${escapeHtml(col)}</span>
+                </td>
+            `).join('');
+
+            return `
+                <table class="design-table">
+                    <thead>
+                        <tr>${headers}</tr>
+                    </thead>
+                    <tbody>
+                        <tr>${sampleCells}</tr>
+                        <tr>${sampleCells}</tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderHeader() {
+            return replaceTokens(document.getElementById('report_header')?.value || '');
+        }
+
+        function renderFooter() {
+            return replaceTokens(document.getElementById('report_footer')?.value || '');
+        }
+
+        function replaceTokens(text) {
+            const values = getParamValues();
+            return text.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => values[name] || '');
+        }
+
+        function renderPreview() {
+            const area = document.getElementById('previewArea');
+
+            if (!area) return;
+
+            let html = `
+                <div class="report-title"><%= report.report_name %></div>
+                ${renderHeader() ? `<div class="template-text">${escapeHtml(renderHeader())}</div>` : ''}
+            `;
+
+            if (selectedColumns.length === 0) {
+                html += '<div class="alert alert-info">Choose columns from SQL tab.</div>';
+            } else if (lastRows.length === 0) {
+                html += '<div class="alert alert-secondary">No data. Press Test SQL first.</div>';
+            } else {
+                html += '<table class="table table-bordered table-sm"><thead><tr>';
+                selectedColumns.forEach(col => {
+                    html += `<th>${escapeHtml(col)}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                lastRows.forEach(row => {
+                    html += '<tr>';
+                    selectedColumns.forEach(col => {
+                        html += `<td>${escapeHtml(row[col] ?? '')}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+            }
+
+            if (renderFooter()) {
+                html += `<div class="template-text">${escapeHtml(renderFooter())}</div>`;
+            }
+
+            area.innerHTML = html;
+        }
+
+        function openPreviewTab() {
+            const previewButton = document.querySelector('[data-bs-target="#previewPane"]');
+            bootstrap.Tab.getOrCreateInstance(previewButton).show();
+            renderPreview();
+        }
+
+        async function saveLayout() {
+            try {
+                const payload = {
+                    report_sql: document.getElementById('report_sql').value,
+                    report_header: document.getElementById('report_header')?.value || '',
+                    report_footer: document.getElementById('report_footer')?.value || '',
+                    report_params: reportParams,
+                    report_layout: {
+                        columns: selectedColumns
+                    }
+                };
+
+                const response = await fetch('/report/save-sql/<%= report.report_id %>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert(result.message || 'Save Error');
+                    return;
+                }
+
+                alert('Saved');
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'Save Error');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function escapeJs(value) {
+            return String(value).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+        }
+    </script>
+</body>
+</html>

@@ -1,123 +1,315 @@
-<div class="card mb-3">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/history.css">
+    <style>
+        .report-builder {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
 
-    <div class="card-body">
+        .builder-panel {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
 
-        <form method="GET">
+        .builder-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-            <div class="row">
+        .builder-panel-body {
+            padding: 16px;
+        }
 
-                <% filters.forEach(filter => { %>
+        .report-paper {
+            background: #fff;
+            min-height: 640px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 24px;
+        }
 
-                    <div class="col-md-3 mb-3">
+        .report-paper-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
 
-                        <label class="form-label">
-                            <%= filter.filter_label %>
-                        </label>
+        .report-paper-sub {
+            color: #64748b;
+            margin-bottom: 16px;
+        }
 
-                        <% if(filter.filter_type === 'date') { %>
+        .template-text {
+            white-space: pre-wrap;
+            line-height: 1.65;
+            margin: 12px 0 18px;
+        }
 
-                            <input type="date"
-                                   name="<%= filter.query_param %>"
-                                   class="form-control">
+        .param-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            margin: 0 6px 6px 0;
+        }
 
+        .print-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .designer-frame {
+            width: 100%;
+            min-height: 900px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        @media (max-width: 992px) {
+            .report-builder {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../layout/sidebar') %>
+
+    <div class="main">
+        <div class="topbar">
+            <div>
+                <div class="topbar-title">Print Report</div>
+                <div class="topbar-sub"><%= report.report_name %></div>
+            </div>
+            <div class="topbar-actions">
+                <a href="/report" class="btn-ghost-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    Back
+                </a>
+                <a href="/report/designer/<%= report.report_id %>" class="btn-ghost-sm">
+                    <i class="bi bi-palette"></i>
+                    Design
+                </a>
+            </div>
+        </div>
+
+        <div class="content">
+            <ul class="nav nav-tabs mb-3" id="builderTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="cal-tab" data-bs-toggle="tab" data-bs-target="#cal-pane" type="button" role="tab">
+                        <i class="bi bi-sliders"></i>
+                        Cal / Variables
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="design-tab" data-bs-toggle="tab" data-bs-target="#design-pane" type="button" role="tab">
+                        <i class="bi bi-layout-text-window"></i>
+                        Design
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-pane" type="button" role="tab">
+                        <i class="bi bi-eye"></i>
+                        Preview
+                    </button>
+                </li>
+            </ul>
+
+            <% if (error) { %>
+                <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="cal-pane" role="tabpanel" tabindex="0">
+                    <div class="report-builder">
+                        <div class="builder-panel">
+                            <div class="builder-panel-header">
+                                <i class="bi bi-calendar-range"></i>
+                                Variables before print
+                            </div>
+                            <div class="builder-panel-body">
+                                <form method="GET" id="filterForm">
+                                    <input type="hidden" name="_" value="1">
+
+                                    <% if (params.length > 0) { %>
+                                        <% params.forEach(param => { %>
+                                            <div class="mb-3">
+                                                <label class="form-label"><%= param.label || param.name %></label>
+                                                <input
+                                                    type="<%= param.type === 'number' ? 'number' : (param.type === 'date' ? 'date' : 'text') %>"
+                                                    name="<%= param.name %>"
+                                                    value="<%= filters[param.name] || param.defaultValue || '' %>"
+                                                    class="form-control"
+                                                    placeholder="{<%= param.name %>}">
+                                                <small class="text-muted">{<%= param.name %>}</small>
+                                            </div>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <div class="text-muted mb-3">
+                                            This report has no variables. Add variables like {date_start} in SQL from Design.
+                                        </div>
+                                    <% } %>
+
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary">
+                                            <i class="bi bi-play-fill"></i>
+                                            Run / Test Query
+                                        </button>
+                                        <% if (hasFilters) { %>
+                                            <button type="button" class="btn btn-success" onclick="openPrint()">
+                                                <i class="bi bi-printer"></i>
+                                                Print Report
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="builder-panel">
+                            <div class="builder-panel-header">
+                                <i class="bi bi-table"></i>
+                                Query Result
+                            </div>
+                            <div class="builder-panel-body">
+                                <% if (rows.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <% columns.forEach(col => { %>
+                                                        <th><%= col %></th>
+                                                    <% }) %>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% rows.slice(0, 20).forEach(row => { %>
+                                                    <tr>
+                                                        <% columns.forEach(col => { %>
+                                                            <td><%= row[col] ?? '-' %></td>
+                                                        <% }) %>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-muted small">Showing first <%= Math.min(rows.length, 20) %> of <%= rows.length %> rows.</div>
+                                <% } else { %>
+                                    <div class="empty-state">
+                                        <i class="bi bi-database"></i>
+                                        <p>Run query to see sample data.</p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="design-pane" role="tabpanel" tabindex="0">
+                    <div class="builder-panel">
+                        <div class="builder-panel-header">
+                            <i class="bi bi-palette"></i>
+                            Design
+                        </div>
+                        <div class="builder-panel-body p-2">
+                            <iframe
+                                class="designer-frame"
+                                src="/report/designer/<%= report.report_id %>?embed=1"
+                                title="Report Designer"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="preview-pane" role="tabpanel" tabindex="0">
+                    <div class="print-actions mb-3">
+                        <button class="btn btn-outline-secondary" onclick="document.getElementById('cal-tab').click()">
+                            <i class="bi bi-sliders"></i>
+                            Edit Variables
+                        </button>
+                        <% if (hasFilters) { %>
+                            <button class="btn btn-success" onclick="openPrint()">
+                                <i class="bi bi-printer"></i>
+                                Print Report
+                            </button>
                         <% } %>
-
-                        <% if(filter.filter_type === 'text') { %>
-
-                            <input type="text"
-                                   name="<%= filter.query_param %>"
-                                   class="form-control">
-
-                        <% } %>
-
                     </div>
 
-                <% }) %>
-
-            </div>
-
-            <button class="btn btn-primary">
-                Run Report
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
-<div class="card">
-
-    <div class="card-body">
-
-        <div class="d-flex justify-content-between mb-3">
-
-            <h5>
-                ผลลัพธ์รายงาน
-            </h5>
-
-            <div>
-
-                <button class="btn btn-success btn-sm">
-                    Export Excel
-                </button>
-
-                <button class="btn btn-danger btn-sm">
-                    Export PDF
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="table-responsive">
-
-            <table class="table table-bordered table-sm">
-
-                <thead>
-
-                    <tr>
-
-                        <% if(rows.length > 0) { %>
-
-                            <% Object.keys(rows[0]).forEach(col => { %>
-
-                                <th>
-                                    <%= col %>
-                                </th>
-
-                            <% }) %>
-
+                    <div class="report-paper">
+                        <div class="report-paper-title"><%= report.report_name %></div>
+                        <% if (report.report_description) { %>
+                            <div class="report-paper-sub"><%= report.report_description %></div>
                         <% } %>
 
-                    </tr>
+                        <% if (header) { %>
+                            <div class="template-text"><%= header %></div>
+                        <% } %>
 
-                </thead>
+                        <% if (rows.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <% columns.forEach(col => { %>
+                                                <th><%= col %></th>
+                                            <% }) %>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% rows.forEach(row => { %>
+                                            <tr>
+                                                <% columns.forEach(col => { %>
+                                                    <td><%= row[col] ?? '-' %></td>
+                                                <% }) %>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-end text-muted small">Total <%= rows.length %> records</div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-eye"></i>
+                                <p>Run query to preview report.</p>
+                            </div>
+                        <% } %>
 
-                <tbody>
-
-                    <% rows.forEach(row => { %>
-
-                        <tr>
-
-                            <% Object.values(row).forEach(val => { %>
-
-                                <td>
-                                    <%= val %>
-                                </td>
-
-                            <% }) %>
-
-                        </tr>
-
-                    <% }) %>
-
-                </tbody>
-
-            </table>
-
+                        <% if (footer) { %>
+                            <div class="template-text"><%= footer %></div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
 
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openPrint() {
+            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+            window.open('/report/print/<%= report.report_id %>?' + params.toString(), '_blank');
+        }
+    </script>
+</body>
+</html>

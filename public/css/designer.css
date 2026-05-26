@@ -1,0 +1,325 @@
+
+        body {
+            background: #e5e7eb;
+            color: #0f172a;
+            font-size: 14px;
+        }
+
+        .designer-shell {
+            min-height: 100vh;
+            background: #eef2f7;
+        }
+
+        .top-menu {
+            height: 28px;
+            background: #9dbbea;
+            border-bottom: 1px solid #6b8fc5;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 0 10px;
+            font-size: 13px;
+        }
+
+        .designer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: #fff;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .builder-tabs {
+            background: #fff;
+            border-bottom: 1px solid #94a3b8;
+            padding-left: 4px;
+        }
+
+        .builder-tabs .nav-link {
+            border-radius: 0;
+            padding: 7px 14px;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .builder-tabs .nav-link.active {
+            border-color: #94a3b8 #94a3b8 #fff;
+        }
+
+        .toolbar {
+            min-height: 34px;
+            background: #b7d1f7;
+            border-bottom: 1px solid #94a3b8;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 8px;
+        }
+
+        .tool-btn {
+            min-width: 28px;
+            height: 26px;
+            border: 1px solid #8aa9d6;
+            background: #eef6ff;
+            border-radius: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .sql-editor {
+            min-height: 420px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+        }
+
+        .param-card {
+            border: 1px solid #dbe3ef;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fff;
+        }
+
+        .param-token {
+            font-family: Consolas, monospace;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border-radius: 4px;
+            padding: 2px 7px;
+        }
+
+        .field-item,
+        .selected-column {
+            border: 1px solid #dbe3ef;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .selected-column {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #eff6ff;
+        }
+
+        .workbench {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr) 280px;
+            min-height: calc(100vh - 118px);
+            border-top: 1px solid #94a3b8;
+        }
+
+        .report-tree,
+        .property-panel {
+            background: #f8fafc;
+            border-right: 1px solid #94a3b8;
+            overflow: auto;
+        }
+
+        .property-panel {
+            border-right: 0;
+            border-left: 1px solid #94a3b8;
+        }
+
+        .panel-title {
+            background: #cfe3ff;
+            border-bottom: 1px solid #94a3b8;
+            padding: 6px 9px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .tree-node {
+            padding: 5px 10px;
+            font-size: 13px;
+        }
+
+        .tree-node.child {
+            padding-left: 28px;
+        }
+
+        .design-surface {
+            background: #999;
+            padding: 24px;
+            overflow: auto;
+        }
+
+        .design-paper,
+        .preview-paper {
+            width: 794px;
+            min-height: 1123px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #64748b;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .28);
+            padding: 44px;
+        }
+
+        .design-paper {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 12px 12px;
+        }
+
+        .report-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 26px;
+        }
+
+        .design-band {
+            border: 1px dashed #64748b;
+            background: rgba(255,255,255,.82);
+            padding: 14px;
+            margin-bottom: 14px;
+            min-height: 92px;
+        }
+
+        .design-label {
+            display: inline-block;
+            border: 1px dashed #94a3b8;
+            background: #fff;
+            padding: 5px 8px;
+            margin: 4px;
+        }
+
+        .design-dbtext {
+            display: inline-block;
+            min-width: 130px;
+            border-bottom: 2px dotted #111827;
+            font-weight: 700;
+            padding: 4px 8px;
+            margin: 4px;
+        }
+
+        .table-builder {
+            background: rgba(255,255,255,.9);
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .field-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .field-chip {
+            border: 1px solid #93c5fd;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-radius: 999px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .design-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 10px;
+        }
+
+        .design-table th,
+        .design-table td {
+            border: 1px solid #64748b;
+            padding: 7px 8px;
+            min-width: 90px;
+            vertical-align: top;
+        }
+
+        .design-table th {
+            background: #e2e8f0;
+            cursor: grab;
+            user-select: none;
+            position: relative;
+        }
+
+        .design-table th.drag-over {
+            outline: 2px solid #2563eb;
+            outline-offset: -2px;
+        }
+
+        .column-tools {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .column-tool {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 3px;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .empty-table {
+            border: 1px dashed #94a3b8;
+            color: #64748b;
+            padding: 18px;
+            text-align: center;
+            background: #fff;
+            margin-top: 10px;
+        }
+
+        .property-row {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 12px;
+        }
+
+        .property-row span {
+            padding: 5px 7px;
+        }
+
+        .property-row span:first-child {
+            background: #eef2f7;
+            font-weight: 700;
+        }
+
+        .preview-stage {
+            background: #999;
+            padding: 24px;
+            min-height: calc(100vh - 118px);
+            overflow: auto;
+        }
+
+        .template-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin: 12px 0 18px;
+        }
+
+        @media (max-width: 1200px) {
+            .workbench {
+                grid-template-columns: 1fr;
+            }
+
+            .report-tree,
+            .property-panel {
+                border: 0;
+            }
+
+            .design-paper,
+            .preview-paper {
+                width: 100%;
+            }
+        }

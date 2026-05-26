@@ -11,6 +11,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const ticketRoutes = require('./routes/ticket');
 const reportRoutes = require('./routes/report');
+const formRoutes = require('./routes/form');
+const report2Routes = require('./routes/report2');
 
 // MIDDLEWARE
 app.use(express.urlencoded({ extended: true }));
@@ -20,6 +22,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+const helper = require('./helpers/helper');
+app.locals.formatDate = helper.formatDate;
+app.locals.formatDateTime = helper.formatDateTime;
+app.locals.number = helper.number;
+app.locals.currency = helper.currency;
 
 app.use(session({
     secret: 'your-secret-key',
@@ -40,6 +48,8 @@ app.use(userRoutes);
 app.use(ticketRoutes);
 // app.use(reportRoutes);
 app.use('/report', reportRoutes);
+app.use(formRoutes);
+app.use(report2Routes);
 
 // HOME
 app.get('/', (req, res) => {
