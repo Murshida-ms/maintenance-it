@@ -25,9 +25,11 @@ async function fetchHistory() {
     // Mapping ข้อมูลจาก DB (MySQL) ให้เข้ากับโครงสร้างที่ UI ต้องการ
     allTasks = data.map(t => ({
       id: `TK-${String(t.id).padStart(4, '0')}`,
+      rawDate: t.created_at,
       dateOpen: t.created_at ? new Date(t.created_at).toLocaleDateString('th-TH') : '—',
       timeOpen: t.created_at ? new Date(t.created_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) + ' น.' : '',
-      dateClose: t.status === 'done' ? 'เสร็จสิ้น' : '—',
+      dateClose: t.closed_at ? new Date(t.closed_at).toLocaleDateString('th-TH') : '—',
+      timeClose: t.closed_at ? new Date(t.closed_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) + ' น.' : '',
       title: t.title,
       detail: t.detail,
       status: t.status,
@@ -96,7 +98,17 @@ function applyFilters() {
     if (activeStatus && t.status !== activeStatus) return false;
     if (q && !t.id.toLowerCase().includes(q) && !t.title.toLowerCase().includes(q)) return false;
     if (pri && t.pri !== pri) return false;
-    // (เพิ่มเติม: กรองวันที่ถ้าจำเป็น)
+    if (dFrom) {
+  const from = new Date(dFrom);
+  const taskDate = new Date(allTasks.find(x => x.id === t.id)?.rawDate || 0);
+  if (taskDate < from) return false;
+}
+if (dTo) {
+  const to = new Date(dTo);
+  to.setHours(23,59,59);
+  const taskDate = new Date(allTasks.find(x => x.id === t.id)?.rawDate || 0);
+  if (taskDate > to) return false;
+}
     return true;
   });
 
@@ -138,7 +150,7 @@ function renderTable() {
         </td>
         <td>
           <div class="task-title">${t.title}</div>
-          <div class="task-sub"><style="font-size:10px"></dstyle=> ${t.detail}</div>
+          <div class="task-sub">${t.detail || '—'}</div>
         </td>
         <td><span class="badge-status ${t.status}">${statusLabel[t.status]}</span></td>
         <td><span class="priority-badge ${t.pri}">${prioLabel[t.pri]}</span></td>
@@ -295,6 +307,109 @@ function addComment(id) {
   setTimeout(() => openPanel(id), 50);
 }
 
+// ===== NOTIFICATIONS =====
+let notifications = [];
+
+function getReadSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('noti-read') || '[]')); }
+  catch { return new Set(); }
+}
+function saveRead(id) {
+  const s = getReadSet(); s.add(id);
+  localStorage.setItem('noti-read', JSON.stringify([...s]));
+}
+function saveAllRead() {
+  localStorage.setItem('noti-read', JSON.stringify(notifications.map(n => n.id)));
+}
+
+async function loadNotifications() {
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) return;
+    const data = await res.json();
+    const readSet = getReadSet();
+    notifications = [];
+    data.forEach(t => {
+      const title = t.title || '';
+      const tid   = 'TK-' + String(t.id).padStart(4, '0');
+      if (t.status === 'done') {
+        const id = tid + '-done';
+        notifications.push({ id, ticketId: tid, read: readSet.has(id),
+          icon: 'bi-check-circle-fill', iconBg: '#BBF7D0', iconColor: '#166534',
+          title: `${tid} เสร็จแล้ว`, desc: `"${title}" เสร็จสิ้นแล้ว`,
+          time: new Date(t.updated_at).toLocaleString('th-TH') });
+      }
+      if (t.status === 'inprogress') {
+        const id = tid + '-prog';
+        notifications.push({ id, ticketId: tid, read: readSet.has(id),
+          icon: 'bi-tools', iconBg: '#FDE68A', iconColor: '#92400E',
+          title: `${tid} กำลังดำเนินการ`, desc: `"${title}" ช่างรับงานแล้ว`,
+          time: new Date(t.updated_at).toLocaleString('th-TH') });
+      }
+      if (t.status === 'pending' && (!t.assignee || t.assignee === '—')) {
+        const id = tid + '-wait';
+        notifications.push({ id, ticketId: tid, read: readSet.has(id),
+          icon: 'bi-hourglass-split', iconBg: '#FEF9C3', iconColor: '#854D0E',
+          title: `${tid} รอมอบหมาย`, desc: `"${title}" ยังไม่มีผู้รับผิดชอบ`,
+          time: new Date(t.created_at).toLocaleString('th-TH') });
+      }
+    });
+    const unread = notifications.filter(n => !n.read).length;
+    const dot = document.getElementById('noti-dot');
+    if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
+  } catch(e) { console.error(e); }
+}
+
+function toggleNotification() {
+  const dd = document.getElementById('noti-dropdown');
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderNotiList();
+}
+
+function renderNotiList() {
+  const list = document.getElementById('noti-list');
+  if (!list) return;
+  if (notifications.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">
+      <i class="bi bi-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>ไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  list.innerHTML = notifications.slice(0, 8).map(n => `
+    <div class="noti-item ${n.read ? '' : 'unread'}" onclick="clickNoti('${n.id}','${n.ticketId}')">
+      <div class="noti-icon" style="background:${n.iconBg};color:${n.iconColor}">
+        <i class="bi ${n.icon}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="noti-item-title">${n.title}${!n.read ? '<span class="noti-unread-dot"></span>' : ''}</div>
+        <div class="noti-item-desc">${n.desc}</div>
+        <div class="noti-item-time">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clickNoti(notiId, ticketId) {
+  const n = notifications.find(x => x.id === notiId);
+  if (n) { n.read = true; saveRead(notiId); }
+  document.getElementById('noti-dropdown').style.display = 'none';
+  window.location.href = '/timeline';
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.read = true);
+  saveAllRead();
+  const dot = document.getElementById('noti-dot');
+  if (dot) dot.style.display = 'none';
+  renderNotiList();
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('noti-wrap')?.contains(e.target)) {
+    const dd = document.getElementById('noti-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
 // ---- TOAST & USER ----
 let currentUserName = '';
 
@@ -333,6 +448,7 @@ function exportCSV() {
 
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadUser();  
-  fetchHistory();    
+  await loadUser();
+  fetchHistory();
+  loadNotifications();
 });

@@ -18,12 +18,11 @@ let panelOpenTaskId = null;
 // ===================================================
 async function loadTickets() {
   try {
-    const res = await fetch('/api/tickets');
+    const res = await fetch('/api/my-tasks');
     if (!res.ok) throw new Error();
     const raw = await res.json();
 
     tasks = raw
-      // แสดงเฉพาะงานที่มี assignee แล้วเท่านั้น
       .filter(t => t.assignee && t.assignee !== '—' && t.assignee.trim() !== '')
       .map(t => ({
         _id:              t.id,
@@ -80,10 +79,30 @@ function calcDeadline(createdAt, priority) {
 
 function buildTimeline(t) {
   return [
-    { label:'แจ้งงานสำเร็จ', time: formatTime(t.created_at), by: t.reporter || t.assignee || '—', state:'done' },
-    { label:'รับเรื่อง',     time:'—', by:'—', state: t.status !== 'pending' ? 'done' : 'active' },
-    { label:'ดำเนินการ',     time:'—', by:'—', state: t.status === 'inprogress' ? 'active' : t.status === 'done' ? 'done' : 'wait' },
-    { label:'เสร็จสิ้น',     time:'—', by:'—', state: t.status === 'done' ? 'done' : 'wait' },
+    {
+      label: 'แจ้งงานสำเร็จ',
+      time:  formatTime(t.created_at),
+      by:    t.reporter_name || t.reporter || '—',
+      state: 'done'
+    },
+    {
+      label: 'รับเรื่อง',
+      time:  t.acceptedAt || '—',
+      by:    t.acceptedBy || '—',
+      state: t.status !== 'pending' ? 'done' : 'active'
+    },
+    {
+      label: 'ดำเนินการ',
+      time:  t.acceptedAt || '—',
+      by:    t.assignee   || '—',
+      state: t.status === 'inprogress' ? 'active' : t.status === 'done' ? 'done' : 'wait'
+    },
+    {
+      label: 'เสร็จสิ้น',
+      time:  t.doneAt || '—',
+      by:    t.doneBy || '—',
+      state: t.status === 'done' ? 'done' : 'wait'
+    },
   ];
 }
 
@@ -144,7 +163,6 @@ function renderStats() {
   const done    = tasks.filter(t => t.status === 'done').length;
   const overSla = tasks.filter(t => t.status !== 'done' && getSecsLeft(t) !== null && getSecsLeft(t) < 0).length;
 
-  // [FIX] ใช้ optional chaining ป้องกัน null reference
   const navPendingBadge = document.getElementById('nav-pending-badge');
   if (navPendingBadge) navPendingBadge.textContent = pend;
 
@@ -207,42 +225,34 @@ function renderCards() {
     items.forEach(t => {
       const reporterInitials = (t.reporter || '').substring(0, 2) || '—';
       const avHtml = t.reporter
-      ? `<div class="avatar-sm av-blue" title="${escHtml(t.reporter)}">${reporterInitials}</div>`
-      : `<div class="avatar-sm av-blue" style="color:#94A3B8;background:#F1F5F9">—</div>`;
+        ? `<div class="avatar-sm av-blue" title="${escHtml(t.reporter)}">${reporterInitials}</div>`
+        : `<div class="avatar-sm av-blue" style="color:#94A3B8;background:#F1F5F9">—</div>`;
 
       const secs    = getSecsLeft(t);
       const cdClass = getCdClass(t, secs);
       const cdHtml  = `<span class="cd-badge ${cdClass}" data-task-id="${t.id}">${getCdLabel(t, secs)}</span>`;
-      
-      // เพิ่ม deadline
+
       const isOver   = secs !== null && secs < 0;
       const isUrgent = secs !== null && secs >= 0 && secs < 3600;
       const dlColor  = isOver ? '#991B1B' : isUrgent ? '#92400E' : '#065F46';
       const dlBg     = isOver ? '#FEE2E2' : isUrgent ? '#FEF9C3' : '#DCFCE7';
       const dlIcon   = isOver ? 'bi-exclamation-triangle-fill' : 'bi-alarm';
 
-      // format deadline
       const deadlineStr = t.deadlineDate
-      ? `${String(t.deadlineDate.getDate()).padStart(2,'0')}/${String(t.deadlineDate.getMonth()+1).padStart(2,'0')}/${t.deadlineDate.getFullYear()+543} ${String(t.deadlineDate.getHours()).padStart(2,'0')}:${String(t.deadlineDate.getMinutes()).padStart(2,'0')} น.`
-      : '—';
+        ? `${String(t.deadlineDate.getDate()).padStart(2,'0')}/${String(t.deadlineDate.getMonth()+1).padStart(2,'0')}/${t.deadlineDate.getFullYear()+543} ${String(t.deadlineDate.getHours()).padStart(2,'0')}:${String(t.deadlineDate.getMinutes()).padStart(2,'0')} น.`
+        : '—';
 
-      // ไฟล์แนบ/รูป
       const attachCount = (t.attachments && t.attachments.length) ? t.attachments.length : 0;
       const attachHtml = `
-      <div style="margin-top:6px">
-    ${attachCount > 0
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;
-            background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;
-            padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
-           <i class="bi bi-paperclip" style="font-size:10px"></i> ${attachCount} ไฟล์แนบ
-         </span>`
-      : `<span style="display:inline-flex;align-items:center;gap:4px;
-            background:#F8FAFC;color:var(--text-muted);border:1px solid var(--border);
-            padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
-           <i class="bi bi-paperclip" style="font-size:10px"></i> 0 ไฟล์แนบ
-         </span>`
-    }
-    </div>`;
+        <div style="margin-top:6px">
+          ${attachCount > 0
+            ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
+                 <i class="bi bi-paperclip" style="font-size:10px"></i> ${attachCount} ไฟล์แนบ
+               </span>`
+            : `<span style="display:inline-flex;align-items:center;gap:4px;background:#F8FAFC;color:var(--text-muted);border:1px solid var(--border);padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600">
+                 <i class="bi bi-paperclip" style="font-size:10px"></i> 0 ไฟล์แนบ
+               </span>`}
+        </div>`;
 
       let quickHtml = '';
       if (s === 'pending') {
@@ -263,18 +273,16 @@ function renderCards() {
       card.className = 'qcard';
       card.setAttribute('data-task-id', t.id);
       card.onclick = () => openPanel(t.id);
-
-    
       card.draggable = true;
       card.addEventListener('dragstart', e => {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', t.id);
-      setTimeout(() => card.style.opacity = '0.4', 0);
-    });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', t.id);
+        setTimeout(() => card.style.opacity = '0.4', 0);
+      });
       card.addEventListener('dragend', () => {
-      card.style.opacity = '';
-      document.querySelectorAll('.qcol-body').forEach(c => c.classList.remove('drag-over'));
-    });
+        card.style.opacity = '';
+        document.querySelectorAll('.qcol-body').forEach(c => c.classList.remove('drag-over'));
+      });
       card.innerHTML = `
         <div class="qcard-accent"></div>
         <div class="qcard-top">
@@ -284,29 +292,26 @@ function renderCards() {
         <div class="qcard-title">${escHtml(t.title)}</div>
         <div class="qcard-meta">
           <span class="qcard-meta-item"><i class="bi bi-calendar3" style="font-size:10px"></i>${t.reportDate}</span>
-          </div>
-        ${attachHtml}
-        
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;
-                background:${dlBg};color:${dlColor};
-                padding:4px 8px;border-radius:6px;font-weight:600">
-        <i class="bi ${dlIcon}" style="font-size:11px"></i>
-          กำหนดส่ง: ${deadlineStr}
         </div>
-      </div>
+        ${attachHtml}
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:${dlBg};color:${dlColor};padding:4px 8px;border-radius:6px;font-weight:600">
+            <i class="bi ${dlIcon}" style="font-size:11px"></i>
+            กำหนดส่ง: ${deadlineStr}
+          </div>
+        </div>
         <div class="qcard-footer">
-        <div class="avatar-group" style="display:flex;align-items:center;gap:6px">
-        ${avHtml}
-        <span style="font-size:11px;color:var(--text-muted);font-weight:500">${escHtml(t.reporter || '—')}</span>
-       </div>
-        ${cdHtml}
-       </div>
+          <div class="avatar-group" style="display:flex;align-items:center;gap:6px">
+            ${avHtml}
+            <span style="font-size:11px;color:var(--text-muted);font-weight:500">${escHtml(t.reporter || '—')}</span>
+          </div>
+          ${cdHtml}
+        </div>
         ${quickHtml}`;
       col.appendChild(card);
     });
   });
-   initDropZones();
+  initDropZones();
 }
 
 // ===================================================
@@ -319,9 +324,9 @@ function openPanel(id) {
   document.getElementById('panel-status-badge').innerHTML =
     `<span class="badge-status ${t.status}">${statusLabel[t.status]}</span>`;
 
-  const secs       = getSecsLeft(t);
-  const cdClass    = getCdClass(t, secs);
-  const cdLabel    = getCdLabel(t, secs);
+  const secs        = getSecsLeft(t);
+  const cdClass     = getCdClass(t, secs);
+  const cdLabel     = getCdLabel(t, secs);
   const deadlineStr = t.deadlineDate
     ? t.deadlineDate.toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'2-digit'})
     : '—';
@@ -339,16 +344,52 @@ function openPanel(id) {
       <span class="cd-badge cd-done"><i class="bi bi-check-circle-fill"></i> เสร็จแล้ว</span>
     </div>`;
 
-  const tlHtml = t.timeline.map(tl => `
-    <div class="tl-item">
-      <div class="tl-dot ${tl.state}">
-        ${tl.state==='done'?'<i class="bi bi-check-lg"></i>':tl.state==='active'?'<i class="bi bi-arrow-repeat"></i>':'<i class="bi bi-circle"></i>'}
-      </div>
-      <div class="tl-text">
-        <h6>${tl.label}</h6>
-        <small>${tl.time !== '—' ? tl.time + ' น.' : ''} ${tl.by !== '—' ? '· ' + tl.by : ''}</small>
-      </div>
-    </div>`).join('');
+  const steps = generateStepsForPanel(t);
+  let tlHtml = '';
+  steps.forEach((step, i) => {
+    const isLast    = i === steps.length - 1;
+    const iconStyle = step.status === 'done'
+      ? 'background:var(--done-bg);color:var(--done);border:2.5px solid var(--done)'
+      : step.status === 'active'
+      ? 'background:var(--inprogress-bg);color:var(--inprogress);border:2.5px solid var(--inprogress)'
+      : 'background:#F8FAFC;color:#CBD5E1;border:2.5px solid var(--border)';
+    const lineColor  = step.status === 'done' ? 'var(--done)' : 'var(--border)';
+    const titleColor = step.status === 'wait' ? 'var(--text-muted)' : 'var(--text-main)';
+    const pulse      = step.status === 'active' ? 'animation:tl-pulse 2s infinite' : '';
+
+    const statusBadge = step.status === 'active'
+      ? `<span style="font-size:10px;background:var(--inprogress-bg);color:var(--inprogress);padding:2px 8px;border-radius:99px;margin-left:6px;font-weight:600">กำลังดำเนินการ</span>`
+      : '';
+
+    const actorHtml = step.actor ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;background:${step.actor.bg};color:${step.actor.tc};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${step.actor.initials}</div>
+        <div>
+          <div style="font-size:12px;font-weight:500">${escHtml(step.actor.name)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${step.actor.role}</div>
+        </div>
+      </div>` : '';
+
+    const detailHtml = step.detail ? `
+      <div style="background:var(--body-bg);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.6">
+        <i class="bi bi-sticky" style="margin-right:4px;color:var(--pending)"></i>${escHtml(step.detail)}
+      </div>` : '';
+
+    tlHtml += `
+      <div style="display:flex;gap:14px;padding-bottom:${isLast ? '0' : '28px'}">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:40px">
+          <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;${iconStyle};${pulse}">
+            <i class="bi ${step.icon}" style="font-size:16px"></i>
+          </div>
+          ${!isLast ? `<div style="flex:1;width:2px;margin-top:4px;min-height:24px;background:${lineColor}"></div>` : ''}
+        </div>
+        <div style="flex:1;padding-top:8px">
+          <div style="font-size:14px;font-weight:600;color:${titleColor}">${escHtml(step.title)}${statusBadge}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${step.time || (step.status === 'wait' ? 'ยังไม่ถึงขั้นตอนนี้' : '')}</div>
+          ${detailHtml}${actorHtml}
+        </div>
+      </div>`;
+  });
 
   const commentsHtml = t.comments.length
     ? t.comments.map(c => `<div class="comment-item"><div class="comment-author">${escHtml(c.author)}</div><div class="comment-text">${escHtml(c.text)}</div><div class="comment-time">${c.time}</div></div>`).join('')
@@ -391,47 +432,42 @@ function openPanel(id) {
         <div class="panel-label">หมายเหตุ</div>
         <div class="panel-value" style="font-size:13px">${escHtml(t.note) || '—'}</div>
       </div>
-    
       <div class="panel-section">
-      <div class="panel-label"><i class="bi bi-paperclip"></i> รูปภาพ / เอกสารแนบ</div>
-      ${t.attachments && t.attachments.length
-      ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-        ${t.attachments.map((a, i) => {
-          const ext = (a.name || '').split('.').pop().toUpperCase();
-          const isPdf = a.isPdf || ext === 'PDF';
-          const docExts = ['DOC','DOCX','XLS','XLSX','PPT','PPTX','TXT','CSV'];
-          if (isPdf) {
-            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
-              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#FEF2F2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-                <i class="bi bi-file-earmark-pdf-fill" style="font-size:28px;color:#EF4444"></i>
-                <span style="font-size:9px;font-weight:700;color:#EF4444">${ext}</span>
-              </div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
-            </div>`;
-          } else if (docExts.includes(ext)) {
-            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
-              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#EFF6FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-                <i class="bi bi-file-earmark-text-fill" style="font-size:28px;color:var(--primary)"></i>
-                <span style="font-size:9px;font-weight:700;color:var(--primary)">${ext}</span>
-              </div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
-            </div>`;
-          } else {
-            return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
-              <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);overflow:hidden;position:relative">
-                <img src="${a.dataURL || a.url || a}" style="width:100%;height:100%;object-fit:cover">
-                <div style="position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='rgba(0,0,0,0.3)'" onmouseout="this.style.background='rgba(0,0,0,0)'">
-                  <i class="bi bi-zoom-in" style="color:#fff;font-size:18px;opacity:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"></i>
-                </div>
-              </div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
-            </div>`;
-          }
-        }).join('')}
-      </div>`
-    : `<span style="font-size:13px;color:var(--text-muted)">—</span>`
-    }
-    </div>
+        <div class="panel-label"><i class="bi bi-paperclip"></i> รูปภาพ / เอกสารแนบ</div>
+        ${t.attachments && t.attachments.length
+          ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+              ${t.attachments.map((a, i) => {
+                const ext = (a.name || '').split('.').pop().toUpperCase();
+                const isPdf = a.isPdf || ext === 'PDF';
+                const docExts = ['DOC','DOCX','XLS','XLSX','PPT','PPTX','TXT','CSV'];
+                if (isPdf) {
+                  return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+                    <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#FEF2F2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+                      <i class="bi bi-file-earmark-pdf-fill" style="font-size:28px;color:#EF4444"></i>
+                      <span style="font-size:9px;font-weight:700;color:#EF4444">${ext}</span>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+                  </div>`;
+                } else if (docExts.includes(ext)) {
+                  return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+                    <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:#EFF6FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+                      <i class="bi bi-file-earmark-text-fill" style="font-size:28px;color:var(--primary)"></i>
+                      <span style="font-size:9px;font-weight:700;color:var(--primary)">${ext}</span>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+                  </div>`;
+                } else {
+                  return `<div onclick="openAttachFromManage('${t.id}',${i})" style="cursor:pointer;width:80px;text-align:center">
+                    <div style="width:80px;height:80px;border-radius:8px;border:1px solid var(--border);overflow:hidden">
+                      <img src="${a.url || a}" style="width:100%;height:100%;object-fit:cover">
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="${a.name}">${a.name}</div>
+                  </div>`;
+                }
+              }).join('')}
+            </div>`
+          : `<span style="font-size:13px;color:var(--text-muted)">—</span>`}
+      </div>
     </div>
     <div class="panel-section">
       <div class="panel-label">ไทม์ไลน์</div>
@@ -454,19 +490,61 @@ function initDropZones() {
       col.classList.add('drag-over');
     });
     col.addEventListener('dragleave', e => {
-      // ป้องกัน flicker เมื่อ hover ลูก element
       if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
     });
     col.addEventListener('drop', async e => {
       e.preventDefault();
       col.classList.remove('drag-over');
-      const taskId  = e.dataTransfer.getData('text/plain');
+      const taskId    = e.dataTransfer.getData('text/plain');
       const newStatus = col.id.replace('col-', '');
       const t = tasks.find(x => x.id === taskId);
       if (!t || t.status === newStatus) return;
       await changeStatus(taskId, newStatus);
     });
   });
+}
+
+function generateStepsForPanel(t) {
+  const assigneeName = t.assignee || '—';
+  const hasAssignee  = assigneeName && assigneeName !== '—';
+  const isPending    = t.status === 'pending';
+  const isInprogress = t.status === 'inprogress';
+  const isDone       = t.status === 'done';
+
+  return [
+    {
+      status: 'done',
+      icon:   'bi-check-lg',
+      title:  'แจ้งงานสำเร็จ',
+      time:   t.reportDate,
+      detail: '',
+      actor:  { name: t.reporter||'—', role:'ผู้แจ้งงาน', initials:(t.reporter||'—').substring(0,2), bg:'#E0E7FF', tc:'#3730A3' }
+    },
+    {
+      status: !hasAssignee ? 'wait' : (isPending ? 'active' : 'done'),
+      icon:   'bi-person-check',
+      title:  'รับเรื่องและมอบหมายงาน',
+      time:   t.acceptedAt ? t.acceptedAt + ' น.' : '',
+      detail: !hasAssignee ? 'รออนุมัติ' : 'มอบหมายให้: ' + assigneeName,
+      actor:  hasAssignee ? { name:assigneeName, role:'ผู้รับผิดชอบ', initials:assigneeName.substring(0,2), bg:'#BBF7D0', tc:'#166534' } : null
+    },
+    {
+      status: (!hasAssignee || isPending) ? 'wait' : (isInprogress ? 'active' : 'done'),
+      icon:   'bi-tools',
+      title:  'กำลังดำเนินการ',
+      time:   t.acceptedAt ? t.acceptedAt + ' น.' : '',
+      detail: (!hasAssignee || isPending) ? '' : (isInprogress ? 'ช่างกำลังดำเนินการแก้ไข' : 'ดำเนินการเสร็จสิ้น'),
+      actor:  (hasAssignee && !isPending) ? { name:assigneeName, role:'ผู้รับผิดชอบ', initials:assigneeName.substring(0,2), bg:'#FDE68A', tc:'#92400E' } : null
+    },
+    {
+      status: isDone ? 'done' : 'wait',
+      icon:   'bi-clipboard-check',
+      title:  'ปิดงานเรียบร้อย',
+      time:   t.doneAt ? t.doneAt + ' น.' : '',
+      detail: isDone ? 'งานเสร็จสมบูรณ์' : '',
+      actor:  isDone ? { name:t.doneBy||assigneeName, role:'ผู้ปิดงาน', initials:(t.doneBy||assigneeName).substring(0,2), bg:'#BBF7D0', tc:'#166534' } : null
+    }
+  ];
 }
 
 function closePanel() {
@@ -522,12 +600,6 @@ function addComment(id) {
   setTimeout(() => openPanel(id), 50);
 }
 
-// ===================================================
-//  ADD TASK
-// ===================================================
-function openModal()  { document.getElementById('add-modal').classList.add('show'); }
-function closeModal() { document.getElementById('add-modal').classList.remove('show'); }
-
 let cancelTargetId = null;
 function openCancelModal(id) {
   const t = tasks.find(x => x.id === id);
@@ -545,39 +617,6 @@ async function confirmCancel() {
   if (!cancelTargetId) return;
   closeCancelModal();
   await changeStatus(cancelTargetId, 'cancelled');
-}
-
-async function addTask() {
-  const title = document.getElementById('new-title').value.trim();
-  if (!title) { showToast('กรุณากรอกชื่องาน','bi-exclamation-triangle-fill','#F59E0B'); return; }
-  const priority = document.getElementById('new-priority').value;
-  const reporter = document.getElementById('new-reporter').value.trim();
-  const detail   = document.getElementById('new-detail').value.trim();
-  const note     = document.getElementById('new-note').value.trim();
-
-  try {
-    const form = new FormData();
-    form.append('title',    title);
-    form.append('detail',   detail);
-    form.append('priority', priority);
-    form.append('note',     note);
-    form.append('reporter', reporter);
-
-    const res  = await fetch('/api/submit-ticket', { method:'POST', body:form });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-
-    closeModal();
-    document.getElementById('new-title').value    = '';
-    document.getElementById('new-reporter').value = '';
-    document.getElementById('new-detail').value   = '';
-    document.getElementById('new-note').value     = '';
-
-    await loadTickets();
-    showToast('เพิ่มงานใหม่เรียบร้อย','bi-check-circle-fill','#10B981');
-  } catch(e) {
-    showToast('บันทึกไม่สำเร็จ: ' + e.message,'bi-exclamation-triangle-fill','#EF4444');
-  }
 }
 
 // ===================================================
@@ -638,31 +677,41 @@ function tickCountdowns() {
 }
 
 // ===================================================
-//  NOTIFICATION SYSTEM
+//  NOTIFICATIONS (เหมือน timeline)
 // ===================================================
-let notifications  = [];
-let knownTaskIds   = new Set();   // ID ที่รู้จักแล้ว (ไม่ trigger ซ้ำ)
-let isFirstLoad    = true;        // รอบแรกไม่ notify — แค่ seed knownTaskIds
+let notifications = [];
+let knownTaskIds  = new Set();
+let isFirstLoad   = true;
+
+function getReadSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('noti-read') || '[]')); }
+  catch { return new Set(); }
+}
+function saveRead(id) {
+  const s = getReadSet(); s.add(id);
+  localStorage.setItem('noti-read', JSON.stringify([...s]));
+}
+function saveAllRead() {
+  localStorage.setItem('noti-read', JSON.stringify(notifications.map(n => n.id)));
+}
 
 function buildNotifications() {
+  const readSet   = getReadSet();
   const newNotifs = [];
 
   tasks.forEach(t => {
-    const nidNew = t.id + '_new';
-    const nidSla = t.id + '_sla';
+    const nidNew = t.id + '-new';
+    const nidSla = t.id + '-sla';
 
-    // งานใหม่ — เฉพาะ pending และไม่เคยเห็น
+    // งานใหม่ pending
     if (t.status === 'pending' && !knownTaskIds.has(nidNew)) {
       if (!isFirstLoad) {
         newNotifs.push({
-          id:     nidNew,
-          type:   'new-task',
-          icon:   'bi-plus-circle-fill',
-          title:  `งานใหม่: ${t.id}`,
-          sub:    t.title,
-          time:   t.reportDate,
-          read:   false,
-          taskId: t.id,
+          id: nidNew, ticketId: t.id, read: false,
+          icon: 'bi-plus-circle-fill', iconBg: '#FEF9C3', iconColor: '#854D0E',
+          title: `งานใหม่: ${t.id}`,
+          desc: t.title,
+          time: t.reportDate,
         });
       }
       knownTaskIds.add(nidNew);
@@ -673,14 +722,11 @@ function buildNotifications() {
     if (t.status !== 'done' && secs !== null && secs < 0 && !knownTaskIds.has(nidSla)) {
       if (!isFirstLoad) {
         newNotifs.push({
-          id:     nidSla,
-          type:   'over-sla',
-          icon:   'bi-exclamation-triangle-fill',
-          title:  `เกิน SLA: ${t.id}`,
-          sub:    t.title,
-          time:   t.reportDate,
-          read:   false,
-          taskId: t.id,
+          id: nidSla, ticketId: t.id, read: false,
+          icon: 'bi-exclamation-triangle-fill', iconBg: '#FEE2E2', iconColor: '#991B1B',
+          title: `เกิน SLA: ${t.id}`,
+          desc: t.title,
+          time: t.reportDate,
         });
       }
       knownTaskIds.add(nidSla);
@@ -688,24 +734,78 @@ function buildNotifications() {
   });
 
   isFirstLoad = false;
-
   newNotifs.forEach(n => {
-    if (!notifications.find(x => x.id === n.id)) {
-      notifications.unshift(n);
-    }
+    if (!notifications.find(x => x.id === n.id)) notifications.unshift(n);
   });
 
-  renderNotifDropdown();
+  // sync read state
+  notifications.forEach(n => { if (readSet.has(n.id)) n.read = true; });
+
+  renderNotiBadge();
 }
 
-// Poll API ทุก 30 วินาที เพื่อจับงานใหม่
+function renderNotiBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  const dot = document.getElementById('noti-dot');
+  if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
+}
+
+function toggleNotification() {
+  const dd = document.getElementById('noti-dropdown');
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderNotiList();
+}
+
+function renderNotiList() {
+  const list = document.getElementById('noti-list');
+  if (!list) return;
+  if (notifications.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">
+      <i class="bi bi-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>
+      ไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  list.innerHTML = notifications.slice(0, 8).map(n => `
+    <div class="noti-item ${n.read ? '' : 'unread'}" onclick="clickNoti('${n.id}','${n.ticketId}')">
+      <div class="noti-icon" style="background:${n.iconBg};color:${n.iconColor}">
+        <i class="bi ${n.icon}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="noti-item-title">
+          ${n.title}
+          ${!n.read ? '<span class="noti-unread-dot"></span>' : ''}
+        </div>
+        <div class="noti-item-desc">${n.desc}</div>
+        <div class="noti-item-time">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clickNoti(notiId, ticketId) {
+  const n = notifications.find(x => x.id === notiId);
+  if (n) { n.read = true; saveRead(notiId); }
+  renderNotiBadge();
+  document.getElementById('noti-dropdown').style.display = 'none';
+  if (ticketId) openPanel(ticketId);
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.read = true);
+  saveAllRead();
+  renderNotiBadge();
+  renderNotiList();
+}
+
+// ===================================================
+//  POLL
+// ===================================================
 async function pollNewTickets() {
   try {
-    const res = await fetch('/api/tickets');
+    const res = await fetch('/api/my-tasks');
     if (!res.ok) return;
     const raw = await res.json();
 
-    const SLA_H = { high: 4, med: 24, low: 72 };
     const fresh = raw
       .filter(t => t.assignee && t.assignee !== '—' && t.assignee.trim() !== '')
       .map(t => ({
@@ -718,98 +818,44 @@ async function pollNewTickets() {
         note:        t.note || '',
         time:        formatTime(t.created_at),
         reportDate:  formatDate(t.created_at),
-        reporter:    t.reporter || t.assignee || '—',
+        reporter:    t.reporter_name || '—',
         assignee:    t.assignee || '—',
-        needs:       [],
-        deadlineDate: (() => {
-          if (!t.created_at) return null;
-          const h = SLA_H[t.priority] || 24;
-          return new Date(new Date(t.created_at).getTime() + h * 3600000);
-        })(),
-        createdDate: formatDate(t.created_at),
+        deadlineDate: calcDeadline(t.created_at, t.priority),
       }));
 
-    // อัปเดต tasks เฉพาะถ้าจำนวนหรือ ID เปลี่ยน
-    const freshIds  = fresh.map(x => x.id).sort().join(',');
+    const freshIds   = fresh.map(x => x.id).sort().join(',');
     const currentIds = tasks.map(x => x.id).sort().join(',');
     if (freshIds !== currentIds) {
-      tasks = fresh;
-      renderAll();
+      await loadTickets();
     }
-
-    await loadTickets();
     buildNotifications();
   } catch { /* silent */ }
-}
-
-function renderNotifDropdown() {
-  const list   = document.getElementById('notif-list');
-  const badge  = document.getElementById('notif-badge');
-  const unread = notifications.filter(n => !n.read).length;
-
-  if (unread > 0) {
-    badge.style.display = 'flex';
-    badge.textContent   = unread > 99 ? '99+' : unread;
-  } else {
-    badge.style.display = 'none';
-  }
-
-  if (notifications.length === 0) {
-    list.innerHTML = `<div class="notif-empty"><i class="bi bi-bell-slash"></i>ไม่มีการแจ้งเตือน</div>`;
-    return;
-  }
-
-  list.innerHTML = notifications.map(n => `
-    <div class="notif-item${n.read ? '' : ' unread'}" onclick="notifClick('${n.id}','${n.taskId}')">
-      <div class="notif-icon ${n.type}"><i class="bi ${n.icon}"></i></div>
-      <div class="notif-text">
-        <div class="notif-text-title">${escHtml(n.title)}</div>
-        <div class="notif-text-sub">${escHtml(n.sub)}</div>
-        <div class="notif-time">${n.time}</div>
-      </div>
-      ${!n.read ? '<div class="notif-unread-dot"></div>' : ''}
-    </div>`).join('');
-}
-
-function notifClick(notifId, taskId) {
-  const n = notifications.find(x => x.id === notifId);
-  if (n) n.read = true;
-  renderNotifDropdown();
-  closeNotif();
-  if (taskId) openPanel(taskId);
-}
-
-function markAllRead() {
-  notifications.forEach(n => { n.read = true; });
-  renderNotifDropdown();
-}
-
-function toggleNotif(e) {
-  e.stopPropagation();
-  document.getElementById('notif-dropdown').classList.toggle('show');
-}
-
-function closeNotif() {
-  document.getElementById('notif-dropdown').classList.remove('show');
 }
 
 // ===================================================
 //  INIT
 // ===================================================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePanel(); closeModal(); closeNotif(); closeCancelModal(); }
+  if (e.key === 'Escape') {
+    closePanel();
+    closeCancelModal();
+    const dd = document.getElementById('noti-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
 });
 
 document.addEventListener('click', e => {
-  const wrap = document.getElementById('notif-wrap');
-  if (wrap && !wrap.contains(e.target)) closeNotif();
+  if (!document.getElementById('noti-wrap')?.contains(e.target)) {
+    const dd = document.getElementById('noti-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
 });
 
 function openAttachFromManage(taskId, idx) {
   const t = tasks.find(x => x.id === taskId);
   if (!t || !t.attachments || !t.attachments[idx]) return;
-  const a = t.attachments[idx];
-  const url = a.dataURL || a.url || a;
+  const a   = t.attachments[idx];
+  const url = a.url || a;
   const win = window.open();
   if (win) {
     win.document.write(`
@@ -817,8 +863,7 @@ function openAttachFromManage(taskId, idx) {
       <body style="margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh">
         ${(a.isPdf || (a.name||'').toLowerCase().endsWith('.pdf'))
           ? `<iframe src="${url}" style="width:100vw;height:100vh;border:none"></iframe>`
-          : `<img src="${url}" style="max-width:100vw;max-height:100vh;object-fit:contain">`
-        }
+          : `<img src="${url}" style="max-width:100vw;max-height:100vh;object-fit:contain">`}
       </body></html>`);
   }
 }
@@ -837,4 +882,4 @@ async function loadUser() {
 loadUser();
 loadTickets();
 setInterval(tickCountdowns, 1000);
-setInterval(pollNewTickets, 30000);  // poll ทุก 30 วินาที
+setInterval(pollNewTickets, 30000);

@@ -6,6 +6,7 @@
 <title>ติดตามงาน - ระบบแจ้งงาน</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/sidebar.css">
@@ -27,9 +28,28 @@
         <span>ติดตามงาน</span>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <button class="btn-act btn-primary-act" onclick="window.location='/form'"><i class="bi bi-plus-lg"></i> แจ้งงานใหม่</button>
+    
+ <div style="display:flex;align-items:center;gap:10px">
+  <button class="btn-act btn-primary-act" onclick="window.location='/form'">
+    <i class="bi bi-plus-lg"></i> แจ้งงานใหม่
+  </button>
+  <div style="position:relative" id="noti-wrap">
+    <button class="noti-btn" id="noti-toggle-btn" onclick="toggleNotification()" aria-label="การแจ้งเตือน">
+      <i class="bi bi-bell"></i>
+      <span class="noti-dot" id="noti-dot" style="display:none"></span>
+    </button>
+    <div class="noti-dropdown" id="noti-dropdown" style="display:none">
+      <div class="noti-head">
+        <span>การแจ้งเตือน</span>
+        <button class="noti-readall" onclick="markAllRead()">อ่านทั้งหมด</button>
+      </div>
+      <div id="noti-list"></div>
+      <div class="noti-foot">
+        <button onclick="filterStatus('all', document.querySelector('.fc'))">ดูทั้งหมด</button>
+      </div>
     </div>
+  </div>
+</div>
   </div>
 
   <div class="content">

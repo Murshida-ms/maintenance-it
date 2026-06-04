@@ -169,6 +169,8 @@
         </div>
 
         <form action="/login" method="POST">
+      <input type="hidden" name="login_type" value="staff">
+
     <div class="field">
       <label>ชื่อผู้ใช้งานเจ้าหน้าที่</label>
       <div class="field-wrap"><i class="ti ti-user"></i>
@@ -226,27 +228,27 @@
   }
 
   window.addEventListener('load', () => {
-    // ดึงค่าจาก sessionStorage (ถ้าไม่มีค่าเลย หรือเปิดใหม่ จะได้ 'user' เป็นค่าเริ่มต้น)
-    const savedTab = sessionStorage.getItem('activeTab') || 'user';
-    switchTab(savedTab, true); 
-
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('error') === 'failed') {
-      const errorId = (savedTab === 'user') ? 'login-error' : 'login-error-staff';
-      const errorDiv = document.getElementById(errorId);
-      
-      if (errorDiv) {
-        errorDiv.style.display = 'flex';
-        const activePanelId = (savedTab === 'user') ? 'form-user' : 'form-staff';
-        document.querySelectorAll(`#${activePanelId} input`).forEach(input => {
-          input.style.borderColor = '#ef4444';
-        });
-      }
+    
+    // ✅ อ่าน tab จาก URL ก่อน ถ้าไม่มีค่อยดึงจาก sessionStorage
+    const tabFromUrl = urlParams.get('tab');
+    const savedTab   = tabFromUrl || sessionStorage.getItem('activeTab') || 'user';
+    switchTab(savedTab, true);
 
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState(null, '', cleanUrl);
+    if (urlParams.get('error') === 'failed') {
+        const errorId  = (savedTab === 'user') ? 'login-error' : 'login-error-staff';
+        const errorDiv = document.getElementById(errorId);
+        if (errorDiv) {
+            errorDiv.style.display = 'flex';
+            const activePanelId = (savedTab === 'user') ? 'form-user' : 'form-staff';
+            document.querySelectorAll(`#${activePanelId} input`).forEach(input => {
+                input.style.borderColor = '#ef4444';
+            });
+        }
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState(null, '', cleanUrl);
     }
-  });
+});
 </script>
 </body>
 </html>  

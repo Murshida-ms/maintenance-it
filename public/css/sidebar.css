@@ -15,27 +15,42 @@
 
 /* LOGO */
 .sidebar-logo {
-  padding: 24px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .sidebar-logo .logo-icon {
-  width: 36px; height: 36px;
-  background: var(--primary);
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: #fff;
-  margin-bottom: 10px;
+  flex-shrink: 0;
+  background: linear-gradient(140deg, #7B2FF7 0%, #4338CA 55%, #0EA5E9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.sidebar-logo h6 {
-  color: #F8FAFC;
-  font-weight: 600;
+.sidebar-logo .logo-icon i {
+  font-size: 18px;
+  color: #fff;
+}
+.sidebar-logo .logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.sidebar-logo .logo-name {
   font-size: 14px;
-  letter-spacing: 0.01em;
-  margin: 0;
+  font-weight: 700;
+  color: #F8FAFC;
+  letter-spacing: -0.2px;
 }
-.sidebar-logo small {
-  color: var(--sidebar-text);
-  font-size: 11px;
+.sidebar-logo .logo-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: #A78BFA;
+  letter-spacing: 0.05em;
 }
 
 /* NAV */

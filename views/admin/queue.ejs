@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบแจ้งงาน - มอบหมายงาน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/sidebar.css">
@@ -22,24 +24,30 @@
       <div class="topbar-title">มอบหมายงาน</div>
       <div class="topbar-sub">Smart Task Dispatch</div>
     </div>
-    <div class="topbar-actions">
-      <div class="notif-wrap" id="notif-wrap">
-        <button class="icon-btn" title="แจ้งเตือน" onclick="toggleNotif(event)" style="position:relative">
-          <i class="bi bi-bell" style="font-size:16px"></i>
-          <span class="notif-badge" id="notif-badge" style="display:none">0</span>
-        </button>
-        <div class="notif-dropdown" id="notif-dropdown">
-          <div class="notif-head">
-            <span class="notif-head-title">การแจ้งเตือน</span>
-            <button class="notif-mark-all" onclick="markAllRead()">อ่านทั้งหมด</button>
-          </div>
-          <div class="notif-list" id="notif-list">
-            <div class="notif-empty"><i class="bi bi-bell-slash"></i>ไม่มีการแจ้งเตือน</div>
-          </div>
-        </div>
+   <div class="topbar-actions">
+  <button class="icon-btn" title="รีเฟรช" onclick="init()">
+    <i class="bi bi-arrow-clockwise" style="font-size:16px"></i>
+  </button>
+  <button class="btn-primary-sm" onclick="resetDispatch()">
+    <i class="bi bi-arrow-counterclockwise"></i> รีเซ็ต
+  </button>
+  <div style="position:relative" id="noti-wrap">
+    <button class="noti-btn" onclick="toggleNotification()">
+      <i class="bi bi-bell"></i>
+      <span class="noti-dot" id="noti-dot" style="display:none"></span>
+    </button>
+    <div class="noti-dropdown" id="noti-dropdown" style="display:none">
+      <div class="noti-head">
+        <span>การแจ้งเตือน</span>
+        <button class="noti-readall" onclick="markAllRead()">อ่านทั้งหมด</button>
       </div>
-      <button class="btn-primary-sm" onclick="resetDispatch()"><i class="bi bi-arrow-clockwise"></i> รีเซ็ต</button>
+      <div id="noti-list"></div>
+      <div class="noti-foot">
+        <button>ดูทั้งหมด</button>
+      </div>
     </div>
+  </div>
+</div>
   </div>
   <div class="dispatch-wrap" id="dispatch-wrap">
     <div class="dispatch-panel">

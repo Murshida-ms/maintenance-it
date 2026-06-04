@@ -42,6 +42,25 @@ async function initDB() {
 }
 initDB();
 
+// ========== MIDDLEWARE: Auth Guard ==========
+
+// ตรวจว่า login อยู่หรือเปล่า — ใช้คุมทุกหน้าที่ต้อง login
+function isAuth(req, res, next) {
+  if (req.session && req.session.userId) return next();
+  res.redirect('/login');
+}
+
+// staff ทุก role เข้าได้หมด ไม่ต้องแยก isAdmin
+function isStaff(req, res, next) {
+  if (req.session && req.session.isStaff) return next();
+  res.status(403).send(`
+    <div style="font-family:sans-serif;text-align:center;padding:60px">
+      <h2 style="color:#EF4444">🚫 ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
+      <p style="color:#6B7280">หน้านี้สำหรับเจ้าหน้าที่เท่านั้น</p>
+      <a href="/login" style="color:#7B2FF7;margin-top:16px;display:inline-block">← กลับหน้า Login</a>
+    </div>`);
+}
+
 // --- ROUTES ---
 
 app.get("/", (req, res) => {
@@ -52,7 +71,7 @@ app.get("/", (req, res) => {
 app.get('/check-username', async (req, res) => {
     const { username } = req.query;
     try {
-        const [rows] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+        const [rows] = await db.query("SELECT user_id FROM users WHERE username = ?", [username]);
         if (rows.length > 0) {
             res.json({ exists: true }); // มีคนใช้แล้ว
         } else {
@@ -73,14 +92,14 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, password, full_name, email } = req.body;
     try {
-        const sql = "INSERT INTO users (username, password, full_name, email) VALUES (?, ?, ?, ?)";
-        await db.query(sql, [username, password, full_name, email]);
+        const sql = "INSERT INTO users (username, password, full_name, email, role, sha1, status) VALUES (?, ?, ?, ?, ?, ?, 'active')";
+        await db.query(sql, [username, password, full_name, email, crypto.createHash('sha1').update(username + password).digest('hex')]);
         
         // สมัครสำเร็จ -> ไปหน้า Login เลย (ไม่ต้องมี alert)
         res.redirect('/login'); 
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
-            // ถ้าชื่อซ้ำ -> ให้เด้งกลับหน้าเดิมเฉยๆ (หน้าบ้านเรามี JS ดักโชว์ตัวแดงไว้อยู่แล้ว)
+            // ถ้าชื่อซ้ำ -> ให้เด้งกลับหน้าเดิมเฉยๆ (หน้าบ้านเรามี JS ดักโ  ชว์ตัวแดงไว้อยู่แล้ว)
             res.redirect('/register?error=duplicate');
         } else {
             console.error(err);
@@ -96,83 +115,168 @@ app.get('/login', (req, res) => {
 
 // รับข้อมูล Login
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        const [rows] = await db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password]);
-        
-        if (rows.length > 0) {
-            // แก้ไขให้ตรงกับโครงสร้างตารางของคุณ (user_id)
-            req.session.userId = rows[0].user_id; 
-            req.session.fullName = rows[0].full_name;
-            
-            res.redirect('/index'); 
-        } else {
-            res.redirect('/login?error=failed'); 
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
+  const { username, password, login_type } = req.body;
+  try {
+
+    // ===== ฝั่งเจ้าหน้าที่ → it_staff =====
+    if (login_type === 'staff') {
+      const [rows] = await db.query(
+        `SELECT s.*, r.name AS role_name
+         FROM it_staff s
+         LEFT JOIN role r ON s.role = r.id
+         WHERE s.username_staff = ? AND s.password_staff = ?`,
+        [username, password]
+      );
+
+      if (rows.length === 0) {
+        return res.redirect('/login?error=failed&tab=staff');
+      }
+
+      const staff = rows[0];
+      req.session.userId   = staff.staff_id;
+      req.session.fullName = staff.staff_name;
+      req.session.username = staff.username_staff;
+      req.session.role     = staff.role;
+      req.session.roleName = staff.role_name || 'เจ้าหน้าที่';
+      req.session.isStaff  = true;   // ✅ flag สำคัญ
+      return res.redirect('/queue');
+
+    // ===== ฝั่งผู้แจ้งงาน → users =====
+    } else {
+      const [rows] = await db.query(
+        "SELECT * FROM users WHERE username = ? AND password = ?",
+        [username, password]
+      );
+
+      if (rows.length === 0) {
+        return res.redirect('/login?error=failed&tab=user');
+      }
+
+      const user = rows[0];
+      req.session.userId   = user.user_id;
+      req.session.fullName = user.full_name;
+      req.session.username = user.username;
+      req.session.role     = user.role;
+      req.session.roleName = 'ผู้แจ้งงาน';
+      req.session.isStaff  = false;  // ✅ flag สำคัญ
+      return res.redirect('/index');
     }
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
 });
 
 // API สำหรับดึงข้อมูล User ที่ Login อยู่
 app.get('/api/me', (req, res) => {
-    if (req.session && req.session.userId) {
-        res.json({
-            fullName: req.session.fullName,
-            role: "-"
-        });
-    } else {
-        res.status(401).json({ error: "Unauthorized" });
-    }
+  if (req.session && req.session.userId) {
+    res.json({
+      fullName: req.session.fullName,
+      username: req.session.username || '',
+      role:     req.session.role,
+      roleName: req.session.roleName || '',
+      isStaff:  req.session.isStaff || false,
+    });
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
 });
 
 // ตั้งค่าการเก็บไฟล์
+// แก้ destination ใน storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // ไฟล์จะไปอยู่ที่โฟลเดอร์ uploads/
+    cb(null, 'public/uploads/'); // ← เปลี่ยนจาก 'uploads/' เป็น 'public/uploads/'
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // ตั้งชื่อไฟล์ใหม่กันชื่อซ้ำ
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage: storage });
+
+// เพิ่ม fileFilter กันไฟล์อันตราย
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx/;
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('ไม่รองรับประเภทไฟล์นี้'));
+    }
+  }
+});
 
 // เปิดให้เข้าถึงโฟลเดอร์ uploads ผ่าน URL ได้ (เช่น http://localhost:4000/uploads/filename.jpg)
 app.use('/uploads', express.static('public/uploads'));
 
 // รับข้อมูลแจ้งงานใหม่ (submit-ticket) พร้อมไฟล์แนบ
 app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
-    const { title, detail, priority, note, assignee } = req.body;
-    const files = req.files;
+  const { title, detail, priority, note, assignee } = req.body;
+  const reporterId   = req.session.userId || null;
+  const reporterType = req.session.isStaff ? 'staff' : 'user';
 
-    // ดึง userId จาก session
-    const reporterId = req.session.userId || null;
+  let attachment = null;
+  if (req.files && req.files.length > 0) {
+    attachment = JSON.stringify(req.files.map(f => f.filename));
+  }
 
-    let attachment = null;
-    if (files && files.length > 0) {
-        attachment = JSON.stringify(files.map(file => file.filename));
+  try {
+    const sql = `
+      INSERT INTO it_maintenance
+      (title, detail, priority, note, assignee, attachment, reporter_id, reporter_type, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+    `;
+    const [result] = await db.query(sql, [
+      title, detail, priority, note, assignee,
+      attachment, reporterId, reporterType
+    ]);
+
+    res.json({ success: true, ticketId: result.insertId });
+  } catch (err) {
+    console.error('Submit Error:', err);
+    res.status(500).json({ error: 'ไม่สามารถบันทึกข้อมูลได้' });
+  }
+});
+
+// อัปโหลดไฟล์เพิ่มเติมให้ Ticket ที่มีอยู่แล้ว
+app.post('/api/tickets/:id/attachments', isAuth, upload.array('files'), async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'ไม่มีไฟล์ที่อัปโหลด' });
+  }
+
+  try {
+    // ดึง attachment เดิมออกมาก่อน
+    const [rows] = await db.query(
+      "SELECT attachment FROM it_maintenance WHERE id = ?", [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'ไม่พบ Ticket' });
     }
 
-    try {
-        const sql = `
-        INSERT INTO it_maintenance
-        (title, detail, priority, note, assignee, attachment, reporter_id, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
-        `;
+    // รวมไฟล์เก่า + ไฟล์ใหม่
+    const oldFiles = JSON.parse(rows[0].attachment || '[]');
+    const newFiles = req.files.map(f => f.filename);
+    const merged   = [...oldFiles, ...newFiles];
 
-        const [result] = await db.query(sql, [
-            title, detail, priority, note, assignee,
-            attachment,
-            reporterId  // บันทึก reporter_id
-        ]);
+    await db.query(
+      "UPDATE it_maintenance SET attachment = ?, updated_at = NOW() WHERE id = ?",
+      [JSON.stringify(merged), id]
+    );
 
-        res.json({ success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว", ticketId: result.insertId });
-    } catch (err) {
-        console.error("Database Error:", err);
-        res.status(500).json({ error: "ไม่สามารถบันทึกข้อมูลได้" });
-    }
+    res.json({
+      success: true,
+      files: newFiles.map(f => ({ filename: f, url: `/uploads/${f}` }))
+    });
+  } catch (err) {
+    console.error('Upload Error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // หมายเลข Ticket 
@@ -189,96 +293,235 @@ app.get('/api/next-ticket', async (req, res) => {
 });
 
 // ดึงข้อมูลมาแสดง
-app.get('/api/tickets', async (req, res) => {
-    try {
-        // JOIN users เพื่อดึง full_name ของผู้แจ้ง
-        const [rows] = await db.query(`
-            SELECT m.*, u.full_name AS reporter_name
-            FROM it_maintenance m
-            LEFT JOIN users u ON m.reporter_id = u.user_id
-            ORDER BY m.created_at DESC
-        `);
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+app.get('/api/tickets', isAuth, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT m.*,
+             CASE 
+               WHEN m.reporter_type = 'staff' THEN s.staff_name
+               ELSE u.full_name
+             END AS reporter_name
+      FROM it_maintenance m
+      LEFT JOIN users    u ON m.reporter_id = u.user_id    AND m.reporter_type = 'user'
+      LEFT JOIN it_staff s ON m.reporter_id = s.staff_id   AND m.reporter_type = 'staff'
+      WHERE m.reporter_id   = ?
+        AND m.reporter_type = ?
+      ORDER BY m.created_at DESC
+    `, [req.session.userId, req.session.isStaff ? 'staff' : 'user']);
+
+    const result = rows.map(row => {
+      let attachments = [];
+      try {
+        const files = JSON.parse(row.attachment || '[]');
+        attachments = files.map(filename => ({
+          filename,
+          name:  filename,
+          url:   `/uploads/${filename}`,
+          isPdf: filename.toLowerCase().endsWith('.pdf')
+        }));
+      } catch { attachments = []; }
+      return { ...row, attachments };
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// สำหรับหน้า /queue → เห็นทุก ticket (pending + inprogress)
+app.get('/api/all-tickets', isAuth, isStaff, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT m.*,
+             CASE 
+               WHEN m.reporter_type = 'staff' THEN s.staff_name
+               ELSE u.full_name
+             END AS reporter_name
+      FROM it_maintenance m
+      LEFT JOIN users    u ON m.reporter_id = u.user_id    AND m.reporter_type = 'user'
+      LEFT JOIN it_staff s ON m.reporter_id = s.staff_id   AND m.reporter_type = 'staff'
+      ORDER BY m.created_at DESC
+    `);
+
+    const result = rows.map(row => {
+      let attachments = [];
+      try {
+        const files = JSON.parse(row.attachment || '[]');
+        attachments = files.map(filename => ({
+          filename,
+          name:  filename,
+          url:   `/uploads/${filename}`,
+          isPdf: filename.toLowerCase().endsWith('.pdf')
+        }));
+      } catch { attachments = []; }
+      return { ...row, attachments };
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // แก้ไขข้อมูล Ticket
 app.put('/api/tickets/:id', async (req, res) => {
-    const { id } = req.params;
-    const { title, detail, note, priority, assignee, status } = req.body;
+  const { id } = req.params;
+  const { title, detail, note, priority, assignee, status } = req.body;
 
-    if (!title) {
-        return res.status(400).json({ error: 'กรุณาระบุหัวข้อ' });
+  if (!title) {
+    return res.status(400).json({ error: 'กรุณาระบุหัวข้อ' });
+  }
+
+  try {
+    let sql, params;
+
+    if (status === 'done') {
+      
+      sql = `UPDATE it_maintenance 
+             SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, 
+                 status = ?, closed_at = NOW(), updated_at = NOW()
+             WHERE id = ?`;
+      params = [title, detail, note, priority, assignee, status, id];
+    } else if (status) {
+      sql = `UPDATE it_maintenance 
+             SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, 
+                 status = ?, updated_at = NOW()
+             WHERE id = ?`;
+      params = [title, detail, note, priority, assignee, status, id];
+    } else {
+      sql = `UPDATE it_maintenance 
+             SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?,
+                 updated_at = NOW()
+             WHERE id = ?`;
+      params = [title, detail, note, priority, assignee, id];
     }
 
-    try {
-        let sql, params;
+    const [result] = await db.query(sql, params);
 
-        if (status) {
-            sql = `UPDATE it_maintenance 
-                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, 
-                       status = ?, updated_at = NOW()
-                   WHERE id = ?`;
-            params = [title, detail, note, priority, assignee, status, id];
-        } else {
-            sql = `UPDATE it_maintenance 
-                   SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?,
-                       updated_at = NOW()
-                   WHERE id = ?`;
-            params = [title, detail, note, priority, assignee, id];
-        }
-
-        const [result] = await db.query(sql, params);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'ไม่พบ Ticket' });
-        }
-
-        res.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว' });
-    } catch (err) {
-        console.error('Update Error:', err);
-        res.status(500).json({ error: err.message });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'ไม่พบ Ticket' });
     }
+
+    res.json({ success: true, message: 'บันทึกเรียบร้อยแล้ว' });
+  } catch (err) {
+    console.error('Update Error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ลบ Ticket
-app.delete('/api/tickets/:id', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const [result] = await db.query(
-            "DELETE FROM it_maintenance WHERE id = ?",
-            [id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'ไม่พบ Ticket' });
-        }
-
-        res.json({ success: true, message: 'ลบ Ticket เรียบร้อยแล้ว' });
-    } catch (err) {
-        console.error('Delete Error:', err);
-        res.status(500).json({ error: err.message });
+app.delete('/api/tickets/:id', isAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // ดึง attachment ก่อนลบ เพื่อลบไฟล์ด้วย
+    const [rows] = await db.query(
+      "SELECT attachment FROM it_maintenance WHERE id = ?", [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'ไม่พบ Ticket' });
     }
+
+    // ลบไฟล์แนบออกจาก server
+    try {
+      const files = JSON.parse(rows[0].attachment || '[]');
+      files.forEach(filename => {
+        const filePath = path.join(__dirname, 'public/uploads', filename);
+        fs.unlink(filePath, () => {});
+      });
+    } catch {}
+
+    // ลบ ticket
+    await db.query("DELETE FROM it_maintenance WHERE id = ?", [id]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete Error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// dashboard
-app.get('/index',    (req, res) => res.render('user/board',     { page: 'index' }));
-// หน้า form
-app.get('/form',     (req, res) => res.render('user/form',      { page: 'form' }));
-// หน้า timeline 
-app.get('/timeline', (req, res) => res.render('user/timeline',  { page: 'timeline' }));
-// หน้า history
-app.get('/history',  (req, res) => res.render('user/history',   { page: 'history' }));
-// หน้า manage
-app.get('/manage',   (req, res) => res.render('admin/manage',   { page: 'manage' }));
-// หน้า มอบหมาย
-app.get('/queue',    (req, res) => res.render('admin/queue',     { page: 'queue' }));
-app.get('/report',   (req, res) => res.render('admin/report',   { page: 'report' }));
-app.get('/users',    (req, res) => res.render('admin/users',    { page: 'users' }));
-app.get('/settings', (req, res) => res.render('admin/settings', { page: 'settings' }));
+// API STAFF 
+app.get('/api/staff', isAuth, isStaff, async (req, res) => {
+  try {
+    // ✅ ดึงจาก it_staff จริงๆ
+    const [rows] = await db.query(`
+      SELECT
+        s.staff_id,
+        s.staff_name,
+        s.username_staff,
+        s.telegram_chat_id,
+        s.role,
+        r.name AS role_name,
+        COUNT(CASE WHEN m.status IN ('pending','inprogress')
+              THEN 1 END) AS active_tasks
+      FROM it_staff s
+      LEFT JOIN role r ON s.role = r.id
+      LEFT JOIN it_maintenance m ON m.assignee = s.staff_name
+      GROUP BY s.staff_id, s.staff_name, s.username_staff,
+               s.telegram_chat_id, s.role, r.name
+      ORDER BY active_tasks ASC, s.staff_name ASC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Staff เห็นเฉพาะงานที่ assign ให้ตัวเอง
+app.get('/api/my-tasks', isAuth, isStaff, async (req, res) => {
+  try {
+    const staffName = req.session.fullName;
+    const staffId   = req.session.userId;
+
+    const [rows] = await db.query(`
+      SELECT m.*,
+             CASE 
+               WHEN m.reporter_type = 'staff' THEN s.staff_name
+               ELSE u.full_name
+             END AS reporter_name
+      FROM it_maintenance m
+      LEFT JOIN users    u ON m.reporter_id = u.user_id    AND m.reporter_type = 'user'
+      LEFT JOIN it_staff s ON m.reporter_id = s.staff_id   AND m.reporter_type = 'staff'
+      WHERE m.assignee = ?
+         OR (m.reporter_id = ? AND m.reporter_type = 'staff')
+      ORDER BY m.created_at DESC
+    `, [staffName, staffId]);
+
+    const result = rows.map(row => {
+      let attachments = [];
+      try {
+        const files = JSON.parse(row.attachment || '[]');
+        attachments = files.map(filename => ({
+          filename,
+          name:  filename,
+          url:   `/uploads/${filename}`,
+          isPdf: filename.toLowerCase().endsWith('.pdf')
+        }));
+      } catch { attachments = []; }
+      return { ...row, attachments };
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===== USER ROUTES =====
+// USER (ผู้แจ้งงาน)
+app.get('/index',    isAuth,          (req, res) => res.render('user/board',    { page: 'index' }));
+app.get('/form',     isAuth,          (req, res) => res.render('user/form',     { page: 'form' }));
+app.get('/timeline', isAuth,          (req, res) => res.render('user/timeline', { page: 'timeline' }));
+app.get('/history',  isAuth,          (req, res) => res.render('user/history',  { page: 'history' }));
+
+// STAFF — เข้าได้ทุกหน้า
+app.get('/queue',    isAuth, isStaff, (req, res) => res.render('admin/queue',   { page: 'queue' }));
+app.get('/manage',   isAuth, isStaff, (req, res) => res.render('admin/manage',  { page: 'manage' }));
+app.get('/report',   isAuth, isStaff, (req, res) => res.render('admin/report',  { page: 'report' }));
+app.get('/users',    isAuth, isStaff, (req, res) => res.render('admin/users',   { page: 'users' }));
+app.get('/settings', isAuth, isStaff, (req, res) => res.render('admin/settings',{ page: 'settings' }));
 
 // Logout
 app.get('/logout', (req, res) => {

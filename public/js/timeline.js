@@ -11,6 +11,111 @@ let currentSearch = '';
 let currentTicket = null;
 let currentUser   = { fullName: '—', initials: '??' };
 
+// NOTIFICATIONS
+let notifications = [];
+
+function getReadSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('noti-read') || '[]')); }
+  catch { return new Set(); }
+}
+function saveRead(id) {
+  const s = getReadSet(); s.add(id);
+  localStorage.setItem('noti-read', JSON.stringify([...s]));
+}
+function saveAllRead() {
+  localStorage.setItem('noti-read', JSON.stringify(notifications.map(n => n.id)));
+}
+
+function buildNotifications() {
+  const readSet = getReadSet();
+  notifications = [];
+  tickets.forEach(t => {
+    if (t.status === 'done') {
+      const id = t.id + '-done';
+      notifications.push({
+        id, ticketId: t.id, read: readSet.has(id),
+        icon: 'bi-check-circle-fill', iconBg: '#BBF7D0', iconColor: '#166534',
+        title: `${t.id} เสร็จแล้ว`,
+        desc: `"${t.title}" เสร็จสิ้นแล้ว`,
+        time: fmtDate(t.rawUpdatedAt)
+      });
+    }
+    if (t.status === 'inprogress') {
+      const id = t.id + '-prog';
+      notifications.push({
+        id, ticketId: t.id, read: readSet.has(id),
+        icon: 'bi-tools', iconBg: '#FDE68A', iconColor: '#92400E',
+        title: `${t.id} กำลังดำเนินการ`,
+        desc: `"${t.title}" ช่างรับงานแล้ว`,
+        time: fmtDate(t.rawUpdatedAt)
+      });
+    }
+    if (t.status === 'pending' && (!t.assignee || t.assignee === '—')) {
+      const id = t.id + '-wait';
+      notifications.push({
+        id, ticketId: t.id, read: readSet.has(id),
+        icon: 'bi-hourglass-split', iconBg: '#FEF9C3', iconColor: '#854D0E',
+        title: `${t.id} รอมอบหมาย`,
+        desc: `"${t.title}" ยังไม่มีผู้รับผิดชอบ`,
+        time: fmtDate(t.rawCreatedAt)
+      });
+    }
+  });
+  renderNotiBadge();
+}
+
+function renderNotiBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  const dot = document.getElementById('noti-dot');
+  if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
+}
+
+function toggleNotification() {
+  const dd = document.getElementById('noti-dropdown');
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderNotiList();
+}
+
+function renderNotiList() {
+  const list = document.getElementById('noti-list');
+  if (!list) return;
+  if (notifications.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">
+      <i class="bi bi-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>ไม่มีการแจ้งเตือน</div>`;
+    return;
+  }
+  list.innerHTML = notifications.slice(0, 8).map(n => `
+    <div class="noti-item ${n.read ? '' : 'unread'}" onclick="clickNoti('${n.id}','${n.ticketId}')">
+      <div class="noti-icon" style="background:${n.iconBg};color:${n.iconColor}">
+        <i class="bi ${n.icon}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="noti-item-title">
+          ${n.title}
+          ${!n.read ? '<span class="noti-unread-dot"></span>' : ''}
+        </div>
+        <div class="noti-item-desc">${n.desc}</div>
+        <div class="noti-item-time">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clickNoti(notiId, ticketId) {
+  const n = notifications.find(x => x.id === notiId);
+  if (n) { n.read = true; saveRead(notiId); }
+  renderNotiBadge();
+  document.getElementById('noti-dropdown').style.display = 'none';
+  selectTicket(ticketId);
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.read = true);
+  saveAllRead();
+  renderNotiBadge();
+  renderNotiList();
+}
+
 // Lightbox state
 let lbImages = [];
 let lbIndex  = 0;
@@ -149,7 +254,8 @@ async function fetchTickets(silent = false) {
         rawCreatedAt: t.created_at,
         rawUpdatedAt: t.updated_at,
         chatMessages: [],
-        attachments: []
+        attachments: Array.isArray(t.attachments) 
+        ? t.attachments  : []
       };
 
       ticket.steps = generateSteps(ticket);
@@ -158,6 +264,7 @@ async function fetchTickets(silent = false) {
 
     updateCounts();
     calcQueue();
+    buildNotifications();
     renderList();
 
     if (silent) {
@@ -242,14 +349,8 @@ function renderList() {
       <div style="text-align:center;padding:48px 24px;color:var(--text-muted)">
         <i class="bi bi-${isEmpty ? 'clipboard-plus' : 'inbox'}" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i>
         <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:6px">
-          ${isEmpty ? 'ยังไม่มีงานในระบบ' : 'ไม่พบรายการที่ตรงกัน'}
+          ${isEmpty ? 'ยังไม่มีงาน' : 'ไม่พบรายการที่ตรงกัน'}
         </div>
-        <div style="font-size:12px;margin-bottom:${isEmpty ? '20px' : '0'}">
-          ${isEmpty ? 'เริ่มต้นแจ้งงานเพื่อให้เจ้าหน้าที่รับทราบและดำเนินการ' : 'ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะ'}
-        </div>
-        ${isEmpty ? `<button class="btn-act btn-primary-act" style="margin:0 auto" onclick="window.location='/form'">
-          <i class="bi bi-plus-lg"></i> แจ้งงานแรก
-        </button>` : ''}
       </div>`;
     return;
   }
@@ -355,7 +456,7 @@ function buildAttachmentSection(t) {
         } else {
           gridHtml += `
             <div class="attach-item" onclick="openAttach('${t.id}', ${i})">
-              <img class="attach-img" src="${a.dataURL}" alt="${a.name}">
+              <img class="attach-img" src="${a.url}" alt="${a.name}"> 
               <div class="attach-overlay"><i class="bi bi-zoom-in"></i><span>ขยาย</span></div>
               <div class="attach-name" title="${a.name}">${a.name}</div>
             </div>`;
@@ -679,24 +780,13 @@ function openAttach(ticketId, idx) {
   const a = t.attachments[idx];
 
   if (a.isPdf) {
-    if (a.dataURL) {
-      const win = window.open();
-      if (win) {
-        win.document.write(`
-          <!DOCTYPE html><html><head><title>${a.name}</title></head>
-          <body style="margin:0;background:#1a1a2e">
-            <iframe src="${a.dataURL}" style="width:100vw;height:100vh;border:none"></iframe>
-          </body></html>`);
-      }
-    }
+    window.open(a.url, '_blank'); // ← เปิด URL จริงแทน dataURL
     return;
   }
 
-  lbImages = t.attachments
-    .map((att, i) => ({ ...att, originalIdx: i }))
-    .filter(att => !att.isPdf && att.dataURL);
-  lbIndex = lbImages.findIndex(att => att.originalIdx === idx);
-  if (lbIndex < 0) lbIndex = 0;
+  // Lightbox สำหรับรูป
+  lbImages = t.attachments.filter(att => !att.isPdf);
+  lbIndex  = lbImages.findIndex(att => att.filename === a.filename);
   showLightboxAt(lbIndex);
 }
 
@@ -704,7 +794,7 @@ function showLightboxAt(i) {
   if (lbImages.length === 0) return;
   lbIndex = (i + lbImages.length) % lbImages.length;
   const a = lbImages[lbIndex];
-  document.getElementById('lightbox-img').src = a.dataURL;
+  document.getElementById('lightbox-img').src = a.url;
   document.getElementById('lightbox-caption').textContent = a.name;
   document.getElementById('lightbox-counter').textContent = `${lbIndex + 1} / ${lbImages.length}`;
   document.getElementById('lightbox').classList.add('show');
@@ -804,9 +894,68 @@ function openEditModal(id) {
   document.getElementById('file-chips').innerHTML     = '';
   document.getElementById('edit-file-input').value   = '';
 
+  // ===== เพิ่มตรงนี้: แสดงไฟล์เก่าพร้อมปุ่มลบ =====
+  const rawId = id.replace('TK-', '').replace(/^0+/, '');
+  const existingWrap = document.getElementById('existing-files');
+  if (existingWrap) existingWrap.remove(); // ล้างของเก่าก่อน
+
+  if (t.attachments && t.attachments.length > 0) {
+    let html = `<div id="existing-files" style="margin-top:10px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px">ไฟล์แนบปัจจุบัน</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+
+    t.attachments.forEach(a => {
+      const isImg = !a.isPdf;
+      html += `
+        <div style="position:relative;width:64px" id="ef-${a.filename}">
+          ${isImg
+            ? `<img src="${a.url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">`
+            : `<div style="width:64px;height:64px;border-radius:8px;border:1px solid var(--border);background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px">
+                <i class="bi bi-file-earmark-pdf-fill" style="color:#EF4444;font-size:22px"></i>
+                <span style="font-size:9px;color:#EF4444;font-weight:700">PDF</span>
+               </div>`}
+          <button onclick="deleteExistingFile('${rawId}','${a.filename}')"
+            style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+                   border-radius:50%;background:#EF4444;color:#fff;border:2px solid #fff;
+                   cursor:pointer;font-size:11px;display:flex;align-items:center;
+                   justify-content:center;z-index:2">✕</button>
+          <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:3px;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</div>
+        </div>`;
+    });
+
+    html += `</div></div>`;
+
+    // วางไว้เหนือ upload-area
+    document.getElementById('upload-preview').insertAdjacentHTML('beforebegin', html);
+  }
+  // ===================================================
+
   document.getElementById('edit-modal').dataset.ticketId = id;
   document.getElementById('edit-modal').classList.add('show');
   document.body.style.overflow = 'hidden';
+}
+
+async function deleteExistingFile(rawId, filename) {
+  if (!confirm('ลบไฟล์นี้?')) return;
+  try {
+    const res = await fetch(`/api/tickets/${rawId}/attachments/${filename}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('ลบไม่สำเร็จ');
+
+    // ลบออกจาก UI ทันที
+    document.getElementById('ef-' + filename)?.remove();
+
+    // อัปเดต attachments ใน memory
+    const ticketId = 'TK-' + String(rawId).padStart(4, '0');
+    const t = tickets.find(x => x.id === ticketId);
+    if (t) t.attachments = t.attachments.filter(a => a.filename !== filename);
+
+    showToast('ลบไฟล์เรียบร้อย');
+  } catch (err) {
+    alert('เกิดข้อผิดพลาด: ' + err.message);
+  }
 }
 
 function closeEditModal(e) {
@@ -818,22 +967,22 @@ function closeEditModal(e) {
 function handleFileSelect(e) {
   const files = Array.from(e.target.files);
   files.forEach(file => {
-    if (file.size > 10 * 1024 * 1024) {
-      alert(`ไฟล์ "${file.name}" ใหญ่เกิน 10MB`);
-      return;
-    }
-    const isImg = file.type.startsWith('image/');
-    const isPdf = file.type === 'application/pdf';
-    const fileObj = { name: file.name, type: file.type, isPdf, dataURL: null };
+    const fileObj = {
+      name: file.name,
+      type: file.type,
+      isPdf: file.type === 'application/pdf',
+      file: file, // ← เก็บ File object ไว้สำหรับ FormData
+      dataURL: null
+    };
     editFiles.push(fileObj);
     const idx = editFiles.length - 1;
 
-    if (isImg) {
+    if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = ev => {
         editFiles[idx].dataURL = ev.target.result;
-        const preview = document.getElementById('upload-preview');
-        preview.innerHTML += `
+        // แสดง preview ตามเดิม
+        document.getElementById('upload-preview').innerHTML += `
           <div class="upload-thumb-wrap" id="thumb-${idx}">
             <img src="${ev.target.result}" class="upload-thumb">
             <button class="upload-thumb-del" onclick="removeFile(${idx})">✕</button>
@@ -841,14 +990,11 @@ function handleFileSelect(e) {
       };
       reader.readAsDataURL(file);
     } else {
-      const reader = new FileReader();
-      reader.onload = ev => { editFiles[idx].dataURL = ev.target.result; };
-      reader.readAsDataURL(file);
-      const chips = document.getElementById('file-chips');
-      chips.innerHTML += `
+      // แสดง chip ไฟล์ตามเดิม
+      document.getElementById('file-chips').innerHTML += `
         <div class="file-chip" id="chip-${idx}">
-          <i class="bi bi-file-earmark-${isPdf ? 'pdf' : 'text'}" style="color:${isPdf ? 'var(--rejected)' : 'var(--primary)'}"></i>
-          <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</span>
+          <i class="bi bi-file-earmark-pdf" style="color:var(--rejected)"></i>
+          <span>${file.name}</span>
           <button class="file-chip-del" onclick="removeFile(${idx})">✕</button>
         </div>`;
     }
@@ -864,13 +1010,11 @@ function removeFile(idx) {
 async function submitEdit() {
   const id    = document.getElementById('edit-modal').dataset.ticketId;
   const title = document.getElementById('edit-title').value.trim();
-  if (!title) {
-    document.getElementById('edit-title').focus();
-    document.getElementById('edit-title').style.borderColor = 'var(--rejected)';
-    return;
-  }
-  document.getElementById('edit-title').style.borderColor = '';
+  if (!title) return;
 
+  const rawId = id.replace('TK-', '').replace(/^0+/, '');
+
+  // 1. บันทึกข้อมูล Ticket ก่อน
   const payload = {
     title,
     detail:   document.getElementById('edit-detail').value.trim(),
@@ -880,7 +1024,6 @@ async function submitEdit() {
   };
 
   try {
-    const rawId = id.replace('TK-', '').replace(/^0+/, '');
     const res = await fetch(`/api/tickets/${rawId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -888,22 +1031,24 @@ async function submitEdit() {
     });
     if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
-    const t = tickets.find(x => x.id === id);
-    const newAttachments = editFiles
-      .filter(f => f !== null)
-      .map(f => ({ name: f.name, type: f.type, dataURL: f.dataURL, isPdf: f.isPdf }));
+    // 2. ถ้ามีไฟล์ใหม่ อัปโหลดแยก
+    const newFiles = editFiles.filter(f => f !== null && f.file);
+    if (newFiles.length > 0) {
+      const formData = new FormData();
+      newFiles.forEach(f => formData.append('files', f.file)); // เก็บ File object ไว้
 
-    Object.assign(t, payload);
-    t.attachments = [...(t.attachments || []), ...newAttachments];
-    t.steps = generateSteps(t);
+      const uploadRes = await fetch(`/api/tickets/${rawId}/attachments`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!uploadRes.ok) throw new Error('อัปโหลดไฟล์ไม่สำเร็จ');
+    }
 
-    calcQueue();
-    renderList();
-    if (currentTicket?.id === id) renderDetail();
-
+    // 3. โหลดข้อมูลใหม่จาก server
+    await fetchTickets(true);
     closeEditModal(null);
-    showToast(`บันทึกเรียบร้อย${newAttachments.length > 0 ? ` · เพิ่มไฟล์ ${newAttachments.length} รายการ` : ''}`);
-  } catch(err) {
+    showToast('บันทึกเรียบร้อย');
+  } catch (err) {
     alert('เกิดข้อผิดพลาด: ' + err.message);
   }
 }
@@ -937,10 +1082,18 @@ async function autoRefresh() {
   refreshTimer = setTimeout(autoRefresh, 45000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadUser();
+document.addEventListener('click', e => {
+  if (!document.getElementById('noti-wrap')?.contains(e.target)) {
+    const dd = document.getElementById('noti-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadUser();
   autoRefresh();
 });
+
 
 window.addEventListener('beforeunload', () => {
   clearTimeout(refreshTimer);
