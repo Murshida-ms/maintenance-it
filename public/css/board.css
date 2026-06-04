@@ -3,7 +3,7 @@
 /* STAT CARDS */
 .stat-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -27,20 +27,18 @@
   font-size: 20px;
   margin-bottom: 4px;
 }
-.sc-pending   .sc-icon { background: var(--pending-bg);   color: var(--pending); }
+.sc-pending    .sc-icon { background: var(--pending-bg);    color: var(--pending); }
 .sc-inprogress .sc-icon { background: var(--inprogress-bg); color: var(--inprogress); }
-.sc-done      .sc-icon { background: var(--done-bg);      color: var(--done); }
-.sc-rejected  .sc-icon { background: var(--rejected-bg);  color: var(--rejected); }
+.sc-done       .sc-icon { background: var(--done-bg);       color: var(--done); }
 .stat-card .sc-num {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
 }
-.sc-pending   .sc-num { color: var(--pending); }
+.sc-pending    .sc-num { color: var(--pending); }
 .sc-inprogress .sc-num { color: var(--inprogress); }
-.sc-done      .sc-num { color: var(--done); }
-.sc-rejected  .sc-num { color: var(--rejected); }
+.sc-done       .sc-num { color: var(--done); }
 .stat-card .sc-label { font-size: 13px; color: var(--text-muted); }
 .stat-card .sc-trend {
   font-size: 11px;
@@ -55,12 +53,6 @@
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-.grid-3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   margin-bottom: 20px;
 }
@@ -111,20 +103,6 @@
 }
 .queue-title { font-size: 13px; font-weight: 500; }
 .queue-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-/* DONUT CHART */
-.donut-wrap { display: flex; align-items: center; gap: 20px; padding: 8px 0; }
-.donut-svg { flex-shrink: 0; }
-.donut-legend { flex: 1; }
-.legend-item {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 10px;
-  font-size: 12px;
-}
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-name { flex: 1; color: var(--text-main); }
-.legend-val  { font-weight: 600; color: var(--text-main); }
-.legend-pct  { font-size: 10px; color: var(--text-muted); margin-left: 3px; }
 
 /* BAR CHART */
 .bar-chart {
@@ -281,11 +259,9 @@
 
 /* RESPONSIVE */
 @media (max-width: 1200px) {
-  .stat-cards { grid-template-columns: repeat(2,1fr); }
+  .stat-cards { grid-template-columns: repeat(3, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
-  .grid-3 { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 768px) {
   .stat-cards { grid-template-columns: 1fr 1fr; }
-  .grid-3 { grid-template-columns: 1fr; }
 }

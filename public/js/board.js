@@ -4,15 +4,6 @@ const statusLabel = { pending:'รอดำเนินการ', inprogress:'�
 const prioLabel   = { high:'ด่วนมาก', med:'ปานกลาง', low:'ปกติ' };
 const avColors    = ['av-blue','av-green','av-amber','av-pink','av-teal'];
 
-// ── ข้อมูล chart (คงไว้ hardcode เพราะต้องการ endpoint แยก) ──────────
-const cats = [
-  { name:'IT / คอมพิวเตอร์', val:58, color:'#2563EB' },
-  { name:'ไฟฟ้า / อาคาร',    val:49, color:'#F59E0B' },
-  { name:'เครือข่าย',        val:37, color:'#10B981' },
-  { name:'ระบบน้ำ',          val:27, color:'#EF4444' },
-  { name:'อื่นๆ',            val:18, color:'#8B5CF6' },
-];
-
 const barData = [
   { day:'จ',  new:12, done:9  },
   { day:'อ',  new:8,  done:11 },
@@ -30,7 +21,7 @@ async function loadStats() {
     if (!res.ok) return;
     const data = await res.json();
 
-    const counts = { pending:0, inprogress:0, done:0, rejected:0 };
+    const counts = { pending:0, inprogress:0, done:0 };
     data.forEach(t => {
       if (counts[t.status] !== undefined) counts[t.status]++;
     });
@@ -38,7 +29,6 @@ async function loadStats() {
     document.getElementById('num-pending').textContent    = counts.pending;
     document.getElementById('num-inprogress').textContent = counts.inprogress;
     document.getElementById('num-done').textContent       = counts.done;
-    document.getElementById('num-rejected').textContent   = counts.rejected;
 
     renderTaskTable(data);
     renderTimeline(data);
@@ -55,7 +45,6 @@ function renderTaskTable(tickets) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // แสดง 7 รายการล่าสุด
   tickets.slice(0, 7).forEach(t => {
     const ticketNo  = 'TK-' + String(t.id).padStart(4, '0');
     const assignee  = t.assignee || '—';
@@ -79,13 +68,12 @@ function renderTaskTable(tickets) {
   });
 }
 
-// ── TIMELINE (ติดตาม ticket ล่าสุดที่ยังไม่เสร็จ) ──────────────────
+// ── TIMELINE ──────────────────────────────────────────────────────────
 function renderTimeline(tickets) {
   const tlWrap = document.getElementById('tl-ticket-id');
   const tlBody = document.getElementById('tl-body');
   if (!tlWrap || !tlBody) return;
 
-  // หา ticket ล่าสุดที่ยัง inprogress หรือ pending
   const active = tickets.find(t => t.status === 'inprogress')
               || tickets.find(t => t.status === 'pending')
               || tickets[0];
@@ -139,7 +127,7 @@ function renderTimeline(tickets) {
     </div>`).join('');
 }
 
-// ── QUEUE LIST (งานรอดำเนินการ) ───────────────────────────────────────
+// ── QUEUE LIST ────────────────────────────────────────────────────────
 function renderQueueList(tickets) {
   const qWrap = document.getElementById('queue-list');
   if (!qWrap) return;
@@ -229,39 +217,6 @@ function renderBarChart() {
   });
 }
 
-// ── DONUT CHART ──────────────────────────────────────────────────────
-function renderDonut() {
-  const total  = cats.reduce((s, c) => s + c.val, 0);
-  const cx = 55, cy = 55, r = 38, stroke = 14;
-  const circ   = 2 * Math.PI * r;
-  let offset   = 0;
-  const gEl    = document.getElementById('donut-g');
-  const legEl  = document.getElementById('donut-legend');
-  if (!gEl || !legEl) return;
-
-  cats.forEach(cat => {
-    const pct  = cat.val / total;
-    const dash = pct * circ;
-    const el   = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    el.setAttribute('cx', cx); el.setAttribute('cy', cy); el.setAttribute('r', r);
-    el.setAttribute('fill', 'none'); el.setAttribute('stroke', cat.color);
-    el.setAttribute('stroke-width', stroke);
-    el.setAttribute('stroke-dasharray', `${dash} ${circ - dash}`);
-    el.setAttribute('stroke-dashoffset', -offset * circ + circ * 0.25);
-    el.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
-    gEl.appendChild(el);
-    offset += pct;
-
-    legEl.innerHTML += `
-      <div class="legend-item">
-        <span class="legend-dot" style="background:${cat.color}"></span>
-        <span class="legend-name" style="font-size:12px;color:var(--text-muted)">${cat.name}</span>
-        <span class="legend-val" style="font-size:12px">${cat.val}</span>
-        <span class="legend-pct">${Math.round(pct * 100)}%</span>
-      </div>`;
-  });
-}
-
 // ── UI HELPERS ────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -281,7 +236,6 @@ async function loadUser() {
     document.getElementById('user-role').textContent     = data.role;
     document.getElementById('user-avatar').textContent   = data.fullName.substring(0, 2);
 
-    // โหลดข้อมูลทั้งหมดหลัง user พร้อม
     await loadStats();
     loadStaffTable();
   } catch (e) {
@@ -291,5 +245,4 @@ async function loadUser() {
 
 Noti.init();
 renderBarChart();
-renderDonut();
 loadUser();
