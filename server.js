@@ -42,6 +42,27 @@ async function initDB() {
 }
 initDB();
 
+// ========== TELEGRAM NOTIFICATION ==========
+async function sendTelegramToGroup(message) {
+  const token   = process.env.TELEGRAM_BOT_TOKEN;
+  const groupId = process.env.TELEGRAM_GROUP_ID;
+  if (!token || !groupId) return;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id:    groupId,
+        text:       message,
+        parse_mode: 'HTML'
+      })
+    });
+  } catch (err) {
+    console.error('Telegram Error:', err.message);
+  }
+}
+
 // ========== MIDDLEWARE: Auth Guard ==========
 
 // ตรวจว่า login อยู่หรือเปล่า — ใช้คุมทุกหน้าที่ต้อง login
@@ -53,12 +74,7 @@ function isAuth(req, res, next) {
 // staff ทุก role เข้าได้หมด ไม่ต้องแยก isAdmin
 function isStaff(req, res, next) {
   if (req.session && req.session.isStaff) return next();
-  res.status(403).send(`
-    <div style="font-family:sans-serif;text-align:center;padding:60px">
-      <h2 style="color:#EF4444">🚫 ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
-      <p style="color:#6B7280">หน้านี้สำหรับเจ้าหน้าที่เท่านั้น</p>
-      <a href="/login" style="color:#7B2FF7;margin-top:16px;display:inline-block">← กลับหน้า Login</a>
-    </div>`);
+  res.redirect(req.headers.referer || '/index');
 }
 
 // --- ROUTES ---
@@ -67,15 +83,15 @@ app.get("/", (req, res) => {
   res.send("<h1>TaskFlow Pro Server is Running</h1>");
 });
 
-// --- API สำหรับตรวจสอบ Username ซ้ำ (เพิ่มใหม่) ---
+// --- API สำหรับตรวจสอบ Username ซ้ำ ---
 app.get('/check-username', async (req, res) => {
     const { username } = req.query;
     try {
         const [rows] = await db.query("SELECT user_id FROM users WHERE username = ?", [username]);
         if (rows.length > 0) {
-            res.json({ exists: true }); // มีคนใช้แล้ว
+            res.json({ exists: true });
         } else {
-            res.json({ exists: false }); // ยังไม่มีคนใช้
+            res.json({ exists: false });
         }
     } catch (err) {
         console.error(err);
@@ -94,12 +110,9 @@ app.post('/register', async (req, res) => {
     try {
         const sql = "INSERT INTO users (username, password, full_name, email, role, sha1, status) VALUES (?, ?, ?, ?, ?, ?, 'active')";
         await db.query(sql, [username, password, full_name, email, crypto.createHash('sha1').update(username + password).digest('hex')]);
-        
-        // สมัครสำเร็จ -> ไปหน้า Login เลย (ไม่ต้องมี alert)
         res.redirect('/login'); 
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
-            // ถ้าชื่อซ้ำ -> ให้เด้งกลับหน้าเดิมเฉยๆ (หน้าบ้านเรามี JS ดักโ  ชว์ตัวแดงไว้อยู่แล้ว)
             res.redirect('/register?error=duplicate');
         } else {
             console.error(err);
@@ -138,7 +151,7 @@ app.post('/login', async (req, res) => {
       req.session.username = staff.username_staff;
       req.session.role     = staff.role;
       req.session.roleName = staff.role_name || 'เจ้าหน้าที่';
-      req.session.isStaff  = true;   // ✅ flag สำคัญ
+      req.session.isStaff  = true;
       return res.redirect('/queue');
 
     // ===== ฝั่งผู้แจ้งงาน → users =====
@@ -158,7 +171,7 @@ app.post('/login', async (req, res) => {
       req.session.username = user.username;
       req.session.role     = user.role;
       req.session.roleName = 'ผู้แจ้งงาน';
-      req.session.isStaff  = false;  // ✅ flag สำคัญ
+      req.session.isStaff  = false;
       return res.redirect('/index');
     }
 
@@ -184,10 +197,9 @@ app.get('/api/me', (req, res) => {
 });
 
 // ตั้งค่าการเก็บไฟล์
-// แก้ destination ใน storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/'); // ← เปลี่ยนจาก 'uploads/' เป็น 'public/uploads/'
+    cb(null, 'public/uploads/');
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -195,7 +207,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// เพิ่ม fileFilter กันไฟล์อันตราย
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -210,14 +221,14 @@ const upload = multer({
   }
 });
 
-// เปิดให้เข้าถึงโฟลเดอร์ uploads ผ่าน URL ได้ (เช่น http://localhost:4000/uploads/filename.jpg)
 app.use('/uploads', express.static('public/uploads'));
 
-// รับข้อมูลแจ้งงานใหม่ (submit-ticket) พร้อมไฟล์แนบ
+// รับข้อมูลแจ้งงานใหม่ พร้อมแจ้งเตือน Telegram
 app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
   const { title, detail, priority, note, assignee } = req.body;
   const reporterId   = req.session.userId || null;
   const reporterType = req.session.isStaff ? 'staff' : 'user';
+  const reporterName = req.session.fullName || 'ไม่ระบุ';
 
   let attachment = null;
   if (req.files && req.files.length > 0) {
@@ -235,6 +246,38 @@ app.post('/api/submit-ticket', upload.array('files'), async (req, res) => {
       attachment, reporterId, reporterType
     ]);
 
+    const ticketNo = 'TK-' + String(result.insertId).padStart(4, '0');
+
+    // ===== แจ้งเตือน Telegram กลุ่ม =====
+    const priorityLabel = { low: '🟢 ปกติ', medium: '🟡 ปานกลาง', high: '🔴 สูง' };
+
+    const now = new Date();
+    const formatDate = (d) => d.toLocaleDateString('th-TH', {
+      year:   'numeric',
+      month:  'long',
+      day:    'numeric',
+      hour:   '2-digit',
+      minute: '2-digit',
+    });
+
+    // กำหนดส่งตาม priority (ชั่วโมง)
+    const deadlineMap = { high: 4, medium: 24, low: 72 };
+    const deadline = new Date(now.getTime() + (deadlineMap[priority] || 24) * 60 * 60 * 1000);
+
+    const message = [
+      `📌 <b>มีรายการแจ้งงานใหม่!</b>`,
+      `🆔<b>:</b> ${ticketNo}`,
+      `<b>หัวข้อ:</b> ${title}`,
+      `<b>ผู้แจ้ง:</b> ${reporterName}`,
+      `<b>ความสำคัญ:</b> ${priorityLabel[priority] || priority}`,
+      `<b>รายละเอียด:</b> ${detail}`,
+      `📅<b>วันที่แจ้ง:</b> ${formatDate(now)}`,
+      `🕐<b>กำหนดส่ง:</b> ${formatDate(deadline)}`,
+    ].filter(Boolean).join('\n');
+
+    await sendTelegramToGroup(message);
+    // ====================================
+
     res.json({ success: true, ticketId: result.insertId });
   } catch (err) {
     console.error('Submit Error:', err);
@@ -251,7 +294,6 @@ app.post('/api/tickets/:id/attachments', isAuth, upload.array('files'), async (r
   }
 
   try {
-    // ดึง attachment เดิมออกมาก่อน
     const [rows] = await db.query(
       "SELECT attachment FROM it_maintenance WHERE id = ?", [id]
     );
@@ -259,7 +301,6 @@ app.post('/api/tickets/:id/attachments', isAuth, upload.array('files'), async (r
       return res.status(404).json({ error: 'ไม่พบ Ticket' });
     }
 
-    // รวมไฟล์เก่า + ไฟล์ใหม่
     const oldFiles = JSON.parse(rows[0].attachment || '[]');
     const newFiles = req.files.map(f => f.filename);
     const merged   = [...oldFiles, ...newFiles];
@@ -292,7 +333,7 @@ app.get('/api/next-ticket', async (req, res) => {
     }
 });
 
-// ดึงข้อมูลมาแสดง
+// ดึงข้อมูลมาแสดง (เฉพาะของตัวเอง)
 app.get('/api/tickets', isAuth, async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -329,7 +370,7 @@ app.get('/api/tickets', isAuth, async (req, res) => {
   }
 });
 
-// สำหรับหน้า /queue → เห็นทุก ticket (pending + inprogress)
+// สำหรับหน้า /queue → เห็นทุก ticket
 app.get('/api/all-tickets', isAuth, isStaff, async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -377,7 +418,6 @@ app.put('/api/tickets/:id', async (req, res) => {
     let sql, params;
 
     if (status === 'done') {
-      
       sql = `UPDATE it_maintenance 
              SET title = ?, detail = ?, note = ?, priority = ?, assignee = ?, 
                  status = ?, closed_at = NOW(), updated_at = NOW()
@@ -414,7 +454,6 @@ app.put('/api/tickets/:id', async (req, res) => {
 app.delete('/api/tickets/:id', isAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    // ดึง attachment ก่อนลบ เพื่อลบไฟล์ด้วย
     const [rows] = await db.query(
       "SELECT attachment FROM it_maintenance WHERE id = ?", [id]
     );
@@ -422,7 +461,6 @@ app.delete('/api/tickets/:id', isAuth, async (req, res) => {
       return res.status(404).json({ error: 'ไม่พบ Ticket' });
     }
 
-    // ลบไฟล์แนบออกจาก server
     try {
       const files = JSON.parse(rows[0].attachment || '[]');
       files.forEach(filename => {
@@ -431,7 +469,6 @@ app.delete('/api/tickets/:id', isAuth, async (req, res) => {
       });
     } catch {}
 
-    // ลบ ticket
     await db.query("DELETE FROM it_maintenance WHERE id = ?", [id]);
 
     res.json({ success: true });
@@ -444,7 +481,6 @@ app.delete('/api/tickets/:id', isAuth, async (req, res) => {
 // API STAFF 
 app.get('/api/staff', isAuth, isStaff, async (req, res) => {
   try {
-    // ✅ ดึงจาก it_staff จริงๆ
     const [rows] = await db.query(`
       SELECT
         s.staff_id,
@@ -510,13 +546,12 @@ app.get('/api/my-tasks', isAuth, isStaff, async (req, res) => {
 });
 
 // ===== USER ROUTES =====
-// USER (ผู้แจ้งงาน)
 app.get('/index',    isAuth,          (req, res) => res.render('user/board',    { page: 'index' }));
 app.get('/form',     isAuth,          (req, res) => res.render('user/form',     { page: 'form' }));
 app.get('/timeline', isAuth,          (req, res) => res.render('user/timeline', { page: 'timeline' }));
 app.get('/history',  isAuth,          (req, res) => res.render('user/history',  { page: 'history' }));
 
-// STAFF — เข้าได้ทุกหน้า
+// STAFF ROUTES
 app.get('/queue',    isAuth, isStaff, (req, res) => res.render('admin/queue',   { page: 'queue' }));
 app.get('/manage',   isAuth, isStaff, (req, res) => res.render('admin/manage',  { page: 'manage' }));
 app.get('/report',   isAuth, isStaff, (req, res) => res.render('admin/report',  { page: 'report' }));
