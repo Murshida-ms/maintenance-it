@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 
 const db = require('../config/database');
 const { isLogin } = require('../middleware/auth');
@@ -172,6 +173,22 @@ router.delete('/api/users/:id', async (req, res) => {
       message: 'เกิดข้อผิดพลาด'
     });
   }
+});
+
+router.get('/check-username', async (req, res) => {
+    const { username } = req.query;
+    try {
+        const [rows] = await db.query("SELECT user_id FROM users WHERE username = ?", [username]);
+        if (rows.length > 0) {
+            res.json({ exists: true }); // มีคนใช้แล้ว
+        } else {
+            res.json({ exists: false }); // ยังไม่มีคนใช้
+        }
+    } catch (err) {
+        console.error(err);
+        // res.status(500).json({ error: 'Database Error' });
+        res.status(500).send(err.message);
+    }
 });
 
 module.exports = router;

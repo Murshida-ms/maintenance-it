@@ -12,6 +12,7 @@ const userRoutes = require('./routes/user');
 const ticketRoutes = require('./routes/ticket');
 const reportRoutes = require('./routes/report');
 const formRoutes = require('./routes/form');
+const extRoutes = require('./routes/ext');
 const report2Routes = require('./routes/report2');
 
 // MIDDLEWARE
@@ -49,6 +50,7 @@ app.use(ticketRoutes);
 // app.use(reportRoutes);
 app.use('/report', reportRoutes);
 app.use(formRoutes);
+app.use(extRoutes);
 app.use(report2Routes);
 
 // HOME

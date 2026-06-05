@@ -58,6 +58,7 @@ exports.setting = async(req,res)=>{
     res.render(
         'report2/setting',
         {
+            page:'report2',
             report:rows[0]
         }
     );
@@ -236,7 +237,18 @@ exports.run = async(req,res)=>{
     const [data] =
         await db.query(sql);
 
-    const html =
+    // const html =
+    //     ejs.render(
+    //         report.report_template,
+    //         {
+    //             rows:data,
+    //             params,
+    //             ...helper
+    //         }
+    //     );
+
+    // res.send(html);
+    const body =
         ejs.render(
             report.report_template,
             {
@@ -245,6 +257,55 @@ exports.run = async(req,res)=>{
                 ...helper
             }
         );
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="th">
+
+    <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+    <title>${report.report_name}</title>
+
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
+    <style>
+
+    body{
+
+        padding:20px;
+        font-family:'Sarabun',sans-serif;
+
+    }
+
+    @media print{
+
+        .no-print{
+
+            display:none;
+
+        }
+
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    ${body}
+
+    </body>
+
+    </html>
+    `;
 
     res.send(html);
 
